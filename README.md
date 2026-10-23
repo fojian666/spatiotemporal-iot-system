@@ -9,7 +9,7 @@ Spatiotemporal IoT demo platform（spatiotemporal-iot-system）——以青海�
 | 模块 | 说明 |
 |---|---|
 | 态势总览 | 区域 KPI、多源趋势、告警流转、智能体建议 |
-| 一网统飞 | 无人机机场/航线编辑（地图点选+拖拽航点）/任务计划/实时飞控/媒体成果/AI 线索闭环 |
+| 一网统飞 | 无人机机场/航线编辑（地图点选+拖拽航点+删除）/任务计划/实时飞控/媒体成果/AI 线索闭环 |
 | 物联仿真 | 4 场景注入（常态/暴雨洪涝/森林火情/水质污染），9 组环境参数驱动 |
 | 时空一张图 | MapLibre + 卫星底图，设备/航线/电子围栏/热区/卫星过境图层 |
 | 知识图谱 | 56 实体 / 126 关系 / 7 知识域，最短路径查询 |
@@ -42,11 +42,13 @@ cd backend && ./scripts/setup_db.sh
 cp .env.example .env        # 填 IOT_JWT_SECRET、三角色密码、IOT_MQTT_PASSWORD
 # 证书：mkcert -install && mkcert -cert-file certs/server.pem \
 #   -key-file certs/server-key.pem localhost 127.0.0.1
-# mosquitto_passwd 用户名密码见 mosquitto/mosquitto.conf
+# MQTT 账号：账号密码就是 .env 里的 IOT_MQTT_USERNAME / IOT_MQTT_PASSWORD，
+#   用 mosquitto_passwd mosquitto/passwd iot_backend 注册进 broker
 
-# 3. 后端（自动启动 Mosquitto；TLS 时走 8443）
-.venv/bin/python -m venv .venv && .venv/bin/pip install -r requirements.txt
-./run.sh                    # http://127.0.0.1:8000，文档 /docs
+# 3. 后端（run.sh 自动启动 Mosquitto）
+python3 -m venv .venv && .venv/bin/pip install -r requirements.txt
+./run.sh                    # .env 保留 IOT_TLS_ENABLED=true（example 默认）→ https://127.0.0.1:8443
+                            # 改为 false 则走 http://127.0.0.1:8000；文档均在 /docs
 
 # 4. 前端
 cd .. && cp .env.example .env.local   # VITE_DATA_SOURCE=api
