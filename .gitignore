@@ -1,0 +1,26 @@
+# dependencies
+node_modules/
+
+# build output
+dist/
+*.tsbuildinfo
+
+# env & secrets (see .env.example / backend/.env.example)
+.env
+.env.local
+backend/.env
+
+# python
+backend/.venv/
+__pycache__/
+*.pyc
+
+# TLS certs & broker credentials (generate locally, e.g. mkcert)
+backend/certs/
+backend/mosquitto/passwd
+
+# os
+.DS_Store
+
+# large local materials (add back manually if intended)
+*.pptx

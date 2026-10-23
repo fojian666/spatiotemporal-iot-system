@@ -1,0 +1,1259 @@
+{
+  "nodes": [
+    {
+      "id": "root",
+      "name": "时空智能物联网",
+      "category": "platform",
+      "desc": "以统一时空基准组织感知、连接、数据与智能能力，实现物理世界的持续观测、语义理解与自主决策。",
+      "source": "课程总论",
+      "props": {
+        "范式": "感知—认知—决策—行动",
+        "核心": "时空基准 + 物联感知 + 领域大模型"
+      }
+    },
+    {
+      "id": "sensor",
+      "name": "智能传感器",
+      "category": "perception",
+      "desc": "将温度、湿度、水质、位移等物理量转换为可传输信号的感知单元，是物联网数据链的起点。",
+      "source": "感知层",
+      "props": {
+        "接口": "I²C / RS-485 / 模拟量",
+        "典型": "气象六要素、多参数水质、GNSS 位移计"
+      }
+    },
+    {
+      "id": "rfid",
+      "name": "RFID 电子标签",
+      "category": "perception",
+      "desc": "利用射频实现非接触式目标识别，常用于资产标识、溯源与门禁管理。",
+      "source": "感知层",
+      "props": {
+        "频段": "LF / HF / UHF",
+        "标准": "ISO 18000-6C"
+      }
+    },
+    {
+      "id": "camera",
+      "name": "视频感知",
+      "category": "perception",
+      "desc": "通过固定点位或移动平台采集连续影像，为视觉识别、事件取证提供非结构化数据。",
+      "source": "感知层",
+      "props": {
+        "协议": "GB/T 28181 / RTSP",
+        "特点": "高带宽、连续流"
+      }
+    },
+    {
+      "id": "gnss",
+      "name": "北斗 / GNSS",
+      "category": "perception",
+      "desc": "提供统一时空基准，为设备、人员、车辆与无人机提供定位与授时能力。",
+      "source": "时空基准",
+      "props": {
+        "服务": "定位 / 授时 / 短报文",
+        "精度": "米级—厘米级（RTK）"
+      }
+    },
+    {
+      "id": "rs",
+      "name": "遥感对地观测",
+      "category": "perception",
+      "desc": "利用卫星或航空平台获取地表多光谱、热红外与雷达影像，支撑大范围变化监测。",
+      "source": "天基感知",
+      "props": {
+        "平台": "光学 / SAR / 高光谱",
+        "分辨率": "0.5m—10m"
+      }
+    },
+    {
+      "id": "uav",
+      "name": "无人机",
+      "category": "perception",
+      "desc": "搭载相机、热成像与多光谱载荷，按航线完成巡检、测绘与应急侦察，是空中移动感知节点。",
+      "source": "无人系统",
+      "props": {
+        "链路": "5G / 图传 / MAVLink",
+        "载荷": "可见光 / 热红外 / 多光谱"
+      }
+    },
+    {
+      "id": "ugv",
+      "name": "无人车",
+      "category": "perception",
+      "desc": "在地面按规划路径自主行驶，搭载传感器完成巡护、采样与物资投送。",
+      "source": "无人系统",
+      "props": {
+        "导航": "RTK + 激光雷达 + 视觉",
+        "系统": "ROS 2"
+      }
+    },
+    {
+      "id": "usv",
+      "name": "无人船",
+      "category": "perception",
+      "desc": "面向水域自主航行与定点采样，可搭载水质探头、侧扫声呐与视频设备。",
+      "source": "无人系统",
+      "props": {
+        "任务": "水质采样 / 水下地形",
+        "通信": "4G / 数传电台"
+      }
+    },
+    {
+      "id": "edgeNode",
+      "name": "边缘感知节点",
+      "category": "perception",
+      "desc": "在靠近数据源侧完成采集汇聚、协议转换与初级过滤，降低回传带宽与时延。",
+      "source": "边缘计算",
+      "props": {
+        "能力": "本地规则 / 轻量推理",
+        "价值": "低时延、断网自治"
+      }
+    },
+    {
+      "id": "nbiot",
+      "name": "NB-IoT",
+      "category": "network",
+      "desc": "授权频谱蜂窝低功耗广域网，覆盖广、连接密度高，适合低速率、长周期遥测业务。",
+      "source": "网络层",
+      "props": {
+        "速率": "~100 kbps",
+        "优势": "广覆盖 / 低功耗 / 海量连接"
+      }
+    },
+    {
+      "id": "lora",
+      "name": "LoRaWAN",
+      "category": "network",
+      "desc": "基于扩频调制的低功耗广域网，可自建网关，适合园区与林区等场景的远距离遥测。",
+      "source": "网络层",
+      "props": {
+        "频段": "免授权 ISM",
+        "拓扑": "星型"
+      }
+    },
+    {
+      "id": "g5",
+      "name": "5G 网络切片",
+      "category": "network",
+      "desc": "在同一物理网络上划分差异化逻辑网络，为视频回传、无人机控制提供高带宽与低时延保障。",
+      "source": "网络层",
+      "props": {
+        "特性": "eMBB / uRLLC / mMTC",
+        "场景": "无人机 / 高清视频 / 大规模物联"
+      }
+    },
+    {
+      "id": "mqtt",
+      "name": "MQTT",
+      "category": "network",
+      "desc": "轻量级发布/订阅消息协议，基于 TCP，支持三级 QoS 与遗嘱消息，是物联网平台的主流接入协议。",
+      "source": "网络层",
+      "props": {
+        "模式": "Pub/Sub",
+        "端口": "1883 / 8883",
+        "QoS": "0 / 1 / 2"
+      }
+    },
+    {
+      "id": "coap",
+      "name": "CoAP",
+      "category": "network",
+      "desc": "面向受限设备的 RESTful 协议，基于 UDP，报文紧凑，适合低功耗传感网。",
+      "source": "网络层",
+      "props": {
+        "模式": "请求/响应 + Observe",
+        "传输": "UDP"
+      }
+    },
+    {
+      "id": "gateway",
+      "name": "边缘网关",
+      "category": "network",
+      "desc": "汇聚多协议设备数据，完成协议转换、数据清洗、本地缓存与安全接入。",
+      "source": "边缘计算",
+      "props": {
+        "协议": "MQTT / Modbus / OPC UA",
+        "能力": "断网续传 / 本地推理"
+      }
+    },
+    {
+      "id": "tsn",
+      "name": "时间敏感网络 TSN",
+      "category": "network",
+      "desc": "通过时间同步与流量整形提供确定性时延，支撑工业控制与多源数据同步。",
+      "source": "网络层",
+      "props": {
+        "标准": "IEEE 802.1",
+        "价值": "确定性 / 时钟同步"
+      }
+    },
+    {
+      "id": "satcom",
+      "name": "卫星通信",
+      "category": "network",
+      "desc": "为无地面网络覆盖区域提供回传链路，北斗短报文可用于应急位置上报。",
+      "source": "网络层",
+      "props": {
+        "类型": "低轨宽带 / 北斗短报文",
+        "场景": "林区 / 应急"
+      }
+    },
+    {
+      "id": "spacetime",
+      "name": "时空智能",
+      "category": "spacetime",
+      "desc": "将时间、空间与语义统一建模，使系统不仅能回答“是什么”，还能回答“在哪里、何时、将如何变化”。",
+      "source": "核心范式",
+      "props": {
+        "三要素": "时间 + 空间 + 语义",
+        "闭环": "观测 → 建模 → 推演 → 行动"
+      }
+    },
+    {
+      "id": "gis",
+      "name": "GIS 地理信息系统",
+      "category": "spacetime",
+      "desc": "对地理空间数据进行组织、管理、分析与可视化的技术体系，是一张图的底座。",
+      "source": "时空信息",
+      "props": {
+        "能力": "图层叠加 / 空间分析 / 制图",
+        "格式": "GeoJSON / Shapefile / MVT"
+      }
+    },
+    {
+      "id": "sdb",
+      "name": "时空数据库",
+      "category": "spacetime",
+      "desc": "同时管理空间几何、时间序列与业务属性的数据基础设施，支持时空范围查询与轨迹检索。",
+      "source": "时空信息",
+      "props": {
+        "代表": "PostGIS / TimescaleDB / GeoMesa",
+        "能力": "时空联合索引"
+      }
+    },
+    {
+      "id": "sindex",
+      "name": "时空索引",
+      "category": "spacetime",
+      "desc": "通过 GeoSorted、R 树、GeoHash 或时空网格将空间邻近性与时间连续性编码，加速查询。",
+      "source": "时空信息",
+      "props": {
+        "结构": "R-Tree / GeoHash / GeoSOT",
+        "目标": "降低时空检索复杂度"
+      }
+    },
+    {
+      "id": "traj",
+      "name": "轨迹数据",
+      "category": "spacetime",
+      "desc": "由移动对象在时间序列上的位置点构成，蕴含路径、停留、速度与行为模式。",
+      "source": "时空信息",
+      "props": {
+        "模型": "点序列 / 路网匹配",
+        "应用": "无人机航迹 / 车辆巡护"
+      }
+    },
+    {
+      "id": "twin",
+      "name": "数字孪生",
+      "category": "spacetime",
+      "desc": "物理实体的实时虚拟映射，通过传感数据驱动模型演化，支持仿真推演与反向控制。",
+      "source": "时空信息",
+      "props": {
+        "要素": "几何 + 状态 + 行为 + 规则",
+        "支撑": "实时数据 / 物理模型 / 可视化"
+      }
+    },
+    {
+      "id": "geofence",
+      "name": "电子围栏",
+      "category": "spacetime",
+      "desc": "以空间多边形定义管控边界，结合实时定位判断越界、闯入与禁飞等空间事件。",
+      "source": "时空信息",
+      "props": {
+        "算法": "点在多边形内 / 距离判断",
+        "应用": "水源保护 / 禁飞区"
+      }
+    },
+    {
+      "id": "grid",
+      "name": "时空网格",
+      "category": "spacetime",
+      "desc": "将地球空间剖分为多级网格单元，实现空天地数据的一致索引与聚合计算。",
+      "source": "时空信息",
+      "props": {
+        "标准": "GeoSOT / 北斗网格码",
+        "价值": "跨源数据对齐"
+      }
+    },
+    {
+      "id": "remote",
+      "name": "遥感影像",
+      "category": "spacetime",
+      "desc": "卫星或航空传感器获取的栅格影像，可用于地表覆盖分类、水质反演与变化检测。",
+      "source": "时空信息",
+      "props": {
+        "类型": "多光谱 / 热红外 / SAR",
+        "处理": "辐射定标 / 融合 / 反演"
+      }
+    },
+    {
+      "id": "position",
+      "name": "时空定位",
+      "category": "spacetime",
+      "desc": "融合 GNSS、惯性导航、视觉与基站信息，确定对象在统一时空基准下的位置与姿态。",
+      "source": "时空信息",
+      "props": {
+        "技术": "RTK / IMU / SLAM",
+        "精度": "厘米级—米级"
+      }
+    },
+    {
+      "id": "access",
+      "name": "统一设备接入",
+      "category": "platform",
+      "desc": "通过物模型、设备影子与协议适配屏蔽异构设备差异，实现即插即用与统一管控。",
+      "source": "平台层",
+      "props": {
+        "核心": "物模型 / 设备影子",
+        "协议": "MQTT / CoAP / HTTP"
+      }
+    },
+    {
+      "id": "stream",
+      "name": "流式计算",
+      "category": "platform",
+      "desc": "对连续到达的遥测数据进行窗口聚合、异常检测与实时指标计算。",
+      "source": "平台层",
+      "props": {
+        "代表": "Flink / Kafka Streams",
+        "模式": "窗口 / 水位线 / 状态"
+      }
+    },
+    {
+      "id": "rules",
+      "name": "规则引擎",
+      "category": "platform",
+      "desc": "将阈值、时空约束与业务条件表达为可执行规则，实现告警触发与自动联动。",
+      "source": "平台层",
+      "props": {
+        "表达": "IF 条件 THEN 动作",
+        "场景": "越限告警 / 越界联动"
+      }
+    },
+    {
+      "id": "orchestration",
+      "name": "任务编排",
+      "category": "platform",
+      "desc": "将航线、载荷动作与无人系统资源组合为可执行任务，支持计划、调度与回滚。",
+      "source": "平台层",
+      "props": {
+        "对象": "无人机 / 无人车 / 无人船",
+        "能力": "计划 / 调度 / 重规划"
+      }
+    },
+    {
+      "id": "media",
+      "name": "媒体资产库",
+      "category": "platform",
+      "desc": "统一沉淀照片、视频与点云成果，关联任务、设备、时间与空间位置。",
+      "source": "平台层",
+      "props": {
+        "元数据": "拍摄参数 / 姿态 / 位置",
+        "价值": "可追溯的数据资产"
+      }
+    },
+    {
+      "id": "openapi",
+      "name": "开放 API",
+      "category": "platform",
+      "desc": "以标准接口向业务系统开放设备、数据与算法能力，支撑跨部门协同。",
+      "source": "平台层",
+      "props": {
+        "风格": "REST / WebSocket / Webhook",
+        "治理": "鉴权 / 限流 / 审计"
+      }
+    },
+    {
+      "id": "datamart",
+      "name": "湖仓数据底座",
+      "category": "platform",
+      "desc": "汇聚遥测、影像、业务与日志数据，为分析与模型训练提供统一数据视图。",
+      "source": "平台层",
+      "props": {
+        "层次": "ODS → DWD → ADS",
+        "能力": "批流一体"
+      }
+    },
+    {
+      "id": "metadata",
+      "name": "元数据与本体",
+      "category": "platform",
+      "desc": "描述数据含义、来源、质量与实体关系，是知识图谱构建与语义互操作的基础。",
+      "source": "平台层",
+      "props": {
+        "内容": "数据字典 / 本体 / 血缘",
+        "标准": "Schema.org / SOSA"
+      }
+    },
+    {
+      "id": "observability",
+      "name": "可观测性",
+      "category": "platform",
+      "desc": "通过指标、日志与链路追踪掌握设备、网络与平台的运行健康度。",
+      "source": "平台层",
+      "props": {
+        "三支柱": "Metrics / Logs / Traces",
+        "对象": "设备在线率 / 消息时延"
+      }
+    },
+    {
+      "id": "kg",
+      "name": "物联网知识图谱",
+      "category": "intelligence",
+      "desc": "以实体—关系—属性组织设备、空间对象、事件、协议与业务概念，支持语义检索与可解释推理。",
+      "source": "智能层",
+      "props": {
+        "模型": "本体 + 三元组",
+        "推理": "路径查找 / 规则推理 / 图嵌入"
+      }
+    },
+    {
+      "id": "llm",
+      "name": "物联网大模型",
+      "category": "intelligence",
+      "desc": "面向物联场景的多模态基础模型，理解遥测、影像、图谱与自然语言，生成分析结论与行动建议。",
+      "source": "智能层",
+      "props": {
+        "能力": "多模态理解 / 工具调用 / 报告生成",
+        "约束": "事实校验 / 权限控制"
+      }
+    },
+    {
+      "id": "rag",
+      "name": "检索增强生成 RAG",
+      "category": "intelligence",
+      "desc": "先检索领域知识与实时数据，再交由大模型组织回答，降低幻觉并让结论可追溯。",
+      "source": "智能层",
+      "props": {
+        "流程": "Embedding → 召回 → 重排 → 生成",
+        "来源": "知识图谱 / 文档 / 遥测"
+      }
+    },
+    {
+      "id": "agent",
+      "name": "智能体 Agent",
+      "category": "intelligence",
+      "desc": "具备目标分解、工具选择与执行反馈能力的自治单元，可调用平台 API 完成闭环任务。",
+      "source": "智能层",
+      "props": {
+        "循环": "感知 → 规划 → 行动 → 反思",
+        "工具": "查询 / 调度 / 告警 / 报告"
+      }
+    },
+    {
+      "id": "cv",
+      "name": "视觉识别",
+      "category": "intelligence",
+      "desc": "利用目标检测、分割与变化检测从影像中提取事件与要素。",
+      "source": "智能层",
+      "props": {
+        "模型": "YOLO / SAM / 变化检测",
+        "场景": "烟火 / 漂浮物 / 违规占道"
+      }
+    },
+    {
+      "id": "forecast",
+      "name": "时序预测",
+      "category": "intelligence",
+      "desc": "基于历史遥测与外部因子预测水位、水质、负荷等未来状态。",
+      "source": "智能层",
+      "props": {
+        "模型": "LSTM / TCN / Transformer",
+        "输出": "点预测 + 置信区间"
+      }
+    },
+    {
+      "id": "copilot",
+      "name": "物联智能助手",
+      "category": "intelligence",
+      "desc": "以自然语言为入口，融合实时态势、知识图谱与工具调用，为值班人员提供可执行的决策建议。",
+      "source": "智能层",
+      "props": {
+        "交互": "对话 / 图表 / 命令",
+        "原则": "可解释 / 可追溯 / 人在回路"
+      }
+    },
+    {
+      "id": "embedding",
+      "name": "向量检索",
+      "category": "intelligence",
+      "desc": "将文本、图像与实体属性编码为向量，通过相似度检索实现跨模态语义召回。",
+      "source": "智能层",
+      "props": {
+        "索引": "HNSW / IVF",
+        "距离": "余弦相似度"
+      }
+    },
+    {
+      "id": "water",
+      "name": "智慧水务",
+      "category": "application",
+      "desc": "融合水质、水文、视频与遥感数据，实现流域监测、污染溯源与调度决策。",
+      "source": "应用层",
+      "props": {
+        "对象": "河流 / 水库 / 排口",
+        "指标": "pH / 浊度 / 氨氮 / 水位"
+      }
+    },
+    {
+      "id": "fire",
+      "name": "森林防火",
+      "category": "application",
+      "desc": "利用热红外、烟雾识别与气象数据实现火点发现、火势研判与扑救调度。",
+      "source": "应用层",
+      "props": {
+        "手段": "卫星热点 / 无人机热成像 / 视频烟雾",
+        "目标": "打早打小"
+      }
+    },
+    {
+      "id": "inspection",
+      "name": "无人机巡检",
+      "category": "application",
+      "desc": "按航线自动执行巡检任务，结合视觉识别形成问题线索与闭环处置。",
+      "source": "应用层",
+      "props": {
+        "流程": "航线 → 任务 → 采集 → 识别 → 工单",
+        "优势": "高频 / 可达 / 可复现"
+      }
+    },
+    {
+      "id": "emergency",
+      "name": "应急指挥",
+      "category": "application",
+      "desc": "汇聚一张图态势、预案与资源，支撑突发事件快速研判与统一调度。",
+      "source": "应用层",
+      "props": {
+        "要素": "事件 / 资源 / 预案 / 通信",
+        "要求": "实时 / 可靠 / 可追溯"
+      }
+    },
+    {
+      "id": "agri",
+      "name": "精准农业",
+      "category": "application",
+      "desc": "结合土壤墒情、气象与遥感反演，实现变量灌溉、施肥与产量预估。",
+      "source": "应用层",
+      "props": {
+        "数据": "墒情 / 气象 / 多光谱",
+        "价值": "节水节肥 / 提质增效"
+      }
+    },
+    {
+      "id": "city",
+      "name": "城市治理",
+      "category": "application",
+      "desc": "通过物联感知与视频分析发现城市管理问题，联动处置流程。",
+      "source": "应用层",
+      "props": {
+        "场景": "市政 / 交通 / 环境",
+        "模式": "感知发现 → 派单 → 处置"
+      }
+    },
+    {
+      "id": "ecology",
+      "name": "生态监测",
+      "category": "application",
+      "desc": "利用遥感与地面站协同观测植被、水体与生物多样性变化。",
+      "source": "应用层",
+      "props": {
+        "指标": "NDVI / 水质 / 覆盖度",
+        "尺度": "区域—景观—样地"
+      }
+    },
+    {
+      "id": "zero",
+      "name": "零信任安全",
+      "category": "security",
+      "desc": "默认不信任任何访问主体，持续验证身份、设备与环境，实施最小权限控制。",
+      "source": "安全体系",
+      "props": {
+        "原则": "Never Trust, Always Verify",
+        "环节": "身份 / 设备 / 链路 / 数据"
+      }
+    },
+    {
+      "id": "auth",
+      "name": "设备身份认证",
+      "category": "security",
+      "desc": "为每台设备分配唯一身份与凭证，防止仿冒接入与指令劫持。",
+      "source": "安全体系",
+      "props": {
+        "机制": "证书 / 密钥 / 安全芯片",
+        "标准": "X.509 / TLS"
+      }
+    },
+    {
+      "id": "privacy",
+      "name": "数据脱敏与分级",
+      "category": "security",
+      "desc": "按敏感程度对数据分类分级，在共享与开放时实施脱敏与访问控制。",
+      "source": "安全体系",
+      "props": {
+        "级别": "公开 / 内部 / 敏感",
+        "手段": "掩码 / 泛化 / 差分隐私"
+      }
+    },
+    {
+      "id": "audit",
+      "name": "审计与溯源",
+      "category": "security",
+      "desc": "记录设备接入、数据访问与指令下发的全链路凭证，支撑安全审计与事件复盘。",
+      "source": "安全体系",
+      "props": {
+        "内容": "操作日志 / 数据血缘",
+        "要求": "完整 / 防篡改"
+      }
+    }
+  ],
+  "links": [
+    {
+      "source": "root",
+      "target": "sensor",
+      "rel": "纳管"
+    },
+    {
+      "source": "root",
+      "target": "gateway",
+      "rel": "接入"
+    },
+    {
+      "source": "root",
+      "target": "access",
+      "rel": "包含"
+    },
+    {
+      "source": "root",
+      "target": "stream",
+      "rel": "包含"
+    },
+    {
+      "source": "root",
+      "target": "rules",
+      "rel": "包含"
+    },
+    {
+      "source": "root",
+      "target": "orchestration",
+      "rel": "包含"
+    },
+    {
+      "source": "root",
+      "target": "media",
+      "rel": "包含"
+    },
+    {
+      "source": "root",
+      "target": "openapi",
+      "rel": "包含"
+    },
+    {
+      "source": "root",
+      "target": "datamart",
+      "rel": "包含"
+    },
+    {
+      "source": "root",
+      "target": "kg",
+      "rel": "认知"
+    },
+    {
+      "source": "root",
+      "target": "llm",
+      "rel": "推理"
+    },
+    {
+      "source": "root",
+      "target": "spacetime",
+      "rel": "统一基准"
+    },
+    {
+      "source": "root",
+      "target": "water",
+      "rel": "赋能"
+    },
+    {
+      "source": "root",
+      "target": "fire",
+      "rel": "赋能"
+    },
+    {
+      "source": "root",
+      "target": "inspection",
+      "rel": "赋能"
+    },
+    {
+      "source": "root",
+      "target": "emergency",
+      "rel": "赋能"
+    },
+    {
+      "source": "root",
+      "target": "agri",
+      "rel": "赋能"
+    },
+    {
+      "source": "root",
+      "target": "city",
+      "rel": "赋能"
+    },
+    {
+      "source": "root",
+      "target": "ecology",
+      "rel": "赋能"
+    },
+    {
+      "source": "root",
+      "target": "zero",
+      "rel": "保障"
+    },
+    {
+      "source": "sensor",
+      "target": "access",
+      "rel": "数据上报"
+    },
+    {
+      "source": "sensor",
+      "target": "mqtt",
+      "rel": "发布消息"
+    },
+    {
+      "source": "sensor",
+      "target": "edgeNode",
+      "rel": "短距汇聚"
+    },
+    {
+      "source": "sensor",
+      "target": "position",
+      "rel": "自带位置"
+    },
+    {
+      "source": "rfid",
+      "target": "access",
+      "rel": "标识接入"
+    },
+    {
+      "source": "rfid",
+      "target": "city",
+      "rel": "资产溯源"
+    },
+    {
+      "source": "camera",
+      "target": "cv",
+      "rel": "视频流"
+    },
+    {
+      "source": "camera",
+      "target": "media",
+      "rel": "流媒体归档"
+    },
+    {
+      "source": "camera",
+      "target": "city",
+      "rel": "城市感知"
+    },
+    {
+      "source": "gnss",
+      "target": "position",
+      "rel": "提供定位"
+    },
+    {
+      "source": "gnss",
+      "target": "traj",
+      "rel": "位置序列"
+    },
+    {
+      "source": "gnss",
+      "target": "uav",
+      "rel": "导航"
+    },
+    {
+      "source": "rs",
+      "target": "remote",
+      "rel": "成像"
+    },
+    {
+      "source": "rs",
+      "target": "ecology",
+      "rel": "生态反演"
+    },
+    {
+      "source": "rs",
+      "target": "fire",
+      "rel": "热点探测"
+    },
+    {
+      "source": "uav",
+      "target": "camera",
+      "rel": "搭载"
+    },
+    {
+      "source": "uav",
+      "target": "traj",
+      "rel": "产生航迹"
+    },
+    {
+      "source": "uav",
+      "target": "inspection",
+      "rel": "执行"
+    },
+    {
+      "source": "uav",
+      "target": "fire",
+      "rel": "火情侦察"
+    },
+    {
+      "source": "uav",
+      "target": "edgeNode",
+      "rel": "机载边缘计算"
+    },
+    {
+      "source": "ugv",
+      "target": "inspection",
+      "rel": "执行"
+    },
+    {
+      "source": "ugv",
+      "target": "position",
+      "rel": "自主导航"
+    },
+    {
+      "source": "usv",
+      "target": "water",
+      "rel": "水质采样"
+    },
+    {
+      "source": "usv",
+      "target": "position",
+      "rel": "自主导航"
+    },
+    {
+      "source": "nbiot",
+      "target": "gateway",
+      "rel": "承载"
+    },
+    {
+      "source": "lora",
+      "target": "gateway",
+      "rel": "承载"
+    },
+    {
+      "source": "g5",
+      "target": "gateway",
+      "rel": "大带宽回传"
+    },
+    {
+      "source": "g5",
+      "target": "uav",
+      "rel": "低时延控制"
+    },
+    {
+      "source": "satcom",
+      "target": "gateway",
+      "rel": "偏远回传"
+    },
+    {
+      "source": "satcom",
+      "target": "emergency",
+      "rel": "应急通信"
+    },
+    {
+      "source": "mqtt",
+      "target": "access",
+      "rel": "协议接入"
+    },
+    {
+      "source": "coap",
+      "target": "access",
+      "rel": "协议接入"
+    },
+    {
+      "source": "tsn",
+      "target": "gateway",
+      "rel": "确定性传输"
+    },
+    {
+      "source": "gateway",
+      "target": "stream",
+      "rel": "边缘预处理"
+    },
+    {
+      "source": "gateway",
+      "target": "edgeNode",
+      "rel": "部署于"
+    },
+    {
+      "source": "gis",
+      "target": "spacetime",
+      "rel": "空间底座"
+    },
+    {
+      "source": "sdb",
+      "target": "spacetime",
+      "rel": "数据底座"
+    },
+    {
+      "source": "sindex",
+      "target": "sdb",
+      "rel": "加速检索"
+    },
+    {
+      "source": "traj",
+      "target": "sdb",
+      "rel": "存储与查询"
+    },
+    {
+      "source": "grid",
+      "target": "sindex",
+      "rel": "网格编码"
+    },
+    {
+      "source": "remote",
+      "target": "gis",
+      "rel": "影像图层"
+    },
+    {
+      "source": "position",
+      "target": "traj",
+      "rel": "生成"
+    },
+    {
+      "source": "twin",
+      "target": "spacetime",
+      "rel": "虚实映射"
+    },
+    {
+      "source": "twin",
+      "target": "water",
+      "rel": "洪水推演"
+    },
+    {
+      "source": "twin",
+      "target": "emergency",
+      "rel": "态势推演"
+    },
+    {
+      "source": "geofence",
+      "target": "gis",
+      "rel": "空间计算"
+    },
+    {
+      "source": "geofence",
+      "target": "rules",
+      "rel": "触发空间规则"
+    },
+    {
+      "source": "spacetime",
+      "target": "kg",
+      "rel": "语义组织"
+    },
+    {
+      "source": "spacetime",
+      "target": "llm",
+      "rel": "时空上下文"
+    },
+    {
+      "source": "spacetime",
+      "target": "twin",
+      "rel": "统一时空"
+    },
+    {
+      "source": "remote",
+      "target": "cv",
+      "rel": "影像分析"
+    },
+    {
+      "source": "access",
+      "target": "mqtt",
+      "rel": "适配"
+    },
+    {
+      "source": "access",
+      "target": "auth",
+      "rel": "身份校验"
+    },
+    {
+      "source": "stream",
+      "target": "rules",
+      "rel": "实时指标"
+    },
+    {
+      "source": "stream",
+      "target": "datamart",
+      "rel": "写入"
+    },
+    {
+      "source": "rules",
+      "target": "emergency",
+      "rel": "联动触发"
+    },
+    {
+      "source": "rules",
+      "target": "agent",
+      "rel": "动作触发"
+    },
+    {
+      "source": "orchestration",
+      "target": "uav",
+      "rel": "调度"
+    },
+    {
+      "source": "orchestration",
+      "target": "ugv",
+      "rel": "调度"
+    },
+    {
+      "source": "orchestration",
+      "target": "usv",
+      "rel": "调度"
+    },
+    {
+      "source": "orchestration",
+      "target": "agent",
+      "rel": "工具"
+    },
+    {
+      "source": "media",
+      "target": "cv",
+      "rel": "离线推理"
+    },
+    {
+      "source": "datamart",
+      "target": "forecast",
+      "rel": "训练样本"
+    },
+    {
+      "source": "datamart",
+      "target": "rag",
+      "rel": "数据检索"
+    },
+    {
+      "source": "openapi",
+      "target": "privacy",
+      "rel": "开放前脱敏"
+    },
+    {
+      "source": "metadata",
+      "target": "kg",
+      "rel": "本体来源"
+    },
+    {
+      "source": "observability",
+      "target": "access",
+      "rel": "监测"
+    },
+    {
+      "source": "sdb",
+      "target": "datamart",
+      "rel": "时空数据"
+    },
+    {
+      "source": "metadata",
+      "target": "datamart",
+      "rel": "数据目录"
+    },
+    {
+      "source": "kg",
+      "target": "llm",
+      "rel": "知识注入"
+    },
+    {
+      "source": "kg",
+      "target": "copilot",
+      "rel": "语义推理"
+    },
+    {
+      "source": "kg",
+      "target": "rag",
+      "rel": "子图召回"
+    },
+    {
+      "source": "llm",
+      "target": "agent",
+      "rel": "驱动"
+    },
+    {
+      "source": "llm",
+      "target": "copilot",
+      "rel": "生成"
+    },
+    {
+      "source": "llm",
+      "target": "emergency",
+      "rel": "生成预案"
+    },
+    {
+      "source": "rag",
+      "target": "llm",
+      "rel": "事实增强"
+    },
+    {
+      "source": "rag",
+      "target": "copilot",
+      "rel": "证据供给"
+    },
+    {
+      "source": "embedding",
+      "target": "rag",
+      "rel": "语义召回"
+    },
+    {
+      "source": "agent",
+      "target": "copilot",
+      "rel": "任务编排"
+    },
+    {
+      "source": "agent",
+      "target": "openapi",
+      "rel": "调用"
+    },
+    {
+      "source": "cv",
+      "target": "agent",
+      "rel": "事件输入"
+    },
+    {
+      "source": "cv",
+      "target": "fire",
+      "rel": "烟火识别"
+    },
+    {
+      "source": "cv",
+      "target": "water",
+      "rel": "漂浮物识别"
+    },
+    {
+      "source": "forecast",
+      "target": "agent",
+      "rel": "趋势输入"
+    },
+    {
+      "source": "forecast",
+      "target": "water",
+      "rel": "水位预测"
+    },
+    {
+      "source": "forecast",
+      "target": "emergency",
+      "rel": "风险预测"
+    },
+    {
+      "source": "kg",
+      "target": "inspection",
+      "rel": "线索关联"
+    },
+    {
+      "source": "llm",
+      "target": "inspection",
+      "rel": "任务生成"
+    },
+    {
+      "source": "water",
+      "target": "inspection",
+      "rel": "河道巡检"
+    },
+    {
+      "source": "water",
+      "target": "usv",
+      "rel": "采样"
+    },
+    {
+      "source": "fire",
+      "target": "uav",
+      "rel": "空中巡查"
+    },
+    {
+      "source": "inspection",
+      "target": "media",
+      "rel": "成果沉淀"
+    },
+    {
+      "source": "emergency",
+      "target": "orchestration",
+      "rel": "资源调度"
+    },
+    {
+      "source": "emergency",
+      "target": "satcom",
+      "rel": "应急链路"
+    },
+    {
+      "source": "agri",
+      "target": "sensor",
+      "rel": "墒情感知"
+    },
+    {
+      "source": "agri",
+      "target": "remote",
+      "rel": "长势反演"
+    },
+    {
+      "source": "city",
+      "target": "camera",
+      "rel": "视频巡查"
+    },
+    {
+      "source": "ecology",
+      "target": "rs",
+      "rel": "大范围监测"
+    },
+    {
+      "source": "ecology",
+      "target": "uav",
+      "rel": "样地核查"
+    },
+    {
+      "source": "zero",
+      "target": "auth",
+      "rel": "支撑"
+    },
+    {
+      "source": "zero",
+      "target": "privacy",
+      "rel": "支撑"
+    },
+    {
+      "source": "zero",
+      "target": "audit",
+      "rel": "支撑"
+    },
+    {
+      "source": "auth",
+      "target": "gateway",
+      "rel": "设备准入"
+    },
+    {
+      "source": "privacy",
+      "target": "media",
+      "rel": "成果脱敏"
+    },
+    {
+      "source": "audit",
+      "target": "orchestration",
+      "rel": "指令留痕"
+    },
+    {
+      "source": "audit",
+      "target": "datamart",
+      "rel": "血缘追踪"
+    }
+  ],
+  "stats": {
+    "nodes": 56,
+    "links": 126,
+    "categories": 7,
+    "sources": 12
+  }
+}

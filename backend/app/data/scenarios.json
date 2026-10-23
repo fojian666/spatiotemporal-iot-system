@@ -1,0 +1,106 @@
+{
+  "normal": {
+    "key": "normal",
+    "name": "常态运行",
+    "code": "NORMAL",
+    "tagline": "多源数据稳定 · 自动巡检有序执行",
+    "description": "全域感知网络稳定在线，边缘节点按周期汇聚遥测数据，无人机执行例行巡检。",
+    "color": "#23e6b0",
+    "severity": "常态",
+    "environment": {
+      "temperature": 17.4,
+      "humidity": 48,
+      "wind": 2.3,
+      "pm25": 24,
+      "ph": 7.62,
+      "turbidity": 18,
+      "ammonia": 0.16,
+      "waterLevel": 2.18,
+      "soilMoisture": 41
+    },
+    "triggers": [
+      "设备心跳平稳",
+      "河道水位正常",
+      "空气质量优良"
+    ],
+    "agentAdvice": "保持例行巡检节奏，关注污水厂排口浊度缓慢上升趋势。"
+  },
+  "storm": {
+    "key": "storm",
+    "name": "暴雨洪涝",
+    "code": "STORM",
+    "tagline": "强降雨 · 水位上涨 · 地质灾害风险",
+    "description": "短时强降雨导致流域水位快速上涨、水体浊度升高，边坡与泥石流沟风险上升。",
+    "color": "#4d8dff",
+    "severity": "严重",
+    "environment": {
+      "temperature": 12.8,
+      "humidity": 93,
+      "wind": 11.6,
+      "pm25": 9,
+      "ph": 7.24,
+      "turbidity": 96,
+      "ammonia": 0.62,
+      "waterLevel": 3.86,
+      "soilMoisture": 84
+    },
+    "triggers": [
+      "1h 降雨量 42.6 mm",
+      "湟水河水位超警戒",
+      "峡群沟位移速率异常"
+    ],
+    "agentAdvice": "建议立即暂停河道无人机航线，切换高空巡航；对低洼区与泥石流沟发布预警。"
+  },
+  "fire": {
+    "key": "fire",
+    "name": "森林火情",
+    "code": "WILDFIRE",
+    "tagline": "高温热点 · 低湿 · 烟尘扩散",
+    "description": "峡群林场出现疑似高温热点，林区湿度骤降、PM2.5 激增，火险等级升至最高。",
+    "color": "#ff7a45",
+    "severity": "紧急",
+    "environment": {
+      "temperature": 33.6,
+      "humidity": 16,
+      "wind": 6.8,
+      "pm25": 286,
+      "ph": 7.5,
+      "turbidity": 36,
+      "ammonia": 0.2,
+      "waterLevel": 1.62,
+      "soilMoisture": 13
+    },
+    "triggers": [
+      "热红外温差 41.8 ℃",
+      "PM2.5 峰值 286 µg/m³",
+      "林区湿度 16%"
+    ],
+    "agentAdvice": "建议无人机切换热成像执行火点复核，开启电子围栏禁飞管控，并同步应急指挥。"
+  },
+  "pollution": {
+    "key": "pollution",
+    "name": "水质污染",
+    "code": "POLLUTION",
+    "tagline": "排口 pH 超标 · 氨氮异常 · 溯源采样",
+    "description": "污水处理厂排口 pH 与氨氮显著超标，下游断面浊度上升，疑似异常排放事件。",
+    "color": "#ff5d8f",
+    "severity": "严重",
+    "environment": {
+      "temperature": 19.2,
+      "humidity": 57,
+      "wind": 1.6,
+      "pm25": 38,
+      "ph": 9.31,
+      "turbidity": 168,
+      "ammonia": 2.9,
+      "waterLevel": 2.26,
+      "soilMoisture": 39
+    },
+    "triggers": [
+      "排口 pH 9.31",
+      "氨氮 2.90 mg/L",
+      "下游浊度上升 2.4 倍"
+    ],
+    "agentAdvice": "建议立刻启动无人船采样与下游加密监测，调取排口视频并生成执法线索。"
+  }
+}

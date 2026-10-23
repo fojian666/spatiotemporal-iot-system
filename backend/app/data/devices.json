@@ -1,0 +1,971 @@
+{
+  "devices": [
+    {
+      "id": "WT-01",
+      "name": "平安驿区域气象站",
+      "shortName": "平安驿气象",
+      "kind": "weather",
+      "zone": "平安街道",
+      "lng": 102.10044,
+      "lat": 36.508829999999996,
+      "protocol": "LoRaWAN",
+      "model": "WS-6A 六要素站",
+      "status": "online",
+      "battery": 92,
+      "signal": 88,
+      "onlineSince": "近 63 天",
+      "metrics": [
+        {
+          "key": "temperature",
+          "label": "气温",
+          "unit": "°C",
+          "digits": 1,
+          "warn": 32,
+          "crit": 36,
+          "direction": "high"
+        },
+        {
+          "key": "humidity",
+          "label": "相对湿度",
+          "unit": "%",
+          "digits": 0,
+          "warn": 90,
+          "crit": 96,
+          "direction": "range",
+          "low": 25
+        },
+        {
+          "key": "wind",
+          "label": "风速",
+          "unit": "m/s",
+          "digits": 1,
+          "warn": 10,
+          "crit": 14,
+          "direction": "high"
+        },
+        {
+          "key": "pm25",
+          "label": "PM2.5",
+          "unit": "µg/m³",
+          "digits": 0,
+          "warn": 75,
+          "crit": 150,
+          "direction": "high"
+        }
+      ]
+    },
+    {
+      "id": "WT-02",
+      "name": "峡群林场小气候站",
+      "shortName": "峡群小气候",
+      "kind": "weather",
+      "zone": "峡群林场",
+      "lng": 102.18310500000001,
+      "lat": 36.467985,
+      "protocol": "NB-IoT",
+      "model": "HC-800 林区站",
+      "status": "online",
+      "battery": 78,
+      "signal": 71,
+      "onlineSince": "近 41 天",
+      "metrics": [
+        {
+          "key": "temperature",
+          "label": "气温",
+          "unit": "°C",
+          "digits": 1,
+          "warn": 32,
+          "crit": 36,
+          "direction": "high"
+        },
+        {
+          "key": "humidity",
+          "label": "相对湿度",
+          "unit": "%",
+          "digits": 0,
+          "warn": 90,
+          "crit": 96,
+          "direction": "range",
+          "low": 25
+        },
+        {
+          "key": "wind",
+          "label": "风速",
+          "unit": "m/s",
+          "digits": 1,
+          "warn": 10,
+          "crit": 14,
+          "direction": "high"
+        },
+        {
+          "key": "pm25",
+          "label": "PM2.5",
+          "unit": "µg/m³",
+          "digits": 0,
+          "warn": 75,
+          "crit": 150,
+          "direction": "high"
+        }
+      ]
+    },
+    {
+      "id": "SL-01",
+      "name": "洪水泉土壤墒情站",
+      "shortName": "洪水泉墒情",
+      "kind": "soil",
+      "zone": "洪水泉乡",
+      "lng": 102.03213,
+      "lat": 36.472815,
+      "protocol": "NB-IoT",
+      "model": "SM-4 墒情仪",
+      "status": "online",
+      "battery": 64,
+      "signal": 63,
+      "onlineSince": "近 29 天",
+      "metrics": [
+        {
+          "key": "moisture",
+          "label": "土壤含水率",
+          "unit": "%",
+          "digits": 0,
+          "warn": 20,
+          "crit": 12,
+          "direction": "low"
+        },
+        {
+          "key": "soilTemperature",
+          "label": "土壤温度",
+          "unit": "°C",
+          "digits": 1,
+          "warn": 33,
+          "crit": 38,
+          "direction": "high"
+        },
+        {
+          "key": "ec",
+          "label": "电导率",
+          "unit": "µS/cm",
+          "digits": 0,
+          "warn": 900,
+          "crit": 1400,
+          "direction": "high"
+        }
+      ]
+    },
+    {
+      "id": "WQ-01",
+      "name": "湟水河平安桥水质站",
+      "shortName": "平安桥水质",
+      "kind": "water",
+      "zone": "湟水河廊道",
+      "lng": 102.051765,
+      "lat": 36.511035,
+      "protocol": "5G / MQTT",
+      "model": "WQ-9 多参数浮标",
+      "status": "online",
+      "battery": 81,
+      "signal": 91,
+      "onlineSince": "近 120 天",
+      "metrics": [
+        {
+          "key": "ph",
+          "label": "pH",
+          "unit": "",
+          "digits": 2,
+          "warn": 8.6,
+          "crit": 9,
+          "direction": "range",
+          "low": 6.2
+        },
+        {
+          "key": "turbidity",
+          "label": "浊度",
+          "unit": "NTU",
+          "digits": 0,
+          "warn": 45,
+          "crit": 90,
+          "direction": "high"
+        },
+        {
+          "key": "ammonia",
+          "label": "氨氮",
+          "unit": "mg/L",
+          "digits": 2,
+          "warn": 1,
+          "crit": 2,
+          "direction": "high"
+        },
+        {
+          "key": "level",
+          "label": "水位",
+          "unit": "m",
+          "digits": 2,
+          "warn": 3.2,
+          "crit": 3.8,
+          "direction": "high"
+        },
+        {
+          "key": "oxygen",
+          "label": "溶解氧",
+          "unit": "mg/L",
+          "digits": 1,
+          "warn": 5,
+          "crit": 3,
+          "direction": "low"
+        }
+      ]
+    },
+    {
+      "id": "WQ-02",
+      "name": "白沈沟入河口监测站",
+      "shortName": "白沈沟入河",
+      "kind": "water",
+      "zone": "三合镇",
+      "lng": 102.07932000000001,
+      "lat": 36.494025,
+      "protocol": "NB-IoT",
+      "model": "WQ-6 岸边站",
+      "status": "online",
+      "battery": 73,
+      "signal": 76,
+      "onlineSince": "近 88 天",
+      "metrics": [
+        {
+          "key": "ph",
+          "label": "pH",
+          "unit": "",
+          "digits": 2,
+          "warn": 8.6,
+          "crit": 9,
+          "direction": "range",
+          "low": 6.2
+        },
+        {
+          "key": "turbidity",
+          "label": "浊度",
+          "unit": "NTU",
+          "digits": 0,
+          "warn": 45,
+          "crit": 90,
+          "direction": "high"
+        },
+        {
+          "key": "ammonia",
+          "label": "氨氮",
+          "unit": "mg/L",
+          "digits": 2,
+          "warn": 1,
+          "crit": 2,
+          "direction": "high"
+        },
+        {
+          "key": "oxygen",
+          "label": "溶解氧",
+          "unit": "mg/L",
+          "digits": 1,
+          "warn": 5,
+          "crit": 3,
+          "direction": "low"
+        }
+      ]
+    },
+    {
+      "id": "WQ-03",
+      "name": "东沟水库水质浮标",
+      "shortName": "东沟水库",
+      "kind": "water",
+      "zone": "东沟水库",
+      "lng": 102.14598,
+      "lat": 36.47964,
+      "protocol": "4G / MQTT",
+      "model": "WQ-9 多参数浮标",
+      "status": "online",
+      "battery": 89,
+      "signal": 82,
+      "onlineSince": "近 75 天",
+      "metrics": [
+        {
+          "key": "ph",
+          "label": "pH",
+          "unit": "",
+          "digits": 2,
+          "warn": 8.6,
+          "crit": 9,
+          "direction": "range",
+          "low": 6.2
+        },
+        {
+          "key": "turbidity",
+          "label": "浊度",
+          "unit": "NTU",
+          "digits": 0,
+          "warn": 45,
+          "crit": 90,
+          "direction": "high"
+        },
+        {
+          "key": "level",
+          "label": "水位",
+          "unit": "m",
+          "digits": 2,
+          "warn": 3.2,
+          "crit": 3.8,
+          "direction": "high"
+        },
+        {
+          "key": "oxygen",
+          "label": "溶解氧",
+          "unit": "mg/L",
+          "digits": 1,
+          "warn": 5,
+          "crit": 3,
+          "direction": "low"
+        }
+      ]
+    },
+    {
+      "id": "WQ-04",
+      "name": "污水处理厂排口站",
+      "shortName": "污水厂排口",
+      "kind": "water",
+      "zone": "富硒产业园",
+      "lng": 102.12386999999998,
+      "lat": 36.48615,
+      "protocol": "5G / Modbus",
+      "model": "IP-8 工业排口机",
+      "status": "warning",
+      "battery": 58,
+      "signal": 84,
+      "onlineSince": "近 132 天",
+      "note": "浊度近 24h 缓慢上升",
+      "metrics": [
+        {
+          "key": "ph",
+          "label": "pH",
+          "unit": "",
+          "digits": 2,
+          "warn": 8.6,
+          "crit": 9,
+          "direction": "range",
+          "low": 6.2
+        },
+        {
+          "key": "turbidity",
+          "label": "浊度",
+          "unit": "NTU",
+          "digits": 0,
+          "warn": 45,
+          "crit": 90,
+          "direction": "high"
+        },
+        {
+          "key": "ammonia",
+          "label": "氨氮",
+          "unit": "mg/L",
+          "digits": 2,
+          "warn": 1,
+          "crit": 2,
+          "direction": "high"
+        },
+        {
+          "key": "level",
+          "label": "水位",
+          "unit": "m",
+          "digits": 2,
+          "warn": 3.2,
+          "crit": 3.8,
+          "direction": "high"
+        }
+      ]
+    },
+    {
+      "id": "AQ-01",
+      "name": "城区空气质量微站",
+      "shortName": "城区空气",
+      "kind": "air",
+      "zone": "平安街道",
+      "lng": 102.09697500000001,
+      "lat": 36.50295,
+      "protocol": "LoRaWAN",
+      "model": "AQ-4 微型站",
+      "status": "online",
+      "battery": 85,
+      "signal": 90,
+      "onlineSince": "近 205 天",
+      "metrics": [
+        {
+          "key": "pm25",
+          "label": "PM2.5",
+          "unit": "µg/m³",
+          "digits": 0,
+          "warn": 75,
+          "crit": 150,
+          "direction": "high"
+        },
+        {
+          "key": "pm10",
+          "label": "PM10",
+          "unit": "µg/m³",
+          "digits": 0,
+          "warn": 150,
+          "crit": 250,
+          "direction": "high"
+        },
+        {
+          "key": "temperature",
+          "label": "气温",
+          "unit": "°C",
+          "digits": 1,
+          "warn": 32,
+          "crit": 36,
+          "direction": "high"
+        },
+        {
+          "key": "humidity",
+          "label": "相对湿度",
+          "unit": "%",
+          "digits": 0,
+          "warn": 90,
+          "crit": 96,
+          "direction": "range",
+          "low": 25
+        }
+      ]
+    },
+    {
+      "id": "AQ-02",
+      "name": "富硒产业园空气站",
+      "shortName": "富硒园空气",
+      "kind": "air",
+      "zone": "富硒产业园",
+      "lng": 102.13822499999999,
+      "lat": 36.5124,
+      "protocol": "NB-IoT",
+      "model": "AQ-4 微型站",
+      "status": "offline",
+      "battery": 12,
+      "signal": 0,
+      "note": "离线 · 边缘网关心跳丢失",
+      "metrics": [
+        {
+          "key": "pm25",
+          "label": "PM2.5",
+          "unit": "µg/m³",
+          "digits": 0,
+          "warn": 75,
+          "crit": 150,
+          "direction": "high"
+        },
+        {
+          "key": "pm10",
+          "label": "PM10",
+          "unit": "µg/m³",
+          "digits": 0,
+          "warn": 150,
+          "crit": 250,
+          "direction": "high"
+        },
+        {
+          "key": "temperature",
+          "label": "气温",
+          "unit": "°C",
+          "digits": 1,
+          "warn": 32,
+          "crit": 36,
+          "direction": "high"
+        },
+        {
+          "key": "humidity",
+          "label": "相对湿度",
+          "unit": "%",
+          "digits": 0,
+          "warn": 90,
+          "crit": 96,
+          "direction": "range",
+          "low": 25
+        }
+      ]
+    },
+    {
+      "id": "SL-02",
+      "name": "祁家川边坡位移计",
+      "shortName": "祁家川边坡",
+      "kind": "geology",
+      "zone": "三合镇",
+      "lng": 102.06545999999999,
+      "lat": 36.480375,
+      "protocol": "LoRaWAN",
+      "model": "GD-3 地质灾害仪",
+      "status": "online",
+      "battery": 69,
+      "signal": 59,
+      "onlineSince": "近 56 天",
+      "metrics": [
+        {
+          "key": "displacement",
+          "label": "累计位移",
+          "unit": "mm",
+          "digits": 1,
+          "warn": 8,
+          "crit": 15,
+          "direction": "high"
+        },
+        {
+          "key": "crack",
+          "label": "裂缝宽度",
+          "unit": "mm",
+          "digits": 2,
+          "warn": 3,
+          "crit": 6,
+          "direction": "high"
+        },
+        {
+          "key": "tilt",
+          "label": "倾角",
+          "unit": "°",
+          "digits": 2,
+          "warn": 1.5,
+          "crit": 3,
+          "direction": "high"
+        }
+      ]
+    },
+    {
+      "id": "SL-03",
+      "name": "峡群沟泥石流监测站",
+      "shortName": "峡群沟地灾",
+      "kind": "geology",
+      "zone": "峡群林场",
+      "lng": 102.16297499999999,
+      "lat": 36.476805000000006,
+      "protocol": "北斗短报文",
+      "model": "DF-7 泥石流站",
+      "status": "online",
+      "battery": 74,
+      "signal": 52,
+      "onlineSince": "近 33 天",
+      "metrics": [
+        {
+          "key": "displacement",
+          "label": "累计位移",
+          "unit": "mm",
+          "digits": 1,
+          "warn": 8,
+          "crit": 15,
+          "direction": "high"
+        },
+        {
+          "key": "crack",
+          "label": "裂缝宽度",
+          "unit": "mm",
+          "digits": 2,
+          "warn": 3,
+          "crit": 6,
+          "direction": "high"
+        },
+        {
+          "key": "tilt",
+          "label": "倾角",
+          "unit": "°",
+          "digits": 2,
+          "warn": 1.5,
+          "crit": 3,
+          "direction": "high"
+        }
+      ]
+    },
+    {
+      "id": "CAM-01",
+      "name": "平安驿高点视频",
+      "shortName": "平安驿视频",
+      "kind": "video",
+      "zone": "平安街道",
+      "lng": 102.102915,
+      "lat": 36.507464999999996,
+      "protocol": "GB/T 28181",
+      "model": "球机 · 4K 45×",
+      "status": "online",
+      "battery": 100,
+      "signal": 95,
+      "onlineSince": "近 360 天",
+      "metrics": []
+    },
+    {
+      "id": "CAM-02",
+      "name": "湟水河桥视频点位",
+      "shortName": "湟水河视频",
+      "kind": "video",
+      "zone": "湟水河廊道",
+      "lng": 102.055065,
+      "lat": 36.510405,
+      "protocol": "GB/T 28181",
+      "model": "枪机 · 4K",
+      "status": "online",
+      "battery": 100,
+      "signal": 92,
+      "onlineSince": "近 360 天",
+      "metrics": []
+    },
+    {
+      "id": "CAM-03",
+      "name": "东沟水库视频点位",
+      "shortName": "东沟视频",
+      "kind": "video",
+      "zone": "东沟水库",
+      "lng": 102.14251499999999,
+      "lat": 36.481215,
+      "protocol": "GB/T 28181",
+      "model": "球机 · 4K",
+      "status": "online",
+      "battery": 100,
+      "signal": 79,
+      "onlineSince": "近 360 天",
+      "metrics": []
+    },
+    {
+      "id": "UAV-01",
+      "name": "无人机机场 · 平安驿",
+      "shortName": "平安驿机场",
+      "kind": "drone",
+      "zone": "平安街道",
+      "lng": 102.08988000000001,
+      "lat": 36.506205,
+      "protocol": "5G / MAVLink",
+      "model": "M350 + H20T",
+      "status": "online",
+      "battery": 86,
+      "signal": 96,
+      "onlineSince": "持续值守",
+      "metrics": []
+    },
+    {
+      "id": "UAV-02",
+      "name": "无人机 · 峡群林场",
+      "shortName": "峡群无人机",
+      "kind": "drone",
+      "zone": "峡群林场",
+      "lng": 102.17568,
+      "lat": 36.472500000000004,
+      "protocol": "4G / MAVLink",
+      "model": "M30T 热成像",
+      "status": "online",
+      "battery": 72,
+      "signal": 68,
+      "onlineSince": "持续值守",
+      "metrics": []
+    },
+    {
+      "id": "UGV-01",
+      "name": "巡护无人车 · 富硒园",
+      "shortName": "富硒园无人车",
+      "kind": "ugv",
+      "zone": "富硒产业园",
+      "lng": 102.132615,
+      "lat": 36.509775,
+      "protocol": "5G / ROS2",
+      "model": "Rover-X 履带车",
+      "status": "online",
+      "battery": 66,
+      "signal": 87,
+      "onlineSince": "近 6 小时",
+      "metrics": []
+    },
+    {
+      "id": "USV-01",
+      "name": "采样无人船 · 东沟水库",
+      "shortName": "东沟无人船",
+      "kind": "usv",
+      "zone": "东沟水库",
+      "lng": 102.14862,
+      "lat": 36.478275,
+      "protocol": "4G / MQTT",
+      "model": "USV-2 采样船",
+      "status": "online",
+      "battery": 47,
+      "signal": 74,
+      "onlineSince": "近 2 小时",
+      "metrics": []
+    },
+    {
+      "id": "SAT-01",
+      "name": "高分六号 · 过境任务",
+      "shortName": "高分六号",
+      "kind": "satellite",
+      "zone": "天基",
+      "lng": 102.07635,
+      "lat": 36.531825,
+      "protocol": "X 波段数传",
+      "model": "GF-6 · 2m 多光谱",
+      "status": "online",
+      "battery": 100,
+      "signal": 100,
+      "onlineSince": "过境窗口",
+      "metrics": []
+    },
+    {
+      "id": "GW-01",
+      "name": "边缘网关 · 平安街道",
+      "shortName": "平安边缘节点",
+      "kind": "gateway",
+      "zone": "平安街道",
+      "lng": 102.09483,
+      "lat": 36.503685,
+      "protocol": "MQTT / OPC UA",
+      "model": "EdgeBox-500",
+      "status": "online",
+      "battery": 100,
+      "signal": 99,
+      "onlineSince": "近 220 天",
+      "metrics": []
+    },
+    {
+      "id": "GW-02",
+      "name": "边缘网关 · 三合镇",
+      "shortName": "三合边缘节点",
+      "kind": "gateway",
+      "zone": "三合镇",
+      "lng": 102.06842999999999,
+      "lat": 36.487199999999994,
+      "protocol": "MQTT / CoAP",
+      "model": "EdgeBox-500",
+      "status": "online",
+      "battery": 100,
+      "signal": 93,
+      "onlineSince": "近 186 天",
+      "metrics": []
+    }
+  ],
+  "routes": {
+    "river": [
+      {
+        "lng": 102.08988000000001,
+        "lat": 36.506205,
+        "name": "平安驿机场",
+        "action": "自动起飞",
+        "altitude": 0
+      },
+      {
+        "lng": 102.07932000000001,
+        "lat": 36.507884999999995,
+        "name": "白沈沟汇口",
+        "action": "水质复核",
+        "altitude": 120
+      },
+      {
+        "lng": 102.06743999999999,
+        "lat": 36.510194999999996,
+        "name": "湟水河桥",
+        "action": "多光谱拍照",
+        "altitude": 120
+      },
+      {
+        "lng": 102.055065,
+        "lat": 36.510405,
+        "name": "平安桥断面",
+        "action": "悬停采样",
+        "altitude": 90
+      },
+      {
+        "lng": 102.07535999999999,
+        "lat": 36.504000000000005,
+        "name": "祁家川边坡",
+        "action": "边坡巡检",
+        "altitude": 140
+      },
+      {
+        "lng": 102.09483,
+        "lat": 36.503265,
+        "name": "平安街道",
+        "action": "热成像扫描",
+        "altitude": 150
+      },
+      {
+        "lng": 102.11133,
+        "lat": 36.504315,
+        "name": "富硒产业园",
+        "action": "巡航",
+        "altitude": 130
+      },
+      {
+        "lng": 102.08988000000001,
+        "lat": 36.506205,
+        "name": "平安驿机场",
+        "action": "自动降落",
+        "altitude": 0
+      }
+    ],
+    "forest": [
+      {
+        "lng": 102.17568,
+        "lat": 36.472500000000004,
+        "name": "峡群临时起降点",
+        "action": "垂直起飞",
+        "altitude": 0
+      },
+      {
+        "lng": 102.17172000000001,
+        "lat": 36.478065,
+        "name": "林场西坡",
+        "action": "热红外扫描",
+        "altitude": 180
+      },
+      {
+        "lng": 102.18112499999998,
+        "lat": 36.482685,
+        "name": "林场核心区",
+        "action": "热点复核",
+        "altitude": 160
+      },
+      {
+        "lng": 102.18987,
+        "lat": 36.477645,
+        "name": "林场北沟",
+        "action": "烟雾识别",
+        "altitude": 180
+      },
+      {
+        "lng": 102.17568,
+        "lat": 36.472500000000004,
+        "name": "峡群临时起降点",
+        "action": "返航",
+        "altitude": 0
+      }
+    ],
+    "ugv": [
+      {
+        "lng": 102.132615,
+        "lat": 36.509775,
+        "name": "富硒园东门"
+      },
+      {
+        "lng": 102.13773,
+        "lat": 36.508095,
+        "name": "温室 3 号"
+      },
+      {
+        "lng": 102.13542,
+        "lat": 36.505785,
+        "name": "土壤采样点"
+      },
+      {
+        "lng": 102.12980999999999,
+        "lat": 36.50694,
+        "name": "灌溉泵站"
+      },
+      {
+        "lng": 102.132615,
+        "lat": 36.509775,
+        "name": "富硒园东门"
+      }
+    ],
+    "usv": [
+      {
+        "lng": 102.14862,
+        "lat": 36.478275,
+        "name": "东沟码头"
+      },
+      {
+        "lng": 102.15241499999999,
+        "lat": 36.480165,
+        "name": "库心采样点"
+      },
+      {
+        "lng": 102.15753000000001,
+        "lat": 36.478590000000004,
+        "name": "东岸剖面"
+      },
+      {
+        "lng": 102.15092999999999,
+        "lat": 36.477015,
+        "name": "坝前监测点"
+      },
+      {
+        "lng": 102.14862,
+        "lat": 36.478275,
+        "name": "东沟码头"
+      }
+    ]
+  },
+  "fences": [
+    {
+      "id": "fence-water",
+      "name": "东沟水库水源保护区",
+      "level": "一级管控",
+      "color": "#4be1ff",
+      "coordinates": [
+        [
+          102.13376999999998,
+          36.484365
+        ],
+        [
+          102.14268,
+          36.48657
+        ],
+        [
+          102.15637499999998,
+          36.485414999999996
+        ],
+        [
+          102.16231499999999,
+          36.48048
+        ],
+        [
+          102.154065,
+          36.474285
+        ],
+        [
+          102.14036999999999,
+          36.47397
+        ],
+        [
+          102.13228500000001,
+          36.478170000000006
+        ],
+        [
+          102.13376999999998,
+          36.484365
+        ]
+      ]
+    },
+    {
+      "id": "fence-forest",
+      "name": "峡群林场防火核心区",
+      "level": "禁飞 / 限入",
+      "color": "#ffbc5c",
+      "coordinates": [
+        [
+          102.16578,
+          36.488985
+        ],
+        [
+          102.18228,
+          36.4914
+        ],
+        [
+          102.19547999999999,
+          36.484680000000004
+        ],
+        [
+          102.192015,
+          36.472395
+        ],
+        [
+          102.17402999999999,
+          36.468615
+        ],
+        [
+          102.16346999999999,
+          36.475335
+        ],
+        [
+          102.16578,
+          36.488985
+        ]
+      ]
+    }
+  ],
+  "center": [
+    102.111,
+    36.4935
+  ]
+}
