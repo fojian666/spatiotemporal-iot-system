@@ -45,7 +45,9 @@ import { useSimulation } from '../engine/simulation';
 import type { DeviceKind } from '../data/devices';
 import {
   createDronePlan,
+  deleteDroneRoute,
   fetchDroneOverview,
+  REMOTE_ENABLED,
   saveDroneRoute,
   sendDroneCommand,
   updateDroneClue,
@@ -192,6 +194,10 @@ export function DroneOpsPage() {
   }, []);
 
   useEffect(() => {
+    if (!REMOTE_ENABLED) {
+      setLoading(false);
+      return undefined;
+    }
     void load();
     return () => {
       if (toastTimer.current) window.clearTimeout(toastTimer.current);
@@ -242,6 +248,17 @@ export function DroneOpsPage() {
         ...current,
         routes: isNew ? [route, ...current.routes] : current.routes.map((item) => (item.id === route.id ? route : item)),
         counts: { ...current.counts, routes: isNew ? current.counts.routes + 1 : current.counts.routes },
+      };
+    });
+  }, []);
+
+  const removeRoute = useCallback((routeId: string) => {
+    setData((current) => {
+      if (!current) return current;
+      return {
+        ...current,
+        routes: current.routes.filter((item) => item.id !== routeId),
+        counts: { ...current.counts, routes: Math.max(0, current.counts.routes - 1) },
       };
     });
   }, []);
@@ -362,7 +379,19 @@ export function DroneOpsPage() {
         </div>
       </div>
 
-      {loading && !data && (
+      {!REMOTE_ENABLED && (
+        <div className="ops-loading">
+          <Plane size={22} />
+          <strong>一网统飞需要完整后端服务</strong>
+          <p>
+            当前为浏览器本地演示模式（VITE_DATA_SOURCE=local）。航线、计划、实时飞控与 AI 线索依赖
+            FastAPI + PostGIS + MQTT 实时链路；启动 backend/run.sh 并把 .env.local 设置为
+            <span className="mono"> VITE_DATA_SOURCE=api</span> 后刷新即可接入。
+          </p>
+        </div>
+      )}
+
+      {REMOTE_ENABLED && loading && !data && (
         <div className="ops-loading">
           <span className="is-spinning"><RefreshCw size={20} /></span>
           <strong>正在装载无人机作业数据</strong>
@@ -370,7 +399,7 @@ export function DroneOpsPage() {
         </div>
       )}
 
-      {error && !data && (
+      {REMOTE_ENABLED && error && !data && (
         <div className="ops-loading ops-loading--error">
           <CircleAlert size={22} />
           <strong>一网统飞数据加载失败</strong>
@@ -406,10 +435,12 @@ export function DroneOpsPage() {
             <RoutesView
               data={data}
               canOperate={canOperate}
+              notify={notify}
               onSaved={(route, isNew) => {
                 saveRouteResult(route, isNew);
                 notify(`航线「${route.name}」已保存`);
               }}
+              onDeleted={removeRoute}
             />
           )}
           {tab === 'flight' && (
@@ -645,6 +676,8 @@ function PlansView({
   const [filter, setFilter] = useState<'active' | 'ended' | 'all'>('all');
   const [query, setQuery] = useState('');
   const [modalOpen, setModalOpen] = useState(false);
+  const [detailId, setDetailId] = useState<string | null>(null);
+  const detail = detailId ? data.plans.find((item) => item.id === detailId) ?? null : null;
   const unfinished = data.plans.filter((plan) => plan.status === '未开始' || plan.status === '执行中' || plan.status === '已暂停');
   const finished = data.plans.filter((plan) => plan.status === '已完成' || plan.status === '执行失败');
   const source = filter === 'active' ? unfinished : filter === 'ended' ? finished : data.plans;
@@ -695,7 +728,7 @@ function PlansView({
                 </span>
                 <span className="plan-actions">
                   <button type="button" className="btn btn--sm" onClick={() => onExecute(plan)}>{plan.status === '已完成' ? '查看' : '执行'}</button>
-                  <button type="button" className="icon-btn" title="计划详情"><ChevronRight size={13} /></button>
+                  <button type="button" className="icon-btn" title="计划详情" onClick={() => setDetailId(plan.id)}><ChevronRight size={13} /></button>
                 </span>
               </div>
             );
@@ -714,6 +747,36 @@ function PlansView({
             onCreated(plan);
           }}
         />
+      )}
+
+      {detail && (
+        <OpsModal title={detail.name} subtitle="FLIGHT PLAN DETAIL" onClose={() => setDetailId(null)}>
+          <div className="media-preview__rows">
+            <div><span>计划编号</span><strong className="mono">{detail.id}</strong></div>
+            <div><span>当前状态</span><strong><PlanStatus status={detail.status} /></strong></div>
+            <div><span>关联航线</span><strong>{detail.routeName}</strong></div>
+            <div><span>执行设备</span><strong className="mono">{detail.deviceId}</strong></div>
+            <div><span>任务类型</span><strong>{detail.taskType}</strong></div>
+            <div><span>计划开始</span><strong>{formatDateTime(detail.plannedStart)}</strong></div>
+            <div><span>计划结束</span><strong>{formatDateTime(detail.plannedEnd)}</strong></div>
+            <div><span>实际开始</span><strong>{formatDateTime(detail.actualStart)}</strong></div>
+            <div><span>实际结束</span><strong>{formatDateTime(detail.actualEnd)}</strong></div>
+            <div><span>媒体上传</span><strong className="mono">{detail.mediaUploaded} / {detail.mediaTotal || 0}</strong></div>
+            <div><span>创建时间</span><strong>{formatDateTime(detail.createdAt)}</strong></div>
+          </div>
+          {(() => {
+            const route = data.routes.find((item) => item.id === detail.routeId);
+            return route ? (
+              <div className="ops-form__hint mono">
+                {route.waypoints.length} WAYPOINTS · {distanceKm(route.waypoints).toFixed(2)} KM · 巡航 {route.altitude} M · {route.speed} M/S
+              </div>
+            ) : null;
+          })()}
+          <div className="ops-form__actions">
+            <button type="button" className="btn btn--sm" onClick={() => setDetailId(null)}>关闭</button>
+            <button type="button" className="btn btn--primary btn--sm" onClick={() => { setDetailId(null); onExecute(detail); }}>进入飞控 <ChevronRight size={11} /></button>
+          </div>
+        </OpsModal>
       )}
     </div>
   );
@@ -809,11 +872,15 @@ function PlanModal({
 function RoutesView({
   data,
   canOperate,
+  notify,
   onSaved,
+  onDeleted,
 }: {
   data: DroneOverview;
   canOperate: boolean;
+  notify: (message: string) => void;
   onSaved: (route: DroneRoute, isNew: boolean) => void;
+  onDeleted: (routeId: string) => void;
 }) {
   const [selectedId, setSelectedId] = useState<string | null>(data.routes[0]?.id ?? null);
   const [isNew, setIsNew] = useState(!data.routes.length);
@@ -873,8 +940,27 @@ function RoutesView({
         gimbalPitch: saved.gimbalPitch,
       });
       onSaved(saved, wasNew);
+    } catch (reason) {
+      notify(reason instanceof Error ? reason.message : '航线保存失败');
     } finally {
       setSaving(false);
+    }
+  };
+
+  const remove = async (route: DroneRoute) => {
+    if (!canOperate) return;
+    if (!window.confirm(`删除航线「${route.name}」？已被飞行计划引用的航线无法删除。`)) return;
+    try {
+      await deleteDroneRoute(route.id);
+      onDeleted(route.id);
+      if (selectedId === route.id) {
+        const rest = data.routes.filter((item) => item.id !== route.id);
+        if (rest.length) selectRoute(rest[0]);
+        else startNew();
+      }
+      notify(`航线「${route.name}」已删除`);
+    } catch (reason) {
+      notify(reason instanceof Error ? reason.message : '航线删除失败');
     }
   };
 
@@ -886,16 +972,36 @@ function RoutesView({
           <button type="button" className="btn btn--sm" disabled={!canOperate} onClick={startNew}><Plus size={12} /> 新建</button>
         </div>
         {data.routes.map((route) => (
-          <button
-            type="button"
+          <div
             key={route.id}
+            role="button"
+            tabIndex={0}
             className={`route-card ${selectedId === route.id ? 'is-active' : ''}`}
             onClick={() => selectRoute(route)}
+            onKeyDown={(event) => {
+              if (event.key === 'Enter' || event.key === ' ') {
+                event.preventDefault();
+                selectRoute(route);
+              }
+            }}
           >
             <span className="route-card__icon"><RouteIcon size={14} /></span>
             <span className="route-card__name"><strong>{route.name}</strong><em>{route.routeType} · {route.waypoints.length} 航点</em></span>
             <span className="route-card__meta mono">{distanceKm(route.waypoints).toFixed(1)} km<ChevronRight size={11} /></span>
-          </button>
+            <button
+              type="button"
+              className="icon-btn"
+              disabled={!canOperate}
+              title={canOperate ? '删除航线' : '观察员为只读角色'}
+              aria-label={`删除航线 ${route.name}`}
+              onClick={(event) => {
+                event.stopPropagation();
+                void remove(route);
+              }}
+            >
+              <Trash2 size={12} />
+            </button>
+          </div>
         ))}
         {isNew && (
           <div className="route-card is-draft">
