@@ -79,6 +79,10 @@ class TelemetryStore:
         )
         self.last_history_at = now
         self.last_ingest_at: datetime | None = None
+        if not settings.simulation_enabled:
+            # Live mode: no synthetic pre-seed; charts fill once real data arrives.
+            self.history = []
+            self.events = deque(maxlen=8)
 
     def ingest(self, payload: dict[str, Any]) -> None:
         device_id = payload.get("device_id")
@@ -109,6 +113,31 @@ class TelemetryStore:
             if self.tick % 9 == 0:
                 templates = SCENARIO_EVENT_TEXT.get(self.scenario_key, SCENARIO_EVENT_TEXT["normal"])
                 self.add_event(templates[self.tick % len(templates)], "data", now)
+
+    def sample_real_history(self) -> None:
+        """Live mode: append a trend point averaged from the latest received readings."""
+        now = now_local()
+        with self.lock:
+            self.sim_time = now
+            self.tick += 1
+            if not self.readings:
+                return
+
+            def average(key: str) -> float:
+                values = [m[key] for m in self.readings.values() if isinstance(m.get(key), (int, float))]
+                return sum(values) / len(values) if values else 0.0
+
+            point = {
+                "ts": int(now.timestamp() * 1000),
+                "t": clock(now),
+                "temperature": round(average("temperature"), 1),
+                "humidity": round(average("humidity")),
+                "pm25": round(average("pm25")),
+                "waterLevel": round(average("level"), 2),
+                "turbidity": round(average("turbidity")),
+                "ph": round(average("ph"), 2),
+            }
+            self.history = self.history[-(settings.history_size - 1) :] + [point]
 
     def add_event(self, text: str, event_type: str, when: datetime | None = None) -> None:
         timestamp = when or now_local()
@@ -155,14 +184,25 @@ class TelemetryStore:
     def snapshot(self, mqtt: MQTTBridge) -> dict[str, Any]:
         now = now_local()
         with self.lock:
-            statuses = {
-                device["id"]: derive_status(
-                    device,
-                    self.readings.get(device["id"], {}),
-                    self.scenario_key,
-                )
-                for device in DEVICES
-            }
+            if settings.simulation_enabled:
+                statuses = {
+                    device["id"]: derive_status(
+                        device,
+                        self.readings.get(device["id"], {}),
+                        self.scenario_key,
+                    )
+                    for device in DEVICES
+                }
+            else:
+                # Live mode: a device that has not reported yet is simply absent.
+                statuses = {
+                    device["id"]: (
+                        derive_status(device, self.readings[device["id"]], self.scenario_key)
+                        if device["id"] in self.readings
+                        else "offline"
+                    )
+                    for device in DEVICES
+                }
             stats = compute_stats(statuses, self.readings, self.alerts, self.tick, self.scenario_key)
             alerts = [
                 {
@@ -205,7 +245,8 @@ class TelemetryService:
         self._thread: threading.Thread | None = None
         self._started_at = time.time()
         # Populate immediately so the first API request has real values.
-        self._simulate_once()
+        if settings.simulation_enabled:
+            self._simulate_once()
 
     def _simulate_once(self) -> None:
         now = now_local()
@@ -230,12 +271,30 @@ class TelemetryService:
             elapsed = time.monotonic() - started
             self._stop.wait(max(0.05, settings.simulation_interval_seconds - elapsed))
 
+    def _run_live(self) -> None:
+        """Live mode: advance the clock and sample history from received readings."""
+        while not self._stop.is_set():
+            try:
+                self.store.sample_real_history()
+            except Exception:  # noqa: BLE001
+                logger.exception("Live history sampling failed")
+            self._stop.wait(settings.history_interval_seconds)
+
     def start(self) -> None:
         self.mqtt.start()
         if self._thread is None:
-            self._thread = threading.Thread(target=self._run, name="iot-simulator", daemon=True)
+            simulated = settings.simulation_enabled
+            self._thread = threading.Thread(
+                target=self._run if simulated else self._run_live,
+                name="iot-simulator" if simulated else "iot-live-sampler",
+                daemon=True,
+            )
             self._thread.start()
-        logger.info("Telemetry service started (scenario=%s)", self.store.scenario_key)
+        logger.info(
+            "Telemetry service started (scenario=%s, mode=%s)",
+            self.store.scenario_key,
+            "simulated" if settings.simulation_enabled else "live",
+        )
 
     def stop(self) -> None:
         self._stop.set()
@@ -281,6 +340,7 @@ class TelemetryService:
             "running": self.store.running,
             "scenario": self.store.scenario_key,
             "tick": self.store.tick,
+            "mode": "simulated" if settings.simulation_enabled else "live",
             "uptimeSeconds": round(time.time() - self._started_at, 1),
             "mqtt": self.mqtt.status(),
         }

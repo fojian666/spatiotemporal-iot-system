@@ -10,6 +10,7 @@ from typing import Any, Callable
 import paho.mqtt.client as mqtt
 
 from .config import settings
+from .schemas import DeviceReadingPayload
 
 
 logger = logging.getLogger(__name__)
@@ -25,6 +26,7 @@ class MQTTBridge:
         self.connected = False
         self.messages_received = 0
         self.messages_published = 0
+        self.messages_rejected = 0
         self.last_error: str | None = None
         self._stop = threading.Event()
         self._pub = mqtt.Client(
@@ -74,11 +76,14 @@ class MQTTBridge:
 
     def _on_message(self, client, userdata, message) -> None:
         try:
-            payload = json.loads(message.payload.decode("utf-8"))
-            self.messages_received += 1
-            self.on_reading(payload)
+            raw = json.loads(message.payload.decode("utf-8"))
+            payload = DeviceReadingPayload.model_validate(raw)
         except Exception as exc:  # noqa: BLE001
-            logger.exception("Failed to process MQTT message: %s", exc)
+            self.messages_rejected += 1
+            logger.warning("Rejected telemetry payload on %s: %s", message.topic, exc)
+            return
+        self.messages_received += 1
+        self.on_reading(payload.model_dump())
 
     def start(self) -> None:
         if not settings.mqtt_enabled:
@@ -126,6 +131,7 @@ class MQTTBridge:
             "connected": self.connected,
             "messagesReceived": self.messages_received,
             "messagesPublished": self.messages_published,
+            "messagesRejected": self.messages_rejected,
             "lastError": self.last_error,
             "host": f"{settings.mqtt_host}:{settings.mqtt_port}",
         }

@@ -55,6 +55,53 @@ npm install && npm run dev
 
 角色：`admin`（管理员）/ `operator`（值班长）/ `viewer`（观察员只读），账号密码由 `IOT_*_PASSWORD` 环境变量注入。
 
+## 接入真实设备（预留接口）
+
+后端默认用内置仿真驱动全链路。设置 `IOT_SIMULATION_ENABLED=false` 后进入**只接收模式**：仿真引擎停用，真实设备经 MQTT 上报的数据直接驱动内存快照 → WebSocket 广播 → PostGIS 落库，前端零改动。该模式下未上报的设备显示为离线，趋势曲线从真实读数聚合采样。
+
+### 遥测消息契约（v1）
+
+设备向以下 topic 发布 JSON（QoS 1，MQTT over TLS）：
+
+```
+iot/pingan/devices/{device_id}/telemetry
+```
+
+```json
+{
+  "version": 1,
+  "device_id": "WQ-01",
+  "ts": "2026-10-24T10:00:00.000+08:00",
+  "scenario": "normal",
+  "metrics": { "ph": 7.62, "turbidity": 18, "level": 2.18 }
+}
+```
+
+| 字段 | 类型 | 说明 |
+|---|---|---|
+| version | int | 契约版本，当前为 1 |
+| device_id | string | 必须已在设备台账注册；未知设备消息被丢弃 |
+| ts | string \| null | ISO-8601 带时区；缺省使用服务端接收时间 |
+| scenario | string | 来源场景标签，默认 `normal` |
+| metrics | object | 指标名 → 数值，开放结构；阈值定义在设备台账 |
+
+契约由 `backend/app/schemas.py`（pydantic）强制校验，非法消息拒收并计数；`/api/health` 与快照里的 `mqtt.messagesReceived / messagesRejected` 可观测收包质量。
+
+### 设备注册与凭证
+
+1. 在 `backend/app/data/devices.json` 增加设备（id、坐标、指标阈值定义）；开发环境清空 `devices` 表后重启，由 seed 重新写入。
+2. 为设备侧创建独立 MQTT 账号（不要复用 `iot_backend`）：`mosquitto_passwd mosquitto/passwd <设备账号>`，并在 `mosquitto/acl` 为其授予 `topic readwrite iot/pingan/devices/#`。
+
+### 端到端验证
+
+```bash
+.venv/bin/python scripts/publish_device.py --device WQ-01 --seconds 30
+```
+
+脚本以**外部设备身份**（独立 MQTT 连接，不经过后端进程）按上述契约发布数据，配合只接收模式即可验证整条链路，也可作为真实设备接入的参考实现。
+
+> 告警 topic（`iot/pingan/alerts/{id}`）当前仅由后端发布、尚未开放外部订阅接入，作为后续扩展预留。
+
 ## 目录结构
 
 ```

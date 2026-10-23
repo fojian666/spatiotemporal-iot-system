@@ -49,6 +49,7 @@ class Settings(BaseSettings):
 
     tls_enabled: bool = False
 
+    simulation_enabled: bool = True
     simulation_interval_seconds: float = 1.0
     history_interval_seconds: int = 5
     history_size: int = 36
