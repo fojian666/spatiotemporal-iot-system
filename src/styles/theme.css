@@ -130,3 +130,26 @@ html[data-theme='light'] .map-hud-label {
 html[data-theme='light'] .map-hud-label em {
   color: #1e293b;
 }
+
+/* ===== 文本选择策略：大屏内容默认不可选，阅读/交互区可复制 ===== */
+.app-shell,
+.auth-screen,
+.boot-splash {
+  -webkit-user-select: none;
+  user-select: none;
+}
+/* 图片禁止拖拽带出 */
+.app-shell img {
+  -webkit-user-drag: none;
+  user-drag: none;
+}
+/* 白名单：文档中心正文（含代码命令）、Copilot 对话、输入框 */
+.docs-content,
+.docs-content *,
+.chat-bubble,
+.chat-bubble *,
+input,
+textarea {
+  -webkit-user-select: text;
+  user-select: text;
+}
