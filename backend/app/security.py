@@ -142,7 +142,9 @@ def consume_ws_ticket(ticket: str) -> tuple[int, int] | None:
 def check_login_rate(key: str) -> tuple[bool, int]:
     now = time.time()
     with _login_lock:
-        attempts = _login_attempts[key]
+        attempts = _login_attempts.get(key)
+        if not attempts:
+            return True, 0
         while attempts and now - attempts[0] > settings.login_window_seconds:
             attempts.popleft()
         if len(attempts) >= settings.login_max_attempts:
@@ -151,8 +153,18 @@ def check_login_rate(key: str) -> tuple[bool, int]:
 
 
 def record_login_failure(key: str) -> None:
+    now = time.time()
     with _login_lock:
-        _login_attempts[key].append(time.time())
+        _login_attempts[key].append(now)
+        if len(_login_attempts) > 256:
+            for stale in [
+                candidate
+                for candidate, attempts in _login_attempts.items()
+                if not attempts or now - attempts[-1] > settings.login_window_seconds
+            ]:
+                _login_attempts.pop(stale, None)
+            while len(_login_attempts) > 512:
+                _login_attempts.pop(next(iter(_login_attempts)), None)
 
 
 def clear_login_failures(key: str) -> None:

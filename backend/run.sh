@@ -37,8 +37,10 @@ if [[ "$TLS_FLAG" == "true" ]]; then
   exec .venv/bin/uvicorn app.main:app \
     --host 127.0.0.1 \
     --port "${IOT_API_PORT:-8443}" \
+    --no-proxy-headers \
     --ssl-certfile certs/server.pem \
     --ssl-keyfile certs/server-key.pem
 fi
 
-exec .venv/bin/uvicorn app.main:app --host 127.0.0.1 --port "${IOT_API_PORT:-8000}"
+# No reverse proxy fronts this demo; do not trust spoofable X-Forwarded-For.
+exec .venv/bin/uvicorn app.main:app --host 127.0.0.1 --port "${IOT_API_PORT:-8000}" --no-proxy-headers
