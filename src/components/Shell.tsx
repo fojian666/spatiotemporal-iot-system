@@ -3,6 +3,7 @@ import {
   Bot,
   Boxes,
   Clock3,
+  CloudCog,
   FlaskConical,
   LayoutDashboard,
   LogOut,
@@ -21,6 +22,7 @@ import { StatusPill } from './ui';
 const NAV = [
   { path: '/', label: '态势总览', en: 'OVERVIEW', icon: LayoutDashboard },
   { path: '/drone', label: '一网统飞', en: 'DRONE OPS', icon: Plane },
+  { path: '/platform', label: '平台服务', en: 'PLATFORM', icon: CloudCog },
   { path: '/simulation', label: '物联仿真', en: 'SIMULATION', icon: FlaskConical },
   { path: '/map', label: '时空一张图', en: 'GEO MAP', icon: MapIcon },
   { path: '/graph', label: '知识图谱', en: 'KNOWLEDGE', icon: Network },
@@ -30,6 +32,7 @@ const NAV = [
 const TITLES: Record<string, string> = {
   '/': '态势总览',
   '/drone': '一网统飞',
+  '/platform': '平台服务',
   '/simulation': '物联仿真',
   '/map': '时空一张图',
   '/graph': '知识图谱',

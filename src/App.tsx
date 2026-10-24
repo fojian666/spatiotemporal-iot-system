@@ -6,6 +6,7 @@ import { GeoMapPage } from './pages/GeoMap';
 import { KnowledgeGraphPage } from './pages/KnowledgeGraph';
 import { OverviewPage } from './pages/Overview';
 import { DroneOpsPage } from './pages/DroneOps';
+import { PlatformPage } from './pages/Platform';
 import { SimulationPage } from './pages/Simulation';
 
 export default function App() {
@@ -20,6 +21,7 @@ export default function App() {
             <Route path="/map" element={<GeoMapPage />} />
             <Route path="/graph" element={<KnowledgeGraphPage />} />
             <Route path="/copilot" element={<CopilotPage />} />
+            <Route path="/platform" element={<PlatformPage />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </Shell>

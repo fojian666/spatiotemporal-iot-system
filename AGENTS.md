@@ -36,11 +36,12 @@ backend/scripts/publish_device.py    # 以外部设备身份向 MQTT 灌数（�
 ## 关键文件地图
 
 ```
-src/App.tsx                  6 条一级路由：/ /drone /simulation /map /graph /copilot
+src/App.tsx                  7 条一级路由：/ /drone /platform /simulation /map /graph /copilot
 src/engine/simulation.tsx    双模式引擎（local 引擎 + remote WS 消费，同一 context 接口）
 src/services/llm.ts          "物联大模型"= 规则引擎（纯函数 askCopilot，无外部模型调用）
 src/services/api.ts          全部 API 客户端 + REMOTE_ENABLED/API_BASE
 src/pages/DroneOps.tsx       一网统飞（唯一强依赖后端的页面，local 模式显示指引）
+src/pages/Platform.tsx       平台服务控制台（对标 OneNET/CTWing/涂鸦：能力矩阵/物模型/教材映射）
 src/components/MapView.tsx   MapLibre + Esri 在线瓦片（离线环境无底图）
 backend/app/main.py          ~22 端点 + lifespan + 安全中间件三件套 + dist 静态挂载
 backend/app/drone_api.py     无人机域 REST（航线/计划/8 种飞控指令状态机/线索）
