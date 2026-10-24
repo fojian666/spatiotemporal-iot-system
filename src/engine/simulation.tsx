@@ -91,7 +91,7 @@ export interface SimContextValue {
   stats: SimStats;
   source: DataSource;
   linkStatus: LinkStatus;
-  setScenario: (key: ScenarioKey) => void;
+  setScenario: (key: ScenarioKey) => Promise<boolean>;
   setRunning: (running: boolean) => void;
   setSpeed: (speed: number) => void;
   cycleAlert: (id: string) => void;
@@ -529,10 +529,9 @@ function LocalSimulationProvider({ children }: { children: ReactNode }) {
   }, [tick, scenarioKey, simTime]);
 
   const applyScenario = useCallback(
-    (key: ScenarioKey) => {
+    async (key: ScenarioKey): Promise<boolean> => {
       setScenarioKey(key);
       setAlerts(buildAlerts(key, simTime));
-      setRunning(true);
       setEvents((current) => [
         {
           id: `scenario-${Date.now()}`,
@@ -542,6 +541,7 @@ function LocalSimulationProvider({ children }: { children: ReactNode }) {
         },
         ...current.slice(0, 7),
       ]);
+      return true;
     },
     [simTime],
   );
@@ -674,10 +674,15 @@ function RemoteSimulationProvider({ children }: { children: ReactNode }) {
     );
   }, [phase]);
 
-  const applyScenario = useCallback((key: ScenarioKey) => {
-    void postScenario(key)
-      .then((next) => setSnapshot(next))
-      .catch((error) => console.error('Scenario update failed', error));
+  const applyScenario = useCallback(async (key: ScenarioKey): Promise<boolean> => {
+    try {
+      const next = await postScenario(key);
+      setSnapshot(next);
+      return true;
+    } catch (error) {
+      console.error('Scenario update failed', error);
+      return false;
+    }
   }, []);
 
   const applyRunning = useCallback((nextRunning: boolean) => {
