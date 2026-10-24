@@ -124,9 +124,10 @@ export function OverviewPage() {
       animationEasingUpdate: 'cubicOut' as const,
       tooltip: {
         trigger: 'axis' as const,
-        backgroundColor: 'rgba(6,16,29,.94)',
-        borderColor: 'rgba(90,180,255,.2)',
-        textStyle: { color: '#dbeafe', fontSize: 11 },
+        backgroundColor: palette.tipBg,
+        borderColor: palette.tipBorder,
+        textStyle: { color: palette.tipText, fontSize: 11 },
+        confine: true,
         axisPointer: { type: 'line' as const, lineStyle: { color: 'rgba(75,225,255,.3)' } },
       },
       grid: { top: 26, left: 36, right: 34, bottom: 22 },

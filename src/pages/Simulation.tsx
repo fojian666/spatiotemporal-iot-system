@@ -120,9 +120,10 @@ export function SimulationPage() {
       animationEasingUpdate: 'cubicOut' as const,
       tooltip: {
         trigger: 'axis',
-        backgroundColor: 'rgba(6,16,29,.94)',
-        borderColor: 'rgba(90,180,255,.2)',
-        textStyle: { color: '#dbeafe', fontSize: 11 },
+        backgroundColor: palette.tipBg,
+        borderColor: palette.tipBorder,
+        textStyle: { color: palette.tipText, fontSize: 11 },
+        confine: true,
         axisPointer: { type: 'line', lineStyle: { color: 'rgba(75,225,255,.3)' } },
       },
       legend: {
