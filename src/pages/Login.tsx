@@ -17,9 +17,9 @@ import { useAuth } from '../auth/AuthContext';
 import { API_BASE, fetchDemoRoles, type DemoRoleInfo, type UserRole } from '../services/api';
 
 const ROLE_META: Record<UserRole, { label: string; note: string; icon: typeof ShieldCheck }> = {
-  admin: { label: '管理员', note: '全部权限', icon: ShieldCheck },
-  operator: { label: '值班长', note: '飞控与处置', icon: UserRound },
-  viewer: { label: '观察员', note: '只读查询', icon: Eye },
+  admin: { label: '管理员', note: '掌钥者 · 全局可动', icon: ShieldCheck },
+  operator: { label: '值班长', note: '执飞控 · 善处置', icon: UserRound },
+  viewer: { label: '观察员', note: '只读 · 观全局', icon: Eye },
 };
 
 export function LoginPage() {
@@ -118,9 +118,9 @@ export function LoginPage() {
 
       <main className="auth-card">
         <section className="auth-visual">
-          <span className="overline">AUTHORIZED OPERATIONS CONSOLE</span>
-          <h1>接入时空智能<br /><em>可信操作台</em></h1>
-          <p>面向低空感知、河流监测与无人系统的统一操作入口。身份、会话与设备链路由 JWT、角色权限与 MQTT ACL 保护。</p>
+          <span className="overline">WHERE THE RIVER MEETS THE SKY</span>
+          <h1>山河入网<br /><em>时空为证</em></h1>
+          <p>低空之翼、湟水之脉与无人系统于此汇流。每一次上报皆有签名，每一次指令皆有回响；身份、会话与设备链路，由 JWT、角色权限与 MQTT ACL 层层守护。</p>
 
           <div className="auth-protocols">
             <span><Fingerprint size={13} /> JWT 会话</span>
@@ -175,7 +175,7 @@ export function LoginPage() {
                 </span>
               </div>
             </div>
-            <em>3 SHELLS · 4 ELECTRONS</em>
+            <em>核守于中 · 电子巡于外</em>
           </div>
 
           <div className="auth-endpoint mono">
@@ -189,7 +189,7 @@ export function LoginPage() {
           <div className="auth-form-head">
             <span className="overline">IDENTITY VERIFICATION</span>
             <h2>登录操作台</h2>
-            <p>使用已分配的账号继续。观察员为只读角色。</p>
+            <p>凭已分配的账号入席；观察员只读——可观全局，不落一子。</p>
           </div>
 
           {demoRoles.length > 0 && (
@@ -220,7 +220,7 @@ export function LoginPage() {
                   );
                 })}
               </div>
-              <p className="auth-demo__hint">账号由服务端配置；点击直接签发对应角色会话，密码不会下发到浏览器。</p>
+              <p className="auth-demo__hint">账号由服务端保管；点击即以该角色入席，密码不下发浏览器。</p>
               <div className="auth-divider"><span>或使用账号密码登录</span></div>
             </div>
           )}
@@ -281,13 +281,13 @@ export function LoginPage() {
 
           <div className="auth-footnote">
             <LockKeyhole size={12} />
-            <span>本地演示环境 · 会话仅保存在当前标签页</span>
+            <span>本地演示环境 · 会话只留于此标签页，关窗即散</span>
           </div>
         </section>
       </main>
 
       <footer className="auth-footer mono">
-        <span>ONLINE GUARD · 21 NODES · 5 UNMANNED ASSETS</span>
+        <span>21 NODES AWAKE · 5 UNMANNED ASSETS ON PATROL</span>
         <span>FASTAPI / POSTGIS / MQTT / JWT</span>
       </footer>
     </div>
