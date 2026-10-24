@@ -21,7 +21,7 @@
   color: var(--teal);
   background: rgba(35, 230, 176, 0.045);
   font-family: var(--font-mono);
-  font-size: 8px;
+  font-size: 9.5px;
   letter-spacing: 0.04em;
 }
 
@@ -57,13 +57,13 @@
 }
 
 .ops-summary__label strong {
-  font-size: 12px;
+  font-size: 13.5px;
   font-weight: 500;
   color: #dff3ff;
 }
 
 .ops-summary__label > span:last-child {
-  font-size: 8px;
+  font-size: 9.5px;
   color: #557185;
 }
 
@@ -86,12 +86,12 @@
 }
 
 .ops-summary__item span {
-  font-size: 8.5px;
+  font-size: 10px;
   color: #648196;
 }
 
 .ops-summary__item strong {
-  font-size: 21px;
+  font-size: 22.5px;
   line-height: 1;
   font-weight: 500;
   color: var(--cyan);
@@ -111,7 +111,7 @@
 }
 
 .ops-summary__link > span {
-  font-size: 7.5px;
+  font-size: 9px;
   color: var(--teal);
 }
 
@@ -119,7 +119,7 @@
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  font-size: 9.5px;
+  font-size: 11px;
   color: #8ab6cf;
 }
 
@@ -155,13 +155,13 @@
   border-radius: 5px;
   border: 1px solid transparent;
   color: #6f8ca1;
-  font-size: 10px;
+  font-size: 11.5px;
   white-space: nowrap;
 }
 
 .ops-tab em {
   font-style: normal;
-  font-size: 6.5px;
+  font-size: 8px;
   letter-spacing: 0.08em;
   color: #3f5c70;
 }
@@ -176,7 +176,7 @@
   background: rgba(75, 225, 255, 0.1);
   color: var(--cyan);
   font-family: var(--font-mono);
-  font-size: 7.5px;
+  font-size: 9px;
   font-weight: 500;
 }
 
@@ -206,7 +206,7 @@
   align-items: center;
   gap: 4px;
   padding: 0 9px;
-  font-size: 7px;
+  font-size: 8.5px;
   color: #3e5b70;
   letter-spacing: 0.04em;
 }
@@ -236,14 +236,14 @@
 }
 
 .ops-loading strong {
-  font-size: 12px;
+  font-size: 13.5px;
   font-weight: 500;
   color: #d9f2ff;
 }
 
 .ops-loading em {
   font-style: normal;
-  font-size: 7px;
+  font-size: 8.5px;
   letter-spacing: 0.13em;
   color: #46677d;
 }
@@ -254,7 +254,7 @@
 
 .ops-loading--error p {
   margin: 0;
-  font-size: 9px;
+  font-size: 10.5px;
   color: #6a8498;
 }
 
@@ -287,13 +287,13 @@
   border-radius: 4px;
   border: 1px solid transparent;
   color: #668399;
-  font-size: 9.5px;
+  font-size: 11px;
   white-space: nowrap;
 }
 
 .ops-subtabs button b {
   font-family: var(--font-mono);
-  font-size: 7.5px;
+  font-size: 9px;
   color: #426177;
   font-weight: 500;
 }
@@ -313,7 +313,7 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  font-size: 7.5px;
+  font-size: 9px;
   color: #4e6d81;
 }
 
@@ -325,7 +325,7 @@
   border: 1px solid var(--line);
   background: rgba(var(--panel-rgb), 0.6);
   color: var(--text);
-  font-size: 9.5px;
+  font-size: 11px;
   outline: none;
 }
 
@@ -340,7 +340,7 @@
   border: 1px solid var(--line);
   background: var(--bg-soft);
   color: var(--text);
-  font-size: 9px;
+  font-size: 10.5px;
   padding: 0 7px;
   outline: none;
 }
@@ -369,7 +369,7 @@
   display: inline-flex;
   align-items: center;
   gap: 2px;
-  font-size: 7.5px;
+  font-size: 9px;
   letter-spacing: 0.08em;
   color: #6f9db4;
   transition: color 200ms var(--ease-out);
@@ -451,14 +451,14 @@
 }
 
 .airport-card__name strong {
-  font-size: 11px;
+  font-size: 12.5px;
   font-weight: 500;
   color: var(--text);
 }
 
 .airport-card__name em {
   font-style: normal;
-  font-size: 8px;
+  font-size: 9.5px;
   color: #57768a;
 }
 
@@ -480,12 +480,12 @@
 
 .airport-card__grid em {
   font-style: normal;
-  font-size: 7px;
+  font-size: 8.5px;
   color: #4d6b7f;
 }
 
 .airport-card__grid strong {
-  font-size: 9px;
+  font-size: 10.5px;
   font-weight: 500;
   color: #b9d8e9;
   white-space: nowrap;
@@ -500,7 +500,7 @@
   margin-top: 10px;
   padding-top: 7px;
   border-top: 1px solid var(--line-soft);
-  font-size: 7px;
+  font-size: 8.5px;
   color: #49697e;
 }
 
@@ -549,24 +549,24 @@
 }
 
 .ops-device-row__name strong {
-  font-size: 9.5px;
+  font-size: 11px;
   font-weight: 500;
   color: #cee9f6;
 }
 
 .ops-device-row__name em {
   font-style: normal;
-  font-size: 7.5px;
+  font-size: 9px;
   color: #547185;
 }
 
 .ops-device-row__kind {
-  font-size: 8px;
+  font-size: 9.5px;
   color: #5f8094;
 }
 
 .ops-device-row__metric {
-  font-size: 8px;
+  font-size: 9.5px;
   color: #8baab9;
   white-space: nowrap;
   overflow: hidden;
@@ -607,13 +607,13 @@
 
 .ops-console__head h3 {
   margin: 0;
-  font-size: 13px;
+  font-size: 14.5px;
   font-weight: 500;
   color: var(--text);
 }
 
 .ops-console__head span {
-  font-size: 7.5px;
+  font-size: 9px;
   color: #547286;
 }
 
@@ -637,12 +637,12 @@
 
 .ops-console__facts span,
 .ops-console__readings span {
-  font-size: 7px;
+  font-size: 8.5px;
   color: #4f6c80;
 }
 
 .ops-console__facts strong {
-  font-size: 9px;
+  font-size: 10.5px;
   font-weight: 500;
   color: #bcd8e8;
 }
@@ -664,7 +664,7 @@
 }
 
 .ops-console__readings strong {
-  font-size: 10px;
+  font-size: 11.5px;
   color: #d3efff;
 }
 
@@ -679,7 +679,7 @@
   margin-top: auto;
   padding-top: 8px;
   border-top: 1px dashed var(--line-soft);
-  font-size: 7px;
+  font-size: 8.5px;
   color: #4b687d;
   letter-spacing: 0.03em;
 }
@@ -706,7 +706,7 @@
   min-height: 34px;
   border-bottom: 1px solid var(--line);
   background: rgba(var(--panel-rgb), 0.78);
-  font-size: 8px;
+  font-size: 9.5px;
   color: #6f8ca0;
   letter-spacing: 0.03em;
 }
@@ -714,7 +714,7 @@
 .ops-table__row {
   min-height: 58px;
   border-bottom: 1px solid rgba(var(--edge-rgb), 0.05);
-  font-size: 9px;
+  font-size: 10.5px;
   color: #8ba8b9;
   animation: listIn 360ms var(--ease-out) backwards;
 }
@@ -743,13 +743,13 @@
 
 .plan-name em {
   font-style: normal;
-  font-size: 7px;
+  font-size: 8.5px;
   letter-spacing: 0.04em;
   color: #4b6b7f;
 }
 
 .plan-name strong {
-  font-size: 10px;
+  font-size: 11.5px;
   font-weight: 500;
   color: #dcf2ff;
   white-space: nowrap;
@@ -758,7 +758,7 @@
 }
 
 .plan-name small {
-  font-size: 8px;
+  font-size: 9.5px;
   color: #5e7c90;
 }
 
@@ -766,7 +766,7 @@
   display: flex;
   flex-direction: column;
   gap: 2px;
-  font-size: 8px;
+  font-size: 9.5px;
   color: #7894a5;
 }
 
@@ -775,7 +775,7 @@
 }
 
 .plan-time small {
-  font-size: 7.5px;
+  font-size: 9px;
   color: #4e6b7e;
 }
 
@@ -785,7 +785,7 @@
   border-radius: 3px;
   background: rgba(109, 168, 255, 0.09);
   color: #8bb9e4;
-  font-size: 8px;
+  font-size: 9.5px;
 }
 
 .plan-status,
@@ -795,7 +795,7 @@
   gap: 4px;
   padding: 2px 6px;
   border-radius: 3px;
-  font-size: 8px;
+  font-size: 9.5px;
   white-space: nowrap;
 }
 
@@ -820,7 +820,7 @@
 }
 
 .plan-media strong {
-  font-size: 8px;
+  font-size: 9.5px;
   color: #7f9eb1;
 }
 
@@ -837,7 +837,7 @@
 .plan-actions .btn {
   height: 24px;
   padding: 0 8px;
-  font-size: 8px;
+  font-size: 9.5px;
 }
 
 /* progress primitives in ops */
@@ -880,7 +880,7 @@
 }
 
 .ops-form label > span {
-  font-size: 8px;
+  font-size: 9.5px;
   color: #648297;
 }
 
@@ -895,7 +895,7 @@
   border-radius: 5px;
   background: rgba(var(--panel-rgb), 0.75);
   color: #d4edfb;
-  font-size: 10px;
+  font-size: 11.5px;
   outline: none;
 }
 
@@ -922,7 +922,7 @@
   padding: 7px 8px;
   border-radius: 4px;
   background: rgba(75, 225, 255, 0.04);
-  font-size: 7px;
+  font-size: 8.5px;
   color: #5f91a8;
 }
 
@@ -935,7 +935,7 @@
   border-radius: 4px;
   color: #ff9aa4;
   background: rgba(255, 123, 134, 0.05);
-  font-size: 9px;
+  font-size: 10.5px;
 }
 
 .ops-form__actions {
@@ -984,7 +984,7 @@
 
 .ops-modal__head h3 {
   margin: 3px 0 0;
-  font-size: 14px;
+  font-size: 15.5px;
   font-weight: 500;
   color: var(--text);
 }
@@ -1023,7 +1023,7 @@
 .ops-route-list__head .btn {
   height: 24px;
   padding: 0 7px;
-  font-size: 8px;
+  font-size: 9.5px;
 }
 
 .route-card {
@@ -1072,7 +1072,7 @@
 }
 
 .route-card__name strong {
-  font-size: 9.5px;
+  font-size: 11px;
   font-weight: 500;
   color: #cfe9f7;
   white-space: nowrap;
@@ -1082,7 +1082,7 @@
 
 .route-card__name em {
   font-style: normal;
-  font-size: 7.5px;
+  font-size: 9px;
   color: #567386;
 }
 
@@ -1090,7 +1090,7 @@
   display: flex;
   align-items: center;
   gap: 2px;
-  font-size: 7px;
+  font-size: 8.5px;
   color: #4f6e81;
 }
 
@@ -1101,7 +1101,7 @@
   margin-top: auto;
   padding-top: 8px;
   border-top: 1px dashed var(--line-soft);
-  font-size: 7px;
+  font-size: 8.5px;
   color: #48677a;
 }
 
@@ -1130,7 +1130,7 @@
 }
 
 .ops-route-form__title strong {
-  font-size: 11px;
+  font-size: 12.5px;
   font-weight: 500;
   color: #d6effc;
 }
@@ -1143,7 +1143,7 @@
 }
 
 .ops-route-form label > span {
-  font-size: 7.5px;
+  font-size: 9px;
   color: #5b7a8e;
 }
 
@@ -1153,14 +1153,14 @@
   bottom: 9px;
   font-style: normal;
   font-family: var(--font-mono);
-  font-size: 7px;
+  font-size: 8.5px;
   color: #4d6a7d;
 }
 
 .ops-route-form input,
 .ops-route-form select {
   height: 30px;
-  font-size: 9px;
+  font-size: 10.5px;
 }
 
 .ops-route-form__stats {
@@ -1170,7 +1170,7 @@
   padding: 7px;
   border: 1px dashed var(--line-soft);
   border-radius: 4px;
-  font-size: 6.8px;
+  font-size: 8.3px;
   color: #54788c;
 }
 
@@ -1215,7 +1215,7 @@
   border: 1px solid var(--line);
   border-radius: 4px;
   background: rgba(var(--panel-rgb), 0.82);
-  font-size: 7px;
+  font-size: 8.5px;
   color: #5a7c90;
   pointer-events: none;
 }
@@ -1238,7 +1238,7 @@
   background: var(--bg-soft);
   color: #d8f7ff;
   font-family: var(--font-mono);
-  font-size: 7px;
+  font-size: 8.5px;
   box-shadow: 0 0 14px -2px rgba(75, 225, 255, 0.5);
   cursor: grab;
 }
@@ -1255,7 +1255,7 @@
   border-radius: 3px;
   background: rgba(var(--panel-rgb), 0.9);
   font-style: normal;
-  font-size: 6.5px;
+  font-size: 8px;
   color: #8ecadd;
 }
 
@@ -1281,7 +1281,7 @@
   justify-content: space-between;
   padding: 6px 9px;
   border-bottom: 1px solid var(--line-soft);
-  font-size: 7px;
+  font-size: 8.5px;
   color: #506f82;
 }
 
@@ -1302,7 +1302,7 @@
 }
 
 .waypoint-row__index {
-  font-size: 7px;
+  font-size: 8.5px;
   color: var(--cyan);
 }
 
@@ -1315,26 +1315,26 @@
 }
 
 .waypoint-row__name strong {
-  font-size: 8.5px;
+  font-size: 10px;
   font-weight: 500;
   color: #bdd9e8;
 }
 
 .waypoint-row__name em {
   font-style: normal;
-  font-size: 7px;
+  font-size: 8.5px;
   color: #557286;
 }
 
 .waypoint-row__coord {
-  font-size: 6.8px;
+  font-size: 8.3px;
   color: #4d6c80;
 }
 
 .ops-waypoints__empty {
   padding: 14px;
   text-align: center;
-  font-size: 8px;
+  font-size: 9.5px;
   color: #526f83;
 }
 
@@ -1361,7 +1361,7 @@
   gap: 9px;
   padding: 7px 10px;
   border-bottom: 1px solid var(--line);
-  font-size: 8px;
+  font-size: 9.5px;
   color: #688a9d;
 }
 
@@ -1371,7 +1371,7 @@
   gap: 4px;
   color: #ff8c96;
   font-family: var(--font-mono);
-  font-size: 7px;
+  font-size: 8.5px;
   letter-spacing: 0.1em;
 }
 
@@ -1407,7 +1407,7 @@
   height: 21px;
   padding: 0 7px;
   border-radius: 3px;
-  font-size: 7.5px;
+  font-size: 9px;
   color: #587589;
   white-space: nowrap;
   flex-shrink: 0;
@@ -1469,12 +1469,12 @@
 .flight-hud em {
   font-style: normal;
   font-family: var(--font-mono);
-  font-size: 6px;
+  font-size: 7.5px;
   color: #60879a;
 }
 
 .flight-hud strong {
-  font-size: 8px;
+  font-size: 9.5px;
   color: #dcf7ff;
 }
 
@@ -1485,7 +1485,7 @@
   padding: 3px 6px;
   border-radius: 3px;
   background: rgba(var(--panel-rgb), 0.65);
-  font-size: 7px;
+  font-size: 8.5px;
   color: #83b8cc;
 }
 
@@ -1498,7 +1498,7 @@
   border-radius: 3px;
   color: #ffd08b;
   background: rgba(var(--panel-rgb), 0.68);
-  font-size: 6.5px;
+  font-size: 8px;
 }
 
 .flight-visual .detect-box {
@@ -1515,7 +1515,7 @@
   gap: 12px;
   padding: 7px 10px;
   border-top: 1px solid var(--line);
-  font-size: 7px;
+  font-size: 8.5px;
   color: #5b7e91;
 }
 
@@ -1557,13 +1557,13 @@
 
 .cockpit-head h3 {
   margin: 4px 0 2px;
-  font-size: 13px;
+  font-size: 14.5px;
   font-weight: 500;
   color: #e3f6ff;
 }
 
 .cockpit-head > div > span:last-child {
-  font-size: 8px;
+  font-size: 9.5px;
   color: #5d7c90;
 }
 
@@ -1579,13 +1579,13 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  font-size: 8px;
+  font-size: 9.5px;
   color: #658497;
 }
 
 .flight-progress > div:first-child strong {
   color: var(--cyan);
-  font-size: 12px;
+  font-size: 13.5px;
   font-weight: 500;
 }
 
@@ -1616,12 +1616,12 @@
   display: flex;
   align-items: center;
   gap: 3px;
-  font-size: 6.8px;
+  font-size: 8.3px;
   color: #537286;
 }
 
 .flight-telemetry strong {
-  font-size: 9px;
+  font-size: 10.5px;
   color: var(--text);
   font-weight: 500;
 }
@@ -1645,7 +1645,7 @@
   border-radius: 5px;
   color: #7593a6;
   background: rgba(var(--text-rgb), 0.016);
-  font-size: 7.5px;
+  font-size: 9px;
 }
 
 .command:hover:not(:disabled) {
@@ -1697,7 +1697,7 @@
   align-items: center;
   gap: 4px;
   padding-top: 6px;
-  font-size: 7.5px;
+  font-size: 9px;
   color: var(--amber);
 }
 
@@ -1715,7 +1715,7 @@
   align-items: center;
   justify-content: space-between;
   padding: 1px 0 3px;
-  font-size: 7px;
+  font-size: 8.5px;
   color: #4e6d80;
 }
 
@@ -1727,7 +1727,7 @@
   padding: 3px 4px;
   border-radius: 3px;
   background: rgba(var(--text-rgb), 0.012);
-  font-size: 7.5px;
+  font-size: 9px;
 }
 
 .flight-command-row span {
@@ -1748,7 +1748,7 @@
 .flight-command-log__empty {
   padding: 9px;
   text-align: center;
-  font-size: 7.5px;
+  font-size: 9px;
   color: #49687b;
 }
 
@@ -1773,14 +1773,14 @@
 }
 
 .ops-space-usage strong {
-  font-size: 14px;
+  font-size: 15.5px;
   font-weight: 500;
   color: var(--text);
 }
 
 .ops-space-usage em {
   font-style: normal;
-  font-size: 8px;
+  font-size: 9.5px;
   color: #557286;
 }
 
@@ -1791,7 +1791,7 @@
 .ops-space-usage__legend {
   display: flex;
   gap: 9px;
-  font-size: 7px;
+  font-size: 8.5px;
   color: #5d7c90;
 }
 
@@ -1875,7 +1875,7 @@
   background: rgba(var(--panel-rgb), 0.76);
   color: #9ac4d7;
   font-family: var(--font-mono);
-  font-size: 6.5px;
+  font-size: 8px;
 }
 
 .media-card__play {
@@ -1900,7 +1900,7 @@
 }
 
 .media-card__body strong {
-  font-size: 9.5px;
+  font-size: 11px;
   font-weight: 500;
   color: #d1eaf7;
   white-space: nowrap;
@@ -1909,13 +1909,13 @@
 }
 
 .media-card__body span {
-  font-size: 7.5px;
+  font-size: 9px;
   color: #5e7c90;
 }
 
 .media-card__body em {
   font-style: normal;
-  font-size: 6.8px;
+  font-size: 8.3px;
   color: #4c6b7e;
 }
 
@@ -1955,7 +1955,7 @@
 }
 
 .media-preview__archive span {
-  font-size: 8px;
+  font-size: 9.5px;
   color: #6b7f8f;
 }
 
@@ -1966,7 +1966,7 @@
   padding: 3px 6px;
   border-radius: 3px;
   background: rgba(var(--panel-rgb), 0.72);
-  font-size: 7px;
+  font-size: 8.5px;
   color: #90c2d5;
 }
 
@@ -1978,7 +1978,7 @@
 
 .media-preview__meta h4 {
   margin: 2px 0 0;
-  font-size: 12px;
+  font-size: 13.5px;
   font-weight: 500;
   color: var(--text);
   word-break: break-all;
@@ -1999,7 +1999,7 @@
   gap: 8px;
   padding: 6px 8px;
   background: rgba(var(--text-rgb), 0.012);
-  font-size: 8px;
+  font-size: 9.5px;
 }
 
 .media-preview__rows span {
@@ -2040,7 +2040,7 @@
   left: 7px;
   bottom: 6px;
   font-style: normal;
-  font-size: 6.5px;
+  font-size: 8px;
   color: #4c6f82;
 }
 
@@ -2093,13 +2093,13 @@
 }
 
 .clue-donut strong {
-  font-size: 22px;
+  font-size: 23.5px;
   font-weight: 500;
   color: #e7f8ff;
 }
 
 .clue-donut span {
-  font-size: 7.5px;
+  font-size: 9px;
   color: #5b798d;
 }
 
@@ -2118,19 +2118,19 @@
   display: flex;
   align-items: center;
   gap: 4px;
-  font-size: 8px;
+  font-size: 9.5px;
   color: #668398;
 }
 
 .clue-stat strong {
-  font-size: 22px;
+  font-size: 23.5px;
   font-weight: 500;
   color: #dcf4ff;
 }
 
 .clue-stat em {
   font-style: normal;
-  font-size: 7px;
+  font-size: 8.5px;
   color: #4c6a7d;
 }
 
@@ -2149,7 +2149,7 @@
   grid-template-columns: 7px minmax(70px, 0.8fr) minmax(100px, 1.2fr);
   align-items: center;
   gap: 5px;
-  font-size: 7.5px;
+  font-size: 9px;
 }
 
 .model-dot {
@@ -2161,7 +2161,7 @@
 }
 
 .ops-model-strip strong {
-  font-size: 8.5px;
+  font-size: 10px;
   font-weight: 500;
   color: #c4e1ef;
 }
@@ -2230,7 +2230,7 @@
   background: rgba(255, 93, 108, 0.85);
   color: #fff;
   font-family: var(--font-mono);
-  font-size: 6.5px;
+  font-size: 8px;
 }
 
 .clue-row__main {
@@ -2245,14 +2245,14 @@
 }
 
 .clue-row__main strong {
-  font-size: 10px;
+  font-size: 11.5px;
   font-weight: 500;
   color: #d7edf9;
 }
 
 .clue-row__main em {
   font-style: normal;
-  font-size: 7.5px;
+  font-size: 9px;
   color: #557386;
   white-space: nowrap;
   overflow: hidden;
@@ -2266,13 +2266,13 @@
 }
 
 .clue-row__objects strong {
-  font-size: 15px;
+  font-size: 16.5px;
   color: #d6f2ff;
   font-weight: 500;
 }
 
 .clue-row__objects span {
-  font-size: 7px;
+  font-size: 8.5px;
   color: #526f82;
 }
 
@@ -2289,7 +2289,7 @@
 .clue-row__actions .btn {
   height: 23px;
   padding: 0 7px;
-  font-size: 7.5px;
+  font-size: 9px;
 }
 
 .clue-detail {
@@ -2321,7 +2321,7 @@
 
 .clue-detail__meta h4 {
   margin: 2px 0 0;
-  font-size: 13px;
+  font-size: 14.5px;
   font-weight: 500;
   color: #e4f7ff;
 }
@@ -2343,7 +2343,7 @@
   justify-content: center;
   gap: 6px;
   color: #4b7186;
-  font-size: 9px;
+  font-size: 10.5px;
 }
 
 .ops-empty--large {
@@ -2354,14 +2354,14 @@
 }
 
 .ops-empty strong {
-  font-size: 11px;
+  font-size: 12.5px;
   font-weight: 500;
   color: #7fa3b7;
 }
 
 .ops-empty p {
   margin: 0;
-  font-size: 8px;
+  font-size: 9.5px;
   color: #4d6b7e;
 }
 
@@ -2381,7 +2381,7 @@
   background: rgba(var(--panel-rgb), 0.94);
   box-shadow: 0 18px 40px -20px rgba(0, 0, 0, 0.9);
   color: #bff8ea;
-  font-size: 9.5px;
+  font-size: 11px;
   animation: toastIn var(--dur-base) var(--ease-out) backwards;
 }
 
@@ -2397,7 +2397,7 @@
   }
 
   .ops-summary__item strong {
-    font-size: 18px;
+    font-size: 19.5px;
   }
 }
 
