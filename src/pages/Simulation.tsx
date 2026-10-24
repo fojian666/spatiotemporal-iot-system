@@ -122,7 +122,7 @@ export function SimulationPage() {
         trigger: 'axis',
         backgroundColor: 'rgba(6,16,29,.94)',
         borderColor: 'rgba(90,180,255,.2)',
-        textStyle: { color: '#dbeafe', fontSize: 12.5 },
+        textStyle: { color: '#dbeafe', fontSize: 11 },
         axisPointer: { type: 'line', lineStyle: { color: 'rgba(75,225,255,.3)' } },
       },
       legend: {
@@ -132,7 +132,7 @@ export function SimulationPage() {
         itemWidth: 9,
         itemHeight: 3,
         itemGap: 14,
-        textStyle: { color: palette.label, fontSize: 11.5 },
+        textStyle: { color: palette.label, fontSize: 10 },
       },
       grid: { top: 32, left: 44, right: 18, bottom: 24 },
       xAxis: {
@@ -141,13 +141,13 @@ export function SimulationPage() {
         data: labels,
         axisLine: { lineStyle: { color: palette.axisLine } },
         axisTick: { show: false },
-        axisLabel: { color: palette.dim, fontSize: 10.5, interval: 3, fontFamily: 'SF Mono, monospace' },
+        axisLabel: { color: palette.dim, fontSize: 9, interval: 3, fontFamily: 'SF Mono, monospace' },
       },
       yAxis: {
         type: 'value',
         name: meta.unit,
-        nameTextStyle: { color: palette.dim, fontSize: 10.5 },
-        axisLabel: { color: palette.dim, fontSize: 10.5 },
+        nameTextStyle: { color: palette.dim, fontSize: 9 },
+        axisLabel: { color: palette.dim, fontSize: 9 },
         splitLine: { lineStyle: { color: palette.grid } },
       },
       series: devices.map((device, index) => {

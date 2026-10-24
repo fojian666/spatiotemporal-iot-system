@@ -40,21 +40,21 @@ html[data-theme='light'] {
   --danger: #dc2626;
   --pink: #db2777;
 
-  --text: #1e293b;
-  --muted: #3f5064;
-  --dim: #5b6b7f;
+  --text: #111827;
+  --muted: #1f2937;
+  --dim: #374151;
 
   --panel-rgb: 255, 255, 255;
   --code-rgb: 240, 244, 248;
   --edge-rgb: 148, 163, 184;
-  --text-rgb: 30, 41, 59;
+  --text-rgb: 17, 24, 39;
   --wash: rgba(15, 23, 42, 0.05);
   --accent-text: #0369a1;
 
-  --chart-label: #475569;
-  --chart-label-strong: #1e293b;
+  --chart-label: #1f2937;
+  --chart-label-strong: #111827;
   --chart-label-dim: rgba(51, 65, 85, 0.3);
-  --chart-dim: #64748b;
+  --chart-dim: #374151;
   --chart-grid: rgba(100, 116, 139, 0.16);
   --chart-axis-line: rgba(100, 116, 139, 0.22);
   --chart-halo: #ffffff;
@@ -77,4 +77,12 @@ html[data-theme='light'] .boot-splash {
 }
 html[data-theme='light'] .map-view__tint {
   background: rgba(15, 23, 42, 0.04);
+}
+
+
+/* 整体等比放大 110%：文字与容器一起缩放，不会引起换行 */
+.app-shell,
+.auth-screen,
+.boot-splash {
+  zoom: 1.1;
 }

@@ -167,7 +167,7 @@ export function KnowledgeGraphPage() {
           },
           emphasis: {
             itemStyle: { borderColor: palette.nodeSelect, borderWidth: 2, shadowBlur: 26 },
-            label: { color: palette.nodeSelect, fontSize: 12.5, textBorderColor: palette.halo, textBorderWidth: 2 },
+            label: { color: palette.nodeSelect, fontSize: 11, textBorderColor: palette.halo, textBorderWidth: 2 },
           },
         };
       }),
@@ -191,7 +191,7 @@ export function KnowledgeGraphPage() {
             position: 'inside',
             formatter: meta.label,
             color: meta.color,
-            fontSize: 11.5,
+            fontSize: 10,
             fontWeight: 600,
             backgroundColor: 'rgba(6,16,29,.82)',
             borderColor: `${meta.color}44`,
@@ -239,7 +239,7 @@ export function KnowledgeGraphPage() {
         borderColor: 'rgba(90,180,255,.22)',
         borderWidth: 1,
         padding: [10, 12],
-        textStyle: { color: '#dcecff', fontSize: 12.5 },
+        textStyle: { color: '#dcecff', fontSize: 11 },
         formatter: (params: unknown) => {
           const data = (params as { data?: { nodeId?: string; name?: string } }).data;
           if (!data?.nodeId) return '';

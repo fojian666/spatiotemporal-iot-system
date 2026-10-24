@@ -126,7 +126,7 @@ export function OverviewPage() {
         trigger: 'axis' as const,
         backgroundColor: 'rgba(6,16,29,.94)',
         borderColor: 'rgba(90,180,255,.2)',
-        textStyle: { color: '#dbeafe', fontSize: 12.5 },
+        textStyle: { color: '#dbeafe', fontSize: 11 },
         axisPointer: { type: 'line' as const, lineStyle: { color: 'rgba(75,225,255,.3)' } },
       },
       grid: { top: 26, left: 36, right: 34, bottom: 22 },
@@ -136,7 +136,7 @@ export function OverviewPage() {
         data: labels,
         axisLine: { lineStyle: { color: palette.axisLine } },
         axisTick: { show: false },
-        axisLabel: { color: palette.dim, fontSize: 10.5, interval: 9, fontFamily: 'SF Mono, monospace' },
+        axisLabel: { color: palette.dim, fontSize: 9, interval: 9, fontFamily: 'SF Mono, monospace' },
       },
       legend: {
         top: 0,
@@ -145,7 +145,7 @@ export function OverviewPage() {
         itemWidth: 9,
         itemHeight: 3,
         itemGap: 12,
-        textStyle: { color: palette.label, fontSize: 11.5 },
+        textStyle: { color: palette.label, fontSize: 10 },
       },
     };
 
@@ -153,8 +153,8 @@ export function OverviewPage() {
       return {
         ...common,
         yAxis: [
-          { type: 'value', name: '°C', nameTextStyle: { color: palette.dim, fontSize: 10.5 }, axisLabel: { color: palette.dim, fontSize: 10.5 }, splitLine: { lineStyle: { color: palette.grid } } },
-          { type: 'value', name: '%', nameTextStyle: { color: palette.dim, fontSize: 10.5 }, axisLabel: { color: palette.dim, fontSize: 10.5 }, splitLine: { show: false } },
+          { type: 'value', name: '°C', nameTextStyle: { color: palette.dim, fontSize: 9 }, axisLabel: { color: palette.dim, fontSize: 9 }, splitLine: { lineStyle: { color: palette.grid } } },
+          { type: 'value', name: '%', nameTextStyle: { color: palette.dim, fontSize: 9 }, axisLabel: { color: palette.dim, fontSize: 9 }, splitLine: { show: false } },
         ],
         series: [
           {
@@ -182,8 +182,8 @@ export function OverviewPage() {
       return {
         ...common,
         yAxis: [
-          { type: 'value', name: 'm', nameTextStyle: { color: palette.dim, fontSize: 10.5 }, axisLabel: { color: palette.dim, fontSize: 10.5 }, splitLine: { lineStyle: { color: palette.grid } } },
-          { type: 'value', name: 'NTU', nameTextStyle: { color: palette.dim, fontSize: 10.5 }, axisLabel: { color: palette.dim, fontSize: 10.5 }, splitLine: { show: false } },
+          { type: 'value', name: 'm', nameTextStyle: { color: palette.dim, fontSize: 9 }, axisLabel: { color: palette.dim, fontSize: 9 }, splitLine: { lineStyle: { color: palette.grid } } },
+          { type: 'value', name: 'NTU', nameTextStyle: { color: palette.dim, fontSize: 9 }, axisLabel: { color: palette.dim, fontSize: 9 }, splitLine: { show: false } },
         ],
         series: [
           {
@@ -210,7 +210,7 @@ export function OverviewPage() {
     return {
       ...common,
       yAxis: [
-        { type: 'value', name: 'µg/m³', nameTextStyle: { color: palette.dim, fontSize: 10.5 }, axisLabel: { color: palette.dim, fontSize: 10.5 }, splitLine: { lineStyle: { color: palette.grid } } },
+        { type: 'value', name: 'µg/m³', nameTextStyle: { color: palette.dim, fontSize: 9 }, axisLabel: { color: palette.dim, fontSize: 9 }, splitLine: { lineStyle: { color: palette.grid } } },
       ],
       series: [
         {
