@@ -59,12 +59,12 @@
 .ops-summary__label strong {
   font-size: 12px;
   font-weight: 500;
-  color: #dff3ff;
+  color: var(--danger);
 }
 
 .ops-summary__label > span:last-child {
   font-size: 8px;
-  color: #557185;
+  color: var(--danger);
 }
 
 .ops-summary__item {
@@ -87,7 +87,7 @@
 
 .ops-summary__item span {
   font-size: 8.5px;
-  color: #648196;
+  color: var(--danger);
 }
 
 .ops-summary__item strong {
@@ -100,8 +100,8 @@
 .ops-summary__item--violet strong { color: var(--violet); }
 .ops-summary__item--amber strong { color: var(--amber); }
 .ops-summary__item--teal strong { color: var(--teal); }
-.ops-summary__item--pink strong { color: #ff84a8; }
-.ops-summary__item--rose strong { color: #ff7b86; }
+.ops-summary__item--pink strong { color: var(--danger); }
+.ops-summary__item--rose strong { color: var(--amber); }
 
 .ops-summary__link {
   display: flex;
@@ -120,7 +120,7 @@
   align-items: center;
   gap: 4px;
   font-size: 9.5px;
-  color: #8ab6cf;
+  color: var(--amber);
 }
 
 .ops-summary__link a:hover {
@@ -154,7 +154,7 @@
   padding: 0 11px;
   border-radius: 5px;
   border: 1px solid transparent;
-  color: #6f8ca1;
+  color: var(--amber);
   font-size: 10px;
   white-space: nowrap;
 }
@@ -163,7 +163,7 @@
   font-style: normal;
   font-size: 6.5px;
   letter-spacing: 0.08em;
-  color: #3f5c70;
+  color: var(--amber);
 }
 
 .ops-tab b {
@@ -181,7 +181,7 @@
 }
 
 .ops-tab:hover {
-  color: #ccecff;
+  color: var(--muted);
   background: rgba(var(--text-rgb), 0.025);
 }
 
@@ -193,7 +193,7 @@
 }
 
 .ops-tab.is-active em {
-  color: #4ca9c6;
+  color: var(--amber);
 }
 
 .ops-tabs__spacer {
@@ -207,7 +207,7 @@
   gap: 4px;
   padding: 0 9px;
   font-size: 7px;
-  color: #3e5b70;
+  color: var(--amber);
   letter-spacing: 0.04em;
 }
 
@@ -228,7 +228,7 @@
   border: 1px solid var(--line);
   border-radius: 9px;
   background: rgba(var(--panel-rgb), 0.64);
-  color: #6d8aa0;
+  color: var(--amber);
 }
 
 .ops-loading > span {
@@ -238,24 +238,24 @@
 .ops-loading strong {
   font-size: 12px;
   font-weight: 500;
-  color: #d9f2ff;
+  color: var(--danger);
 }
 
 .ops-loading em {
   font-style: normal;
   font-size: 7px;
   letter-spacing: 0.13em;
-  color: #46677d;
+  color: var(--dim);
 }
 
 .ops-loading--error {
-  color: #ff8993;
+  color: var(--amber);
 }
 
 .ops-loading--error p {
   margin: 0;
   font-size: 9px;
-  color: #6a8498;
+  color: var(--amber);
 }
 
 /* subbar */
@@ -286,7 +286,7 @@
   padding: 0 9px;
   border-radius: 4px;
   border: 1px solid transparent;
-  color: #668399;
+  color: var(--amber);
   font-size: 9.5px;
   white-space: nowrap;
 }
@@ -294,12 +294,12 @@
 .ops-subtabs button b {
   font-family: var(--font-mono);
   font-size: 7.5px;
-  color: #426177;
+  color: var(--amber);
   font-weight: 500;
 }
 
 .ops-subtabs button.is-active {
-  color: #d8f3ff;
+  color: var(--amber);
   border-color: rgba(75, 225, 255, 0.18);
   background: rgba(75, 225, 255, 0.075);
 }
@@ -314,7 +314,7 @@
   align-items: center;
   gap: 8px;
   font-size: 7.5px;
-  color: #4e6d81;
+  color: var(--muted);
 }
 
 .ops-mini-search input {
@@ -371,7 +371,7 @@
   gap: 2px;
   font-size: 7.5px;
   letter-spacing: 0.08em;
-  color: #6f9db4;
+  color: var(--muted);
   transition: color 200ms var(--ease-out);
 }
 
@@ -459,7 +459,7 @@
 .airport-card__name em {
   font-style: normal;
   font-size: 8px;
-  color: #57768a;
+  color: var(--dim);
 }
 
 .airport-card__grid {
@@ -481,13 +481,13 @@
 .airport-card__grid em {
   font-style: normal;
   font-size: 7px;
-  color: #4d6b7f;
+  color: var(--muted);
 }
 
 .airport-card__grid strong {
   font-size: 9px;
   font-weight: 500;
-  color: #b9d8e9;
+  color: var(--dim);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -501,14 +501,14 @@
   padding-top: 7px;
   border-top: 1px solid var(--line-soft);
   font-size: 7px;
-  color: #49697e;
+  color: var(--dim);
 }
 
 .airport-card__foot span:last-child {
   display: inline-flex;
   align-items: center;
   gap: 2px;
-  color: #75a5bb;
+  color: var(--dim);
 }
 
 .ops-device-row {
@@ -551,23 +551,23 @@
 .ops-device-row__name strong {
   font-size: 9.5px;
   font-weight: 500;
-  color: #cee9f6;
+  color: var(--amber);
 }
 
 .ops-device-row__name em {
   font-style: normal;
   font-size: 7.5px;
-  color: #547185;
+  color: var(--danger);
 }
 
 .ops-device-row__kind {
   font-size: 8px;
-  color: #5f8094;
+  color: var(--danger);
 }
 
 .ops-device-row__metric {
   font-size: 8px;
-  color: #8baab9;
+  color: var(--muted);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -614,7 +614,7 @@
 
 .ops-console__head span {
   font-size: 7.5px;
-  color: #547286;
+  color: var(--amber);
 }
 
 .ops-console__facts {
@@ -638,13 +638,13 @@
 .ops-console__facts span,
 .ops-console__readings span {
   font-size: 7px;
-  color: #4f6c80;
+  color: var(--amber);
 }
 
 .ops-console__facts strong {
   font-size: 9px;
   font-weight: 500;
-  color: #bcd8e8;
+  color: var(--amber);
 }
 
 .ops-console__readings {
@@ -665,7 +665,7 @@
 
 .ops-console__readings strong {
   font-size: 10px;
-  color: #d3efff;
+  color: var(--text);
 }
 
 .ops-console__actions {
@@ -680,7 +680,7 @@
   padding-top: 8px;
   border-top: 1px dashed var(--line-soft);
   font-size: 7px;
-  color: #4b687d;
+  color: var(--amber);
   letter-spacing: 0.03em;
 }
 
@@ -707,7 +707,7 @@
   border-bottom: 1px solid var(--line);
   background: rgba(var(--panel-rgb), 0.78);
   font-size: 8px;
-  color: #6f8ca0;
+  color: var(--amber);
   letter-spacing: 0.03em;
 }
 
@@ -715,7 +715,7 @@
   min-height: 58px;
   border-bottom: 1px solid rgba(var(--edge-rgb), 0.05);
   font-size: 9px;
-  color: #8ba8b9;
+  color: var(--amber);
   animation: listIn 360ms var(--ease-out) backwards;
 }
 
@@ -745,13 +745,13 @@
   font-style: normal;
   font-size: 7px;
   letter-spacing: 0.04em;
-  color: #4b6b7f;
+  color: var(--muted);
 }
 
 .plan-name strong {
   font-size: 10px;
   font-weight: 500;
-  color: #dcf2ff;
+  color: var(--danger);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -759,7 +759,7 @@
 
 .plan-name small {
   font-size: 8px;
-  color: #5e7c90;
+  color: var(--muted);
 }
 
 .plan-time {
@@ -767,7 +767,7 @@
   flex-direction: column;
   gap: 2px;
   font-size: 8px;
-  color: #7894a5;
+  color: var(--amber);
 }
 
 .plan-time em {
@@ -776,7 +776,7 @@
 
 .plan-time small {
   font-size: 7.5px;
-  color: #4e6b7e;
+  color: var(--amber);
 }
 
 .task-type {
@@ -784,7 +784,7 @@
   padding: 2px 6px;
   border-radius: 3px;
   background: rgba(109, 168, 255, 0.09);
-  color: #8bb9e4;
+  color: var(--muted);
   font-size: 8px;
 }
 
@@ -807,11 +807,11 @@
   background: currentColor;
 }
 
-.plan-status--pending { color: #8db0c4; background: rgba(141, 176, 196, 0.08); }
+.plan-status--pending { color: var(--danger); background: rgba(141, 176, 196, 0.08); }
 .plan-status--running { color: var(--teal); background: rgba(35, 230, 176, 0.08); }
 .plan-status--paused { color: var(--amber); background: rgba(255, 188, 92, 0.08); }
-.plan-status--done { color: #76a9ff; background: rgba(var(--edge-rgb), 0.08); }
-.plan-status--failed { color: #ff7b86; background: rgba(255, 123, 134, 0.08); }
+.plan-status--done { color: var(--muted); background: rgba(var(--edge-rgb), 0.08); }
+.plan-status--failed { color: var(--amber); background: rgba(255, 123, 134, 0.08); }
 
 .plan-media {
   display: flex;
@@ -821,7 +821,7 @@
 
 .plan-media strong {
   font-size: 8px;
-  color: #7f9eb1;
+  color: var(--muted);
 }
 
 .plan-media .progress {
@@ -881,7 +881,7 @@
 
 .ops-form label > span {
   font-size: 8px;
-  color: #648297;
+  color: var(--amber);
 }
 
 .ops-form input,
@@ -894,7 +894,7 @@
   border: 1px solid var(--line);
   border-radius: 5px;
   background: rgba(var(--panel-rgb), 0.75);
-  color: #d4edfb;
+  color: var(--text);
   font-size: 10px;
   outline: none;
 }
@@ -923,7 +923,7 @@
   border-radius: 4px;
   background: rgba(75, 225, 255, 0.04);
   font-size: 7px;
-  color: #5f91a8;
+  color: var(--danger);
 }
 
 .ops-form__error {
@@ -933,7 +933,7 @@
   padding: 7px 8px;
   border: 1px solid rgba(255, 123, 134, 0.2);
   border-radius: 4px;
-  color: #ff9aa4;
+  color: var(--amber);
   background: rgba(255, 123, 134, 0.05);
   font-size: 9px;
 }
@@ -1074,7 +1074,7 @@
 .route-card__name strong {
   font-size: 9.5px;
   font-weight: 500;
-  color: #cfe9f7;
+  color: var(--amber);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -1083,7 +1083,7 @@
 .route-card__name em {
   font-style: normal;
   font-size: 7.5px;
-  color: #567386;
+  color: var(--amber);
 }
 
 .route-card__meta {
@@ -1091,7 +1091,7 @@
   align-items: center;
   gap: 2px;
   font-size: 7px;
-  color: #4f6e81;
+  color: var(--muted);
 }
 
 .ops-route-list__foot {
@@ -1102,7 +1102,7 @@
   padding-top: 8px;
   border-top: 1px dashed var(--line-soft);
   font-size: 7px;
-  color: #48677a;
+  color: var(--dim);
 }
 
 .ops-route-editor {
@@ -1132,7 +1132,7 @@
 .ops-route-form__title strong {
   font-size: 11px;
   font-weight: 500;
-  color: #d6effc;
+  color: var(--text);
 }
 
 .ops-route-form label {
@@ -1144,7 +1144,7 @@
 
 .ops-route-form label > span {
   font-size: 7.5px;
-  color: #5b7a8e;
+  color: var(--muted);
 }
 
 .ops-route-form label > em {
@@ -1154,7 +1154,7 @@
   font-style: normal;
   font-family: var(--font-mono);
   font-size: 7px;
-  color: #4d6a7d;
+  color: var(--amber);
 }
 
 .ops-route-form input,
@@ -1171,7 +1171,7 @@
   border: 1px dashed var(--line-soft);
   border-radius: 4px;
   font-size: 6.8px;
-  color: #54788c;
+  color: var(--dim);
 }
 
 .ops-route-form__save {
@@ -1216,7 +1216,7 @@
   border-radius: 4px;
   background: rgba(var(--panel-rgb), 0.82);
   font-size: 7px;
-  color: #5a7c90;
+  color: var(--muted);
   pointer-events: none;
 }
 
@@ -1236,7 +1236,7 @@
   border: 1px solid rgba(75, 225, 255, 0.7);
   border-radius: 50%;
   background: var(--bg-soft);
-  color: #d8f7ff;
+  color: var(--dim);
   font-family: var(--font-mono);
   font-size: 7px;
   box-shadow: 0 0 14px -2px rgba(75, 225, 255, 0.5);
@@ -1256,7 +1256,7 @@
   background: rgba(var(--panel-rgb), 0.9);
   font-style: normal;
   font-size: 6.5px;
-  color: #8ecadd;
+  color: var(--amber);
 }
 
 .route-editor-map .maplibregl-ctrl-group {
@@ -1282,7 +1282,7 @@
   padding: 6px 9px;
   border-bottom: 1px solid var(--line-soft);
   font-size: 7px;
-  color: #506f82;
+  color: var(--muted);
 }
 
 .ops-waypoints__list {
@@ -1317,25 +1317,25 @@
 .waypoint-row__name strong {
   font-size: 8.5px;
   font-weight: 500;
-  color: #bdd9e8;
+  color: var(--amber);
 }
 
 .waypoint-row__name em {
   font-style: normal;
   font-size: 7px;
-  color: #557286;
+  color: var(--amber);
 }
 
 .waypoint-row__coord {
   font-size: 6.8px;
-  color: #4d6c80;
+  color: var(--muted);
 }
 
 .ops-waypoints__empty {
   padding: 14px;
   text-align: center;
   font-size: 8px;
-  color: #526f83;
+  color: var(--muted);
 }
 
 /* ================= flight ================= */
@@ -1362,14 +1362,14 @@
   padding: 7px 10px;
   border-bottom: 1px solid var(--line);
   font-size: 8px;
-  color: #688a9d;
+  color: var(--muted);
 }
 
 .flight-live {
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  color: #ff8c96;
+  color: var(--amber);
   font-family: var(--font-mono);
   font-size: 7px;
   letter-spacing: 0.1em;
@@ -1408,13 +1408,13 @@
   padding: 0 7px;
   border-radius: 3px;
   font-size: 7.5px;
-  color: #587589;
+  color: var(--amber);
   white-space: nowrap;
   flex-shrink: 0;
 }
 
 .camera-switch button.is-active {
-  color: #d8f4ff;
+  color: var(--amber);
   background: rgba(75, 225, 255, 0.1);
 }
 
@@ -1470,12 +1470,12 @@
   font-style: normal;
   font-family: var(--font-mono);
   font-size: 6px;
-  color: #60879a;
+  color: var(--dim);
 }
 
 .flight-hud strong {
   font-size: 8px;
-  color: #dcf7ff;
+  color: var(--amber);
 }
 
 .flight-hud__bottom {
@@ -1486,7 +1486,7 @@
   border-radius: 3px;
   background: rgba(var(--panel-rgb), 0.65);
   font-size: 7px;
-  color: #83b8cc;
+  color: var(--dim);
 }
 
 .flight-video__ai {
@@ -1496,7 +1496,7 @@
   padding: 4px 6px;
   border: 1px solid rgba(255, 188, 92, 0.22);
   border-radius: 3px;
-  color: #ffd08b;
+  color: var(--pink);
   background: rgba(var(--panel-rgb), 0.68);
   font-size: 6.5px;
 }
@@ -1516,7 +1516,7 @@
   padding: 7px 10px;
   border-top: 1px solid var(--line);
   font-size: 7px;
-  color: #5b7e91;
+  color: var(--muted);
 }
 
 .flight-connection span {
@@ -1564,7 +1564,7 @@
 
 .cockpit-head > div > span:last-child {
   font-size: 8px;
-  color: #5d7c90;
+  color: var(--muted);
 }
 
 .flight-progress {
@@ -1580,7 +1580,7 @@
   align-items: center;
   justify-content: space-between;
   font-size: 8px;
-  color: #658497;
+  color: var(--amber);
 }
 
 .flight-progress > div:first-child strong {
@@ -1594,7 +1594,7 @@
 }
 
 .flight-progress__meta span:last-child {
-  color: #8db8ca;
+  color: var(--amber);
 }
 
 .flight-telemetry {
@@ -1617,7 +1617,7 @@
   align-items: center;
   gap: 3px;
   font-size: 6.8px;
-  color: #537286;
+  color: var(--amber);
 }
 
 .flight-telemetry strong {
@@ -1643,13 +1643,13 @@
   padding: 5px 2px;
   border: 1px solid var(--line);
   border-radius: 5px;
-  color: #7593a6;
+  color: var(--amber);
   background: rgba(var(--text-rgb), 0.016);
   font-size: 7.5px;
 }
 
 .command:hover:not(:disabled) {
-  color: #d7f4ff;
+  color: var(--amber);
   border-color: rgba(75, 225, 255, 0.25);
   background: rgba(75, 225, 255, 0.05);
 }
@@ -1661,7 +1661,7 @@
 }
 
 .command--danger {
-  color: #ff7b86;
+  color: var(--amber);
   border-color: rgba(255, 93, 108, 0.22);
   background: rgba(255, 93, 108, 0.055);
 }
@@ -1716,7 +1716,7 @@
   justify-content: space-between;
   padding: 1px 0 3px;
   font-size: 7px;
-  color: #4e6d80;
+  color: var(--muted);
 }
 
 .flight-command-row {
@@ -1731,25 +1731,25 @@
 }
 
 .flight-command-row span {
-  color: #4e6d80;
+  color: var(--muted);
 }
 
 .flight-command-row strong {
-  color: #b8d8e8;
+  color: var(--dim);
   font-weight: 500;
 }
 
 .flight-command-row em {
   font-style: normal;
   text-align: right;
-  color: #547488;
+  color: var(--dim);
 }
 
 .flight-command-log__empty {
   padding: 9px;
   text-align: center;
   font-size: 7.5px;
-  color: #49687b;
+  color: var(--dim);
 }
 
 /* ================= media ================= */
@@ -1781,7 +1781,7 @@
 .ops-space-usage em {
   font-style: normal;
   font-size: 8px;
-  color: #557286;
+  color: var(--amber);
 }
 
 .ops-space-usage .progress {
@@ -1792,7 +1792,7 @@
   display: flex;
   gap: 9px;
   font-size: 7px;
-  color: #5d7c90;
+  color: var(--muted);
 }
 
 .ops-space-usage__legend span {
@@ -1859,7 +1859,7 @@
 .media-card__thumb.is-archive {
   display: grid;
   place-items: center;
-  color: #ffcf78;
+  color: var(--muted);
   background: linear-gradient(160deg, rgba(255, 188, 92, 0.12), rgba(var(--panel-rgb), 0.8));
 }
 
@@ -1873,7 +1873,7 @@
   padding: 2px 5px;
   border-radius: 3px;
   background: rgba(var(--panel-rgb), 0.76);
-  color: #9ac4d7;
+  color: var(--amber);
   font-family: var(--font-mono);
   font-size: 6.5px;
 }
@@ -1887,7 +1887,7 @@
   display: grid;
   place-items: center;
   border-radius: 50%;
-  color: #dff9ff;
+  color: var(--amber);
   background: rgba(var(--panel-rgb), 0.65);
   border: 1px solid rgba(75, 225, 255, 0.2);
 }
@@ -1902,7 +1902,7 @@
 .media-card__body strong {
   font-size: 9.5px;
   font-weight: 500;
-  color: #d1eaf7;
+  color: var(--muted);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -1910,13 +1910,13 @@
 
 .media-card__body span {
   font-size: 7.5px;
-  color: #5e7c90;
+  color: var(--muted);
 }
 
 .media-card__body em {
   font-style: normal;
   font-size: 6.8px;
-  color: #4c6b7e;
+  color: var(--muted);
 }
 
 .media-preview {
@@ -1948,7 +1948,7 @@
   align-items: center;
   justify-content: center;
   gap: 8px;
-  color: #ffcf78;
+  color: var(--muted);
   border: 1px solid rgba(255, 188, 92, 0.14);
   border-radius: 6px;
   background: rgba(255, 188, 92, 0.035);
@@ -1956,7 +1956,7 @@
 
 .media-preview__archive span {
   font-size: 8px;
-  color: #6b7f8f;
+  color: var(--muted);
 }
 
 .media-preview__pose {
@@ -1967,7 +1967,7 @@
   border-radius: 3px;
   background: rgba(var(--panel-rgb), 0.72);
   font-size: 7px;
-  color: #90c2d5;
+  color: var(--dim);
 }
 
 .media-preview__meta {
@@ -2003,11 +2003,11 @@
 }
 
 .media-preview__rows span {
-  color: #567386;
+  color: var(--amber);
 }
 
 .media-preview__rows strong {
-  color: #b8d7e7;
+  color: var(--dim);
   font-weight: 500;
   text-align: right;
   word-break: break-all;
@@ -2041,7 +2041,7 @@
   bottom: 6px;
   font-style: normal;
   font-size: 6.5px;
-  color: #4c6f82;
+  color: var(--muted);
 }
 
 .media-preview__actions {
@@ -2100,7 +2100,7 @@
 
 .clue-donut span {
   font-size: 7.5px;
-  color: #5b798d;
+  color: var(--amber);
 }
 
 .clue-stat {
@@ -2119,19 +2119,19 @@
   align-items: center;
   gap: 4px;
   font-size: 8px;
-  color: #668398;
+  color: var(--amber);
 }
 
 .clue-stat strong {
   font-size: 22px;
   font-weight: 500;
-  color: #dcf4ff;
+  color: var(--amber);
 }
 
 .clue-stat em {
   font-style: normal;
   font-size: 7px;
-  color: #4c6a7d;
+  color: var(--amber);
 }
 
 .ops-model-strip {
@@ -2163,12 +2163,12 @@
 .ops-model-strip strong {
   font-size: 8.5px;
   font-weight: 500;
-  color: #c4e1ef;
+  color: var(--danger);
 }
 
 .ops-model-strip em {
   font-style: normal;
-  color: #547184;
+  color: var(--danger);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -2241,19 +2241,19 @@
 }
 
 .clue-row__main > span {
-  color: #4f7b91;
+  color: var(--amber);
 }
 
 .clue-row__main strong {
   font-size: 10px;
   font-weight: 500;
-  color: #d7edf9;
+  color: var(--text);
 }
 
 .clue-row__main em {
   font-style: normal;
   font-size: 7.5px;
-  color: #557386;
+  color: var(--amber);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -2267,18 +2267,18 @@
 
 .clue-row__objects strong {
   font-size: 15px;
-  color: #d6f2ff;
+  color: var(--amber);
   font-weight: 500;
 }
 
 .clue-row__objects span {
   font-size: 7px;
-  color: #526f82;
+  color: var(--muted);
 }
 
 .clue-status--pending { color: var(--amber); background: rgba(255, 188, 92, 0.08); }
 .clue-status--done { color: var(--teal); background: rgba(35, 230, 176, 0.08); }
-.clue-status--ignored { color: #71889a; background: rgba(113, 136, 154, 0.08); }
+.clue-status--ignored { color: var(--dim); background: rgba(113, 136, 154, 0.08); }
 
 .clue-row__actions {
   display: flex;
@@ -2342,7 +2342,7 @@
   align-items: center;
   justify-content: center;
   gap: 6px;
-  color: #4b7186;
+  color: var(--danger);
   font-size: 9px;
 }
 
@@ -2356,13 +2356,13 @@
 .ops-empty strong {
   font-size: 11px;
   font-weight: 500;
-  color: #7fa3b7;
+  color: var(--danger);
 }
 
 .ops-empty p {
   margin: 0;
   font-size: 8px;
-  color: #4d6b7e;
+  color: var(--muted);
 }
 
 .ops-toast {
@@ -2380,7 +2380,7 @@
   border-radius: 6px;
   background: rgba(var(--panel-rgb), 0.94);
   box-shadow: 0 18px 40px -20px rgba(0, 0, 0, 0.9);
-  color: #bff8ea;
+  color: var(--amber);
   font-size: 9.5px;
   animation: toastIn var(--dur-base) var(--ease-out) backwards;
 }

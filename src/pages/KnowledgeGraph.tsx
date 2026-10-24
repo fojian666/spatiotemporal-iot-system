@@ -11,7 +11,7 @@ import {
   X,
 } from 'lucide-react';
 import type { EChartsOption } from 'echarts';
-import { chartPalette, useTheme } from '../theme';
+import { chartPalette, darkenHex, useTheme } from '../theme';
 import { PageHeader } from '../components/Shell';
 import { EChart, Panel, StatusPill } from '../components/ui';
 import {
@@ -77,6 +77,11 @@ CATEGORY_ORDER.forEach((category, categoryIndex) => {
 
 const nodeColor = (node: KnowledgeNode) => CATEGORY_META[node.category].color;
 
+// 浅色主题下加深分类色，保证标签在白底可读
+function themeAwareLabelColor(theme: 'dark' | 'light', color: string) {
+  return theme === 'light' ? darkenHex(color, 0.55) : color;
+}
+
 function resolvePathLinks(path: KnowledgeNode[]) {
   const pairs = new Set<string>();
   for (let index = 0; index < path.length - 1; index += 1) {
@@ -134,9 +139,10 @@ export function KnowledgeGraphPage() {
         const isSearchMatch = matchIds.has(item.id);
         const isDimmed = hidden.has(item.category) || (Boolean(q) && !isSearchMatch);
         const color = nodeColor(item);
+        const labelColor = themeAwareLabelColor(theme, color);
         const degree = degrees.get(item.id) ?? 0;
         const size = isRoot ? 34 : HUB_IDS.has(item.id) ? 20 + Math.min(9, degree * 0.6) : 9 + Math.min(11, degree * 1.35);
-        const borderColor = isPath ? '#8affc1' : isSelected ? palette.nodeSelect : isSearchMatch ? '#ffe28a' : `${color}88`;
+        const borderColor = isPath ? '#8affc1' : isSelected ? palette.nodeSelect : isSearchMatch ? '#ffe28a' : `${labelColor}88`;
         return {
           id: item.id,
           nodeId: item.id,
@@ -158,7 +164,7 @@ export function KnowledgeGraphPage() {
             show: true,
             position: 'right',
             distance: 5,
-            color: isDimmed ? palette.labelDim : isSelected ? palette.nodeSelect : isNeighbor ? palette.labelStrong : palette.label,
+            color: isDimmed ? palette.labelDim : isSelected ? palette.nodeSelect : isNeighbor ? labelColor : labelColor,
             textBorderColor: palette.halo,
             textBorderWidth: 2,
             fontSize: isRoot || HUB_IDS.has(item.id) ? 10.5 : 9.2,
@@ -213,7 +219,7 @@ export function KnowledgeGraphPage() {
       const isPathEdge = pathPairs.has(pair);
       const isAdjacent = item.source === selected.id || item.target === selected.id;
       const searchDim = Boolean(q) && !matchIds.has(item.source) && !matchIds.has(item.target);
-      const color = isPathEdge ? '#5fffb1' : isAdjacent ? '#7defff' : nodeColor(sourceNode);
+      const color = isPathEdge ? '#5fffb1' : isAdjacent ? '#7defff' : themeAwareLabelColor(theme, nodeColor(sourceNode));
       return {
         source: item.source,
         target: item.target,
@@ -269,7 +275,7 @@ export function KnowledgeGraphPage() {
         },
       ],
     } as EChartsOption;
-  }, [hidden, pathIds, pathPairs, search, searchResults, selected.id, neighbors, palette]);
+  }, [hidden, pathIds, pathPairs, search, searchResults, selected.id, neighbors, palette, theme]);
 
   const toggleCategory = (category: KnowledgeCategory) => {
     setHidden((current) => {

@@ -110,7 +110,7 @@
   border-radius: 4px;
   border: 1px solid rgba(95, 185, 255, 0.16);
   background: rgba(var(--panel-rgb), 0.92);
-  color: #d3eaff;
+  color: var(--muted);
   font-size: 9px;
   white-space: nowrap;
   opacity: 0;
@@ -125,7 +125,7 @@
   font-style: normal;
   font-family: var(--font-mono);
   font-size: 7.5px;
-  color: #547893;
+  color: var(--dim);
 }
 
 .map-node:hover .map-node__label,
@@ -135,7 +135,7 @@
 }
 
 .map-node.is-selected {
-  border-color: #ffffff;
+  border-color: var(--muted);
   box-shadow: 0 0 0 4px rgba(var(--text-rgb), 0.09), 0 0 24px color-mix(in srgb, var(--node-color) 65%, transparent);
   z-index: 6;
 }
@@ -215,7 +215,7 @@
   border-radius: 4px;
   border: 1px solid rgba(95, 185, 255, 0.16);
   background: rgba(var(--panel-rgb), 0.9);
-  color: #cde8ff;
+  color: var(--amber);
   font-size: 8.5px;
   white-space: nowrap;
   opacity: 0;
@@ -245,7 +245,7 @@
 }
 
 .map-moving.is-selected .map-moving__core {
-  border-color: #ffffff;
+  border-color: var(--muted);
   box-shadow: 0 0 0 4px rgba(var(--text-rgb), 0.08), 0 0 22px var(--node-color);
 }
 
@@ -295,7 +295,7 @@
   place-items: center;
   font-family: var(--font-mono);
   font-size: 7.5px;
-  color: #9feaff;
+  color: var(--amber);
   background: rgba(var(--panel-rgb), 0.9);
   border: 1px solid rgba(75, 225, 255, 0.38);
   box-shadow: 0 0 8px rgba(75, 225, 255, 0.16);
@@ -304,7 +304,7 @@
 .waypoint-marker em {
   font-style: normal;
   font-size: 8px;
-  color: #82a4c0;
+  color: var(--dim);
   background: rgba(var(--panel-rgb), 0.72);
   padding: 1px 4px;
   border-radius: 3px;
@@ -336,7 +336,7 @@
 .fence-label em {
   font-style: normal;
   font-size: 7.5px;
-  color: #5d7c96;
+  color: var(--muted);
   letter-spacing: 0.08em;
 }
 
@@ -398,7 +398,7 @@
 }
 
 .map-layer-toggle.is-on {
-  color: #cfe8fb;
+  color: var(--amber);
 }
 
 .map-layer-toggle.is-on i {
@@ -452,7 +452,7 @@
   border-radius: 4px;
   border: 1px solid var(--line);
   background: rgba(var(--panel-rgb), 0.72);
-  color: #6c8aa4;
+  color: var(--muted);
   font-size: 8px;
   letter-spacing: 0.05em;
   backdrop-filter: blur(8px);
@@ -506,7 +506,7 @@
 .map-route-caption strong {
   font-size: 9px;
   font-weight: 500;
-  color: #c6e6fd;
+  color: var(--dim);
 }
 
 .map-route-caption span {
@@ -554,13 +554,13 @@
 
 .maplibregl-ctrl-attrib {
   background: rgba(var(--panel-rgb), 0.68) !important;
-  color: #5f7d96 !important;
+  color: var(--muted) !important;
   font-size: 8px !important;
   border-radius: 4px !important;
 }
 
 .maplibregl-ctrl-attrib a {
-  color: #7a9ab4 !important;
+  color: var(--muted) !important;
 }
 
 .maplibregl-ctrl-attrib-button {

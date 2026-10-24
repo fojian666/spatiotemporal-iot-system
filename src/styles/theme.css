@@ -86,3 +86,48 @@ html[data-theme='light'] .map-view__tint {
 .boot-splash {
   zoom: 1.1;
 }
+
+html[data-theme='light'] .scenario-pill,
+html[data-theme='light'] .scenario-switch__item {
+  color: color-mix(in srgb, var(--pill, #b45309) 55%, #111827);
+}
+html[data-theme='light'] .btn--primary {
+  color: #ffffff;
+}
+html[data-theme='light'] .panel-title,
+html[data-theme='light'] .panel-head .overline {
+  color: var(--text);
+}
+
+html[data-theme='light'] .kg-category-badge,
+html[data-theme='light'] .kg-detail__glyph {
+  color: color-mix(in srgb, var(--node-color, #0891b2) 45%, #111827);
+}
+html[data-theme='light'] .btn--sm,
+html[data-theme='light'] .btn:not(.btn--primary):not(.btn--ai) {
+  color: var(--text);
+}
+
+html[data-theme='light'] .map-node__core,
+html[data-theme='light'] .map-moving__core {
+  color: color-mix(in srgb, var(--node-color, #0891b2) 45%, #1e293b);
+}
+html[data-theme='light'] .place-label span,
+html[data-theme='light'] .map-node__label,
+html[data-theme='light'] .map-moving__label {
+  color: #1e293b;
+}
+html[data-theme='light'] .btn--primary {
+  background: linear-gradient(135deg, #0891b2, #2563eb);
+  box-shadow: 0 8px 26px -12px rgba(8, 145, 178, 0.5);
+}
+
+html[data-theme='light'] .operator__avatar {
+  background: linear-gradient(135deg, #0369a1, #1d4ed8);
+}
+html[data-theme='light'] .map-hud-label {
+  background: rgba(255, 255, 255, 0.82);
+}
+html[data-theme='light'] .map-hud-label em {
+  color: #1e293b;
+}

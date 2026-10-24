@@ -63,3 +63,11 @@ export function chartPalette(): ChartPalette {
     nodeSelect: read('--node-select', '#ffffff'),
   };
 }
+
+/** Darken a hex color toward black by the given factor (0-1). */
+export function darkenHex(hex: string, factor: number): string {
+  const m = hex.replace('#', '');
+  if (m.length !== 6) return hex;
+  const channels = [0, 2, 4].map((i) => Math.max(0, Math.min(255, Math.round(parseInt(m.slice(i, i + 2), 16) * factor))));
+  return `#${channels.map((c) => c.toString(16).padStart(2, '0')).join('')}`;
+}
