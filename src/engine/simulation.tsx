@@ -581,6 +581,12 @@ function LocalSimulationProvider({ children }: { children: ReactNode }) {
     const weather = DEVICES.filter((d) => d.kind === 'weather' || d.kind === 'air');
     const water = DEVICES.filter((d) => d.kind === 'water');
     const avg = (arr: number[]) => arr.reduce((a, b) => a + b, 0) / Math.max(1, arr.length);
+    const reported = (devices: typeof DEVICES, key: 'temperature' | 'humidity' | 'pm25' | 'level' | 'ph') => {
+      const values = devices
+        .map((device) => readings[device.id]?.[key])
+        .filter((value): value is number => typeof value === 'number');
+      return avg(values);
+    };
     const activeWarningAlerts = alerts.filter((a) => a.level === 'warning' && a.status !== '已完成').length;
     const regionHealth = Math.max(
       35,
@@ -597,11 +603,11 @@ function LocalSimulationProvider({ children }: { children: ReactNode }) {
       unmannedActive: DEVICES.filter((d) => ['drone', 'ugv', 'usv', 'satellite'].includes(d.kind)).length,
       regionHealth,
       messageRate: Math.round(1280 + Math.sin(tick / 5) * 48 + (scenarioKey === 'normal' ? 0 : 310)),
-      avgTemperature: +avg(weather.map((d) => readings[d.id]?.temperature ?? 0)).toFixed(1),
-      avgHumidity: Math.round(avg(weather.map((d) => readings[d.id]?.humidity ?? 0))),
-      avgPm25: Math.round(avg(weather.filter((d) => d.id !== 'AQ-02').map((d) => readings[d.id]?.pm25 ?? 0))),
-      avgWaterLevel: +avg(water.map((d) => readings[d.id]?.level ?? 0)).toFixed(2),
-      avgPh: +avg(water.map((d) => readings[d.id]?.ph ?? 0)).toFixed(2),
+      avgTemperature: +reported(weather, 'temperature').toFixed(1),
+      avgHumidity: Math.round(reported(weather, 'humidity')),
+      avgPm25: Math.round(reported(weather.filter((d) => d.id !== 'AQ-02'), 'pm25')),
+      avgWaterLevel: +reported(water, 'level').toFixed(2),
+      avgPh: +reported(water, 'ph').toFixed(2),
       todayTasks: 24 + (scenarioKey === 'normal' ? 0 : 3),
       dataQuality: scenarioKey === 'normal' ? 98.4 : 96.7,
     };

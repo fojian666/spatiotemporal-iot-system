@@ -304,6 +304,13 @@ def compute_stats(
     def average(items: list[float]) -> float:
         return sum(items) / max(1, len(items))
 
+    def reported(devices: list[dict[str, Any]], key: str) -> list[float]:
+        return [
+            float(metrics[key])
+            for device in devices
+            if (metrics := readings.get(device["id"])) and key in metrics
+        ]
+
     region_health = max(
         35,
         min(
@@ -326,11 +333,11 @@ def compute_stats(
         "unmannedActive": sum(1 for device in DEVICES if device["kind"] in UNMANNED_KINDS),
         "regionHealth": region_health,
         "messageRate": round(1280 + math.sin(tick / 5) * 48 + (0 if scenario_key == "normal" else 310)),
-        "avgTemperature": round(average([float(readings.get(device["id"], {}).get("temperature", 0)) for device in weather]), 1),
-        "avgHumidity": round(average([float(readings.get(device["id"], {}).get("humidity", 0)) for device in weather])),
-        "avgPm25": round(average([float(readings.get(device["id"], {}).get("pm25", 0)) for device in weather if device["id"] != "AQ-02"])),
-        "avgWaterLevel": round(average([float(readings.get(device["id"], {}).get("level", 0)) for device in water]), 2),
-        "avgPh": round(average([float(readings.get(device["id"], {}).get("ph", 0)) for device in water]), 2),
+        "avgTemperature": round(average(reported(weather, "temperature")), 1),
+        "avgHumidity": round(average(reported(weather, "humidity"))),
+        "avgPm25": round(average(reported([device for device in weather if device["id"] != "AQ-02"], "pm25"))),
+        "avgWaterLevel": round(average(reported(water, "level")), 2),
+        "avgPh": round(average(reported(water, "ph")), 2),
         "todayTasks": 24 + (0 if scenario_key == "normal" else 3),
         "dataQuality": 98.4 if scenario_key == "normal" else 96.7,
     }
