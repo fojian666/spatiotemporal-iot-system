@@ -338,6 +338,38 @@ async def create_plan(
     return _plan_dict(plan)
 
 
+PLAN_COMMAND_LABELS = {
+    "takeoff": "起飞",
+    "pause": "暂停",
+    "resume": "继续",
+    "hover": "悬停",
+    "return": "返航",
+    "land": "降落",
+    "complete": "完成",
+    "fail": "异常",
+}
+
+# command -> allowed current statuses, next status, set actual_start, set actual_end
+PLAN_TRANSITIONS: dict[str, tuple[set[str], str, bool, bool]] = {
+    "takeoff": ({"未开始"}, "执行中", True, False),
+    "resume": ({"已暂停"}, "执行中", True, False),
+    "pause": ({"执行中"}, "已暂停", False, False),
+    "hover": ({"执行中", "已暂停"}, "", False, False),
+    "return": ({"执行中", "已暂停"}, "执行中", True, False),
+    "land": ({"执行中", "已暂停"}, "已完成", False, True),
+    "complete": ({"执行中", "已暂停"}, "已完成", False, True),
+    "fail": ({"未开始", "执行中", "已暂停"}, "执行失败", False, True),
+}
+
+
+def plan_transition(status: str, command: str) -> tuple[str, bool, bool] | None:
+    """Return (next_status, set_start, set_end) or None when the transition is illegal."""
+    allowed, next_status, set_start, set_end = PLAN_TRANSITIONS[command]
+    if status not in allowed:
+        return None
+    return (next_status or status), set_start, set_end
+
+
 @router.post("/plans/{plan_id}/command")
 async def plan_command(
     plan_id: str,
@@ -348,6 +380,13 @@ async def plan_command(
     plan = await session.get(FlightPlan, plan_id)
     if plan is None:
         raise HTTPException(status_code=404, detail="飞行计划不存在")
+    transition = plan_transition(plan.status, payload.command)
+    if transition is None:
+        raise HTTPException(
+            status_code=409,
+            detail=f"当前状态「{plan.status}」不允许执行「{PLAN_COMMAND_LABELS[payload.command]}」指令",
+        )
+    next_status, set_start, set_end = transition
     now = now_local()
     command = FlightCommand(
         plan_id=plan.id,
@@ -357,24 +396,13 @@ async def plan_command(
         created_at=now,
     )
     session.add(command)
-    if payload.command in {"takeoff", "resume"}:
-        plan.status = "执行中"
-        if plan.actual_start is None:
-            plan.actual_start = now
-    elif payload.command == "pause":
-        plan.status = "已暂停"
-    elif payload.command == "fail":
-        plan.status = "执行失败"
+    plan.status = next_status
+    if set_start and plan.actual_start is None:
+        plan.actual_start = now
+    if set_end:
         plan.actual_end = now
-    elif payload.command in {"land", "complete"}:
-        plan.status = "已完成"
-        plan.actual_end = now
-    elif payload.command == "hover":
-        pass  # 悬停不改变任务状态
-    else:
-        plan.status = "执行中"
-        if plan.actual_start is None:
-            plan.actual_start = now
+    elif payload.command in {"takeoff", "resume", "return"}:
+        plan.actual_end = None
     await session.commit()
     return {"plan": _plan_dict(plan), "command": _command_dict(command)}
 
