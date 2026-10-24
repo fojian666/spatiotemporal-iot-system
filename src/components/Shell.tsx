@@ -1,3 +1,4 @@
+import { useEffect, useState, type CSSProperties, type ReactNode } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import {
   Bot,
@@ -8,12 +9,13 @@ import {
   LayoutDashboard,
   LogOut,
   Map as MapIcon,
+  Moon,
   Network,
   Plane,
   RadioTower,
+  Sun,
   type LucideIcon,
 } from 'lucide-react';
-import type { CSSProperties, ReactNode } from 'react';
 import { useAuth } from '../auth/AuthContext';
 import { formatSimTime, useSimulation } from '../engine/simulation';
 import { ArchitectureModal, useArchitectureModal } from './ArchitectureModal';
@@ -62,9 +64,32 @@ function Logo() {
   );
 }
 
+const THEME_KEY = 'stiot-theme';
+type Theme = 'dark' | 'light';
+
+function useTheme() {
+  const [theme, setTheme] = useState<Theme>(() =>
+    document.documentElement.dataset.theme === 'light' ? 'light' : 'dark',
+  );
+  useEffect(() => {
+    document.documentElement.dataset.theme = theme;
+  }, [theme]);
+  const toggle = () => {
+    const next: Theme = theme === 'dark' ? 'light' : 'dark';
+    setTheme(next);
+    try {
+      window.localStorage.setItem(THEME_KEY, next);
+    } catch {
+      // hardened browser contexts may block storage
+    }
+  };
+  return { theme, toggle };
+}
+
 export function Shell({ children }: { children: ReactNode }) {
   const { simTime, scenario, running, speed, stats, source, linkStatus } = useSimulation();
   const { user, logout, isRemote } = useAuth();
+  const { theme, toggle: toggleTheme } = useTheme();
   const roleLabel = user?.role === 'admin' ? '管理员' : user?.role === 'operator' ? '值班长' : user?.role === 'viewer' ? '观察员（只读）' : '本地演示';
   const displayName = user?.displayName ?? '值班长';
   const avatarText = user ? user.displayName.slice(0, 2) : 'LOCAL';
@@ -139,6 +164,17 @@ export function Shell({ children }: { children: ReactNode }) {
                   : linkStatus === 'connecting' ? 'API 连接中' : 'API 重连中'
                 : running ? (speed === 1 ? '本地同步 · 1s' : `仿真加速 ×${speed}`) : '数据流暂停'}
             </span>
+
+            <button
+              type="button"
+              className="arch-trigger"
+              onClick={toggleTheme}
+              title={theme === 'dark' ? '切换为白色主题' : '切换为暗色主题'}
+              aria-label="切换主题"
+            >
+              {theme === 'dark' ? <Sun size={15} /> : <Moon size={15} />}
+              {theme === 'dark' ? '白色主题' : '暗色主题'}
+            </button>
 
             <button type="button" className="arch-trigger" onClick={openModal}>
               <Boxes size={15} />

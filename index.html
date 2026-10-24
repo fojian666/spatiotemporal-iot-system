@@ -6,6 +6,13 @@
     <meta name="theme-color" content="#050b16" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <title>时空智能物联网系统 · 平安区</title>
+    <script>
+      // 首帧前应用主题，避免刷新时闪错主题
+      document.documentElement.dataset.theme =
+        (function () {
+          try { return localStorage.getItem('stiot-theme'); } catch (e) { return null; }
+        })() || 'dark';
+    </script>
   </head>
   <body>
     <div id="root"></div>

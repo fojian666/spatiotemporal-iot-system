@@ -6,6 +6,7 @@ import './styles/pages.css';
 import './styles/copilot.css';
 import './styles/auth.css';
 import './styles/drone.css';
+import './styles/theme.css';
 import App from './App';
 import { AuthGate, AuthProvider } from './components/AuthProvider';
 

@@ -1,6 +1,6 @@
 :root {
   color-scheme: dark;
-  --bg: #040a12;
+  --bg: var(--bg);
   --bg-soft: #071321;
   --panel: rgba(8, 20, 35, 0.9);
   --panel-strong: #091828;
@@ -171,7 +171,7 @@ ul {
   flex-direction: column;
   padding: 14px 0 14px;
   border-right: 1px solid var(--line);
-  background: linear-gradient(180deg, rgba(8, 18, 32, 0.98), rgba(4, 10, 18, 0.98));
+  background: linear-gradient(180deg, rgba(var(--panel-rgb), 0.98), rgba(var(--panel-rgb), 0.98));
   position: relative;
   z-index: 30;
 }
@@ -297,7 +297,7 @@ ul {
   gap: 18px;
   padding: 0 20px;
   border-bottom: 1px solid var(--line);
-  background: rgba(5, 13, 23, 0.74);
+  background: rgba(var(--panel-rgb), 0.74);
   backdrop-filter: blur(18px);
   position: relative;
   z-index: 25;
@@ -462,7 +462,7 @@ ul {
   font-size: 10px;
   font-weight: 600;
   color: #07131e;
-  background: linear-gradient(135deg, #8ff2ff, #4ea6ff);
+  background: linear-gradient(135deg, var(--accent-text), #4ea6ff);
   box-shadow: 0 0 14px rgba(75, 225, 255, 0.22);
 }
 
@@ -475,7 +475,7 @@ ul {
 .operator strong {
   font-size: 10.5px;
   font-weight: 500;
-  color: #dceeff;
+  color: var(--text);
 }
 
 .operator span {
@@ -508,7 +508,7 @@ ul {
   background:
     radial-gradient(900px 480px at 76% 0%, rgba(21, 82, 130, 0.1), transparent 70%),
     radial-gradient(700px 500px at 10% 100%, rgba(11, 84, 78, 0.08), transparent 70%),
-    #040a12;
+    var(--bg);
 }
 
 .app-content--flush {
@@ -1760,7 +1760,7 @@ select {
   gap: 9px;
   background:
     radial-gradient(700px 420px at 50% 35%, rgba(22, 100, 145, 0.18), transparent 70%),
-    #040a12;
+    var(--bg);
   color: var(--text);
 }
 
