@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState, type CSSProperties, type KeyboardEvent as ReactKeyboardEvent } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties, type KeyboardEvent as ReactKeyboardEvent } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import {
   Activity,
@@ -243,6 +243,8 @@ export function CopilotPage() {
   const [lastEvidence, setLastEvidence] = useState<CopilotReply['evidence']>([]);
   const [lastIntent, setLastIntent] = useState('');
   const scrollRef = useRef<HTMLDivElement>(null);
+  const stickToBottomRef = useRef(true);
+  const forceScrollRef = useRef(false);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const timerRef = useRef<number | null>(null);
   const toastTimerRef = useRef<number | null>(null);
@@ -251,14 +253,23 @@ export function CopilotPage() {
   const time = formatSimTime(simTime);
   const lastReply = useMemo(() => [...messages].reverse().find((message) => message.reply)?.reply ?? null, [messages]);
 
-  const scrollToBottom = () => {
+  const handleChatScroll = useCallback(() => {
     const node = scrollRef.current;
-    if (node) node.scrollTop = node.scrollHeight;
-  };
+    if (!node) return;
+    stickToBottomRef.current = node.scrollHeight - node.scrollTop - node.clientHeight < 96;
+  }, []);
+
+  const scrollToBottom = useCallback((force = false) => {
+    const node = scrollRef.current;
+    if (!node) return;
+    if (!force && !stickToBottomRef.current) return;
+    node.scrollTop = node.scrollHeight;
+  }, []);
 
   useEffect(() => {
-    scrollToBottom();
-  }, [messages.length, pending]);
+    scrollToBottom(forceScrollRef.current);
+    forceScrollRef.current = false;
+  }, [messages.length, pending, scrollToBottom]);
 
   useEffect(() => {
     return () => {
@@ -282,6 +293,7 @@ export function CopilotPage() {
     setMessages((current) => [...current, userMessage]);
     setInput('');
     setPending(true);
+    forceScrollRef.current = true;
     if (timerRef.current) window.clearTimeout(timerRef.current);
     timerRef.current = window.setTimeout(() => {
       const reply = askCopilot(query, sim);
@@ -298,7 +310,6 @@ export function CopilotPage() {
       setLastEvidence(reply.evidence);
       setLastIntent(reply.intent);
       setPending(false);
-      window.setTimeout(scrollToBottom, 30);
     }, 620);
   };
 
@@ -326,9 +337,14 @@ export function CopilotPage() {
         showToast('观察员为只读角色，无法切换仿真场景。');
         return;
       }
-      setScenario(action.value as ScenarioKey);
       const target = SCENARIO_LIST.find((item) => item.key === action.value);
-      showToast(`已切换仿真场景：${target?.name ?? action.value}，后续回答将基于新场景的实时数据。`);
+      void Promise.resolve(setScenario(action.value as ScenarioKey)).then((ok) => {
+        showToast(
+          ok
+            ? `已切换仿真场景：${target?.name ?? action.value}，后续回答将基于新场景的实时数据。`
+            : '场景切换失败，请检查后端连接后重试。',
+        );
+      });
       return;
     }
     send(action.value);
@@ -342,6 +358,12 @@ export function CopilotPage() {
   };
 
   const clearChat = () => {
+    if (timerRef.current) {
+      window.clearTimeout(timerRef.current);
+      timerRef.current = null;
+    }
+    setPending(false);
+    stickToBottomRef.current = true;
     setMessages([]);
     setLastPipeline(null);
     setLastEvidence([]);
@@ -393,7 +415,7 @@ export function CopilotPage() {
             </div>
           </header>
 
-          <div className="chat-scroll" ref={scrollRef}>
+          <div className="chat-scroll" ref={scrollRef} onScroll={handleChatScroll}>
             {!messages.length && (
               <div className="chat-welcome">
                 <div className="welcome-visual">

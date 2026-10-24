@@ -777,6 +777,23 @@ function trendAnswer(ctx: SimContextValue, query: string): Draft | null {
   ];
   const metric = metrics.find((item) => item.keys.some((key) => query.includes(key)));
   if (!metric) return null;
+  if (ctx.history.length < 2) {
+    return {
+      intent: '时空趋势分析',
+      text: `${metric.label}时序分析暂时不可用：当前窗口只有 ${ctx.history.length} 个采样点，至少需要 2 个才能计算趋势。
+
+服务端处于真实设备直连模式时，历史曲线要等设备持续上报后才会生成；请确认设备已上线并完成至少两个采样周期后再试。`,
+      evidence: [
+        telemetryEvidence(
+          ctx,
+          `${metric.label} · 采样窗口`,
+          `已收到历史采样 ${ctx.history.length} 个；趋势分析至少需要 2 个`,
+        ),
+      ],
+      followups: ['现在有哪些设备在线？', '现在平安区有哪些风险？', '生成一份区域态势简报'],
+      confidence: 0.55,
+    };
+  }
   const values = ctx.history.map((point) => point[metric.field]);
   const first = values[0];
   const last = values[values.length - 1];
