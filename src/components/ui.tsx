@@ -270,7 +270,8 @@ export function EChart({
   }, []);
 
   useEffect(() => {
-    chartRef.current?.setOption(option, { notMerge: false, lazyUpdate: true });
+    // 不用 lazyUpdate：首绘依赖 rAF，窗口被遮挡节流时图表会永远停留在空容器
+    chartRef.current?.setOption(option, { notMerge: false });
   }, [option]);
 
   return <div ref={ref} className={`echart ${className}`} style={{ height }} />;
