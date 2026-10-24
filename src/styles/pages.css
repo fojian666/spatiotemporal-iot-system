@@ -4342,13 +4342,11 @@
 
 /* ===== 文档切换淡入淡出 ===== */
 .docs-content {
-  transition: opacity 170ms var(--ease-out), transform 170ms var(--ease-out);
+  transition: opacity 200ms ease;
 }
 .docs-content.is-fading {
   opacity: 0;
-  transform: translateY(6px);
 }
 @media (prefers-reduced-motion: reduce) {
-  .docs-content,
-  .docs-content.is-fading { transition: none; transform: none; }
+  .docs-content { transition: none; }
 }
