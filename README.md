@@ -10,7 +10,7 @@ Spatiotemporal IoT demo platform（spatiotemporal-iot-system）——以青海�
 |---|---|
 | 态势总览 | 区域 KPI、多源趋势、告警流转、智能体建议 |
 | 一网统飞 | 无人机机场/航线编辑（地图点选+拖拽航点+删除）/任务计划/实时飞控/媒体成果/AI 线索闭环 |
-| 文档中心 | 模仿 OneNET / CTWing / 涂鸦开发者文档形态：侧栏目录树 + 正文阅读区，17 篇文档（平台介绍/快速入门/功能指南/开发者指南/教材对照/FAQ） |
+| 文档中心 | 模仿 OneNET / CTWing / 涂鸦开发者文档形态：侧栏目录树 + 正文阅读区（开卷书壳 + 翻页转场），6 组 23 篇文档（平台介绍/快速入门/功能使用指南/开发者指南/教材研读/常见问题） |
 | 物联仿真 | 4 场景注入（常态/暴雨洪涝/森林火情/水质污染），9 组环境参数驱动 |
 | 时空一张图 | MapLibre + 卫星底图，设备/航线/电子围栏/热区/卫星过境图层 |
 | 知识图谱 | 56 实体 / 126 关系 / 7 知识域，最短路径查询 |
@@ -22,6 +22,13 @@ Spatiotemporal IoT demo platform（spatiotemporal-iot-system）——以青海�
 - **后端**：FastAPI + SQLAlchemy(async) + PostgreSQL/PostGIS
 - **消息**：Mosquitto MQTT（TLS :8883，用户名/ACL），遥测经发布-订阅真实回路回灌
 - **安全**：JWT（HS256 + token_version 登出踢出）、RBAC 三角色、登录限流、WS 一次性票据、CORS/TrustedHost/安全响应头
+
+## 视觉与动效
+
+- **登录页**：原子核 3D 视觉——三层电子壳层、拖尾电子与核子团（preserve-3d 真实遮挡），随指针视差倾斜；文案取「山河入网 / 时空为证」意象。
+- **文档中心**：开卷书壳与翻页转场；窄屏（≤1100px）与 `prefers-reduced-motion` 下自动退化为直接切换。
+- **控制台**：入场编排、KPI 数字滚动、列表 stagger、toast/模态两段式退场、状态徽章脉冲、主题切换 View Transition。
+- 全部为纯 CSS / rAF 实现，未引入动效库；统一受 `prefers-reduced-motion` 降级（降级后保留静止姿态而非空白）。
 
 ## 快速开始
 
@@ -120,3 +127,4 @@ public/assets/  演示航拍影像
 - 仿真领域逻辑在前端 `src/engine/simulation.tsx` 与后端 `backend/app/data.py` 各有一份 TypeScript / Python 实现，用于支持无后端演示模式，修改公式需同步两处。
 - 演示地理坐标相对真实卫星影像做了可读性扩散（见 `src/data/devices.ts` 注释），数据库与地图使用同一坐标系，内部一致。
 - API 模式下仿真时钟固定 1×，本地模式支持 2×/4× 加速。
+- 书籍/课程资料（`*.docx`、`*.pptx`）只保留在本地工作区，.gitignore 已忽略，不进入仓库。

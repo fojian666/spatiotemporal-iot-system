@@ -36,6 +36,14 @@ backend/scripts/publish_device.py    # 以外部设备身份向 MQTT 灌数（�
 6. **遥测契约拒绝项**：`schemas.py` 除字段校验外还拒绝**非数值指标（NaN/Inf）与未注册/伪造 device_id**，拒收计数进 `mqtt.messagesRejected`；放宽校验前先想清楚。
 7. **run.sh 行为**：会从 `backend/.env` 读取 `IOT_MQTT_PORT / IOT_TLS_ENABLED / IOT_API_PORT`（不 source 整个文件）；`IOT_TLS_ENABLED=true` 但缺证书时**拒绝启动**（不回退明文）。
 8. **前端网络层**：`api.ts` 所有请求带 15s 超时；瞬时网络错误**不登出会话**；飞控指令的乐观更新在失败时回滚——改 DroneOps 时保持这套模式。
+9. **动效降级基线**：`base.css` 的全局 `prefers-reduced-motion` 规则把动画时长归零且 fill 为 none，**仅靠 keyframes 定位的元素会回落到基础样式**。新增用 keyframe 定位的元素（参照 `.auth-atom__electron`、`.auth-atom__nucleon`）必须把静止姿态写进基础 transform，否则降级下会塌回原点。
+
+## 视觉与动效层（纯 CSS/rAF，无动效库）
+
+- **登录页**：原子核 3D 视觉（`auth.css` 的 `.auth-atom`）——三层电子壳层、拖尾电子、核子团。反向壳层的 `animation-direction: reverse` **必须同时作用于壳层与电子**，否则自旋抵消失效、电子被压扁；指针视差写 `--atom-tilt-x/y`。文案走「山河 / 信 / 巡」意象：主视觉诗意、表单侧克制，改文案时保持这条分界。
+- **文档中心**：开卷书壳 + 翻页转场（`Platform.tsx` 的 flip 状态 + `pages.css` 的 `.docs-page-turn`，rotateY ±104°）；≤1100px 与 reduced-motion 下退化为直接切换。
+- **控制台状态动效**：KPI 数字滚动（`useAnimatedNumber`）、toast/模态两段式退场、列表 24ms stagger（`--i`）、状态徽章脉冲、主题切换走 View Transitions API（`src/theme.ts`）。
+- 入场编排集中在 `auth.css` / `base.css` 的 motion layer；全局降级开关是 `base.css` 的 `@media (prefers-reduced-motion: reduce)`，勿在组件里另造降级分支。
 
 ## 多 harness 协作
 
@@ -49,7 +57,9 @@ src/engine/simulation.tsx    双模式引擎（local 引擎 + remote WS 消费�
 src/services/llm.ts          "物联大模型"= 规则引擎（纯函数 askCopilot，无外部模型调用）
 src/services/api.ts          全部 API 客户端 + REMOTE_ENABLED/API_BASE
 src/pages/DroneOps.tsx       一网统飞（唯一强依赖后端的页面，local 模式显示指引）
-src/pages/Platform.tsx       文档中心（侧栏目录树+正文阅读区；文档内容在该文件 DOC_GROUPS 内维护）
+src/pages/Platform.tsx       文档中心（侧栏目录树+正文阅读区+开卷书壳/翻页转场；文档内容在该文件 DOC_GROUPS 内维护）
+src/theme.ts                 主题存储与切换（支持时经 View Transitions API 转场）
+src/hooks/useAnimatedNumber.ts  KPI 数字滚动（rAF 补间，reduced-motion 直接落位）
 src/components/MapView.tsx   MapLibre + Esri 在线瓦片（离线环境无底图）
 backend/app/main.py          ~22 端点 + lifespan + 安全中间件三件套 + dist 静态挂载
 backend/app/drone_api.py     无人机域 REST（航线/计划/8 种飞控指令状态机/线索）
@@ -65,6 +75,7 @@ backend/app/schemas.py       遥测消息契约 v1（pydantic，拒收计数进 
 ## 安全红线
 
 - `.env`、`backend/certs/`、`backend/mosquitto/passwd` 永不入库（.gitignore 已配，提交前 `git status` 复核）；
+- 书籍/课程资料（`*.docx`、`*.pptx`，如 20261008 目录稿）只留本地工作区：.gitignore 已忽略，**勿用 `git add -f` 入库**（938f9a4 起取消跟踪）；
 - JWT 密钥、角色密码只经环境变量注入；勿在前端硬编码任何凭据；
 - 一键演示登录（`IOT_DEMO_LOGIN_ENABLED`）只用于本地演示：密码永不下发前端，角色会话由 `/api/auth/demo-login` 在服务端签发；对外部署前关闭；
 - WS 用一次性票据（60s）而非长期 token；CORS/TrustedHost 仅限 localhost。
