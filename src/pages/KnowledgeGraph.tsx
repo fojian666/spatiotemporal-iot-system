@@ -252,7 +252,7 @@ export function KnowledgeGraphPage() {
           const node = getNode(data.nodeId);
           if (!node) return '';
           const meta = CATEGORY_META[node.category];
-          return `<div style="max-width:250px"><div style="color:${meta.color};font-size:10px;letter-spacing:.12em;margin-bottom:4px">${meta.label}</div><div style="font-size:13px;font-weight:600;color:#f0f8ff;margin-bottom:4px">${node.name}</div><div style="color:#8aa7c2;line-height:1.6">${node.desc.slice(0, 82)}…</div><div style="margin-top:6px;color:#587792;font-size:10px">关联度 ${degrees.get(node.id) ?? 0} · 点击查看知识子图</div></div>`;
+          return `<div style="max-width:min(250px, 60vw)"><div style="color:${meta.color};font-size:10px;letter-spacing:.12em;margin-bottom:4px">${meta.label}</div><div style="font-size:13px;font-weight:600;color:#f0f8ff;margin-bottom:4px">${node.name}</div><div style="color:#8aa7c2;line-height:1.6">${node.desc.slice(0, 82)}…</div><div style="margin-top:6px;color:#587792;font-size:10px">关联度 ${degrees.get(node.id) ?? 0} · 点击查看知识子图</div></div>`;
         },
       },
       series: [

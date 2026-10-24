@@ -86,13 +86,6 @@ html[data-theme='light'] .map-view__tint {
 }
 
 
-/* 整体等比放大 110%：文字与容器一起缩放，不会引起换行 */
-.app-shell,
-.auth-screen,
-.boot-splash {
-  zoom: 1.1;
-}
-
 html[data-theme='light'] .scenario-pill,
 html[data-theme='light'] .scenario-switch__item {
   color: color-mix(in srgb, var(--pill, #b45309) 55%, #111827);
