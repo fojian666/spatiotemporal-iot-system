@@ -32,6 +32,14 @@ backend/scripts/publish_device.py    # 以外部设备身份向 MQTT 灌数（�
 2. **设备台账双源**：前端 `src/data/devices.ts` 存原始坐标、运行时扩散（lng×1.65 / lat×1.05 偏离中心）；`backend/app/data/devices.json` 存扩散后的最终坐标。增改设备时两边必须对齐（backend = frontend × expandPoint 公式）。
 3. **认证双层**：前端 `canOperate`（AuthProvider）禁用 UI + 后端 `require_roles` 拦截 403。改任何写接口时保持两层一致。登出 = DB `token_version+1` 踢全部旧 token；前端 token 存 sessionStorage。
 4. **单进程约束**：WS 票据、登录限流、遥测内存态全在进程内，不支持多 worker/多实例水平部署。
+5. **飞控指令走转换表**：`drone_api.py` 的 `PLAN_TRANSITIONS` 是指令→合法现状态/新状态的声明式映射，非法转换返回 409 且**不写审计行**。增改指令先改表，勿在 handler 里直改 status。
+6. **遥测契约拒绝项**：`schemas.py` 除字段校验外还拒绝**非数值指标（NaN/Inf）与未注册/伪造 device_id**，拒收计数进 `mqtt.messagesRejected`；放宽校验前先想清楚。
+7. **run.sh 行为**：会从 `backend/.env` 读取 `IOT_MQTT_PORT / IOT_TLS_ENABLED / IOT_API_PORT`（不 source 整个文件）；`IOT_TLS_ENABLED=true` 但缺证书时**拒绝启动**（不回退明文）。
+8. **前端网络层**：`api.ts` 所有请求带 15s 超时；瞬时网络错误**不登出会话**；飞控指令的乐观更新在失败时回滚——改 DroneOps 时保持这套模式。
+
+## 多 harness 协作
+
+本仓库可能有多个 AI 会话并行工作。动手前：`git fetch` + `git log origin/main..main` 确认没有别人未推送/未拉取的提交；提交信息用 `fix(api):` / `fix(web):` 区分层；工作完成后尽快推送，减少本地堆积。
 
 ## 关键文件地图
 

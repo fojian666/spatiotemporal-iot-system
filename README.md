@@ -46,10 +46,11 @@ cp .env.example .env        # 填 IOT_JWT_SECRET、三角色密码、IOT_MQTT_PA
 # MQTT 账号：账号密码就是 .env 里的 IOT_MQTT_USERNAME / IOT_MQTT_PASSWORD，
 #   用 mosquitto_passwd mosquitto/passwd iot_backend 注册进 broker
 
-# 3. 后端（run.sh 自动启动 Mosquitto）
+# 3. 后端（run.sh 自动启动 Mosquitto；开关从 backend/.env 读取）
 python3 -m venv .venv && .venv/bin/pip install -r requirements.txt
 ./run.sh                    # .env 保留 IOT_TLS_ENABLED=true（example 默认）→ https://127.0.0.1:8443
                             # 改为 false 则走 http://127.0.0.1:8000；文档均在 /docs
+                            # 注意：TLS=true 但缺证书时会拒绝启动（不回退明文）
 
 # 4. 前端
 cd .. && cp .env.example .env.local   # VITE_DATA_SOURCE=api
