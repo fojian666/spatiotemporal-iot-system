@@ -207,7 +207,7 @@ export function LoginPage() {
               </div>
             )}
 
-            <button type="submit" className="btn btn--primary auth-submit" disabled={busy}>
+            <button type="submit" className="btn btn--primary auth-submit" disabled={busy} data-loading={loading ? 'true' : undefined}>
               {loading ? '正在验证…' : '进入系统'}
               {!loading && <ArrowRight size={15} />}
             </button>
