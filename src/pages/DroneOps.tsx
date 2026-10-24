@@ -186,12 +186,14 @@ export function DroneOpsPage() {
       const overview = await fetchDroneOverview();
       setData(overview);
     } catch (reason) {
-      setError(reason instanceof Error ? reason.message : '无法加载一网统飞数据');
+      const message = reason instanceof Error ? reason.message : '无法加载一网统飞数据';
+      setError(message);
+      if (background) notify(`刷新失败：${message}`);
     } finally {
       setLoading(false);
       setRefreshing(false);
     }
-  }, []);
+  }, [notify]);
 
   useEffect(() => {
     if (!REMOTE_ENABLED) {
@@ -294,13 +296,15 @@ export function DroneOpsPage() {
   );
 
   const handleClueUpdate = useCallback(
-    async (clueId: string, status: AiClue['status']) => {
+    async (clueId: string, status: AiClue['status']): Promise<boolean> => {
       try {
         const updated = await updateDroneClue(clueId, status);
         replaceClue(updated);
         notify(`线索已标记为「${status}」`);
+        return true;
       } catch (reason) {
         notify(reason instanceof Error ? reason.message : '线索更新失败');
+        return false;
       }
     },
     [notify, replaceClue],
@@ -695,7 +699,7 @@ function PlansView({
           <label className="ops-mini-search">
             <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="搜索计划 / 航线 / 设备" />
           </label>
-          <button type="button" className="btn btn--primary btn--sm" disabled={!canOperate} onClick={() => setModalOpen(true)}>
+          <button type="button" className="btn btn--primary btn--sm" disabled={!canOperate || !data.routes.length} title={!data.routes.length ? '请先在航线规划中创建航线' : undefined} onClick={() => setModalOpen(true)}>
             <Plus size={13} /> 新建计划
           </button>
         </div>
@@ -1053,7 +1057,7 @@ function RoutesView({
                   <span className="waypoint-row__index mono">{String(index + 1).padStart(2, '0')}</span>
                   <span className="waypoint-row__name"><strong>{point.name ?? `航点 ${index + 1}`}</strong><em>{point.action} · {point.altitude}m</em></span>
                   <span className="waypoint-row__coord mono">{point.lng.toFixed(4)}, {point.lat.toFixed(4)}</span>
-                  <button type="button" className="icon-btn" disabled={!canOperate} onClick={() => setDraft({ ...draft, waypoints: draft.waypoints.filter((_, i) => i !== index) })}><Trash2 size={12} /></button>
+                  <button type="button" className="icon-btn" title="删除航点" aria-label={`删除航点 ${index + 1}`} disabled={!canOperate} onClick={() => setDraft({ ...draft, waypoints: draft.waypoints.filter((_, i) => i !== index) })}><Trash2 size={12} /></button>
                 </div>
               ))}
               {!draft.waypoints.length && <div className="ops-waypoints__empty">点击地图添加第一个航点，至少 2 个航点可保存</div>}
@@ -1197,7 +1201,7 @@ function FlightView({
   const battery = Math.max(16, Math.round((deviceReading.battery ?? 86) - progress * 0.09));
   const mediaPercent = activePlan.mediaTotal ? Math.round((activePlan.mediaUploaded / activePlan.mediaTotal) * 100) : 0;
   const seenCommands = new Set<number>();
-  const commands = [...localLog, ...data.commands]
+  const commands = [...localLog, ...data.commands.filter((item) => item.planId === activePlan.id)]
     .filter((item) => {
       if (seenCommands.has(item.id)) return false;
       seenCommands.add(item.id);
@@ -1438,10 +1442,20 @@ function CluesView({
 }: {
   data: DroneOverview;
   canOperate: boolean;
-  onUpdate: (clueId: string, status: AiClue['status']) => void;
+  onUpdate: (clueId: string, status: AiClue['status']) => Promise<boolean>;
 }) {
   const [status, setStatus] = useState<'全部' | '待处理' | '已核实' | '已忽略'>('全部');
   const [selected, setSelected] = useState<AiClue | null>(null);
+  const [pendingId, setPendingId] = useState<string | null>(null);
+  const act = async (clueId: string, next: AiClue['status']) => {
+    if (pendingId) return;
+    setPendingId(clueId);
+    const ok = await onUpdate(clueId, next);
+    setPendingId(null);
+    if (ok) {
+      setSelected((current) => (current && current.id === clueId ? { ...current, status: next } : current));
+    }
+  };
   const clues = data.clues.filter((clue) => status === '全部' || clue.status === status);
   const mediaById = new Map(data.media.map((asset) => [asset.id, asset]));
   const modelById = new Map(data.models.map((model) => [model.id, model]));
@@ -1510,8 +1524,8 @@ function CluesView({
               <div className="clue-row__status"><span className={`clue-status clue-status--${clue.status === '待处理' ? 'pending' : clue.status === '已核实' ? 'done' : 'ignored'}`}><i />{clue.status}</span></div>
               <div className="clue-row__actions" onClick={(event) => event.stopPropagation()}>
                 <button type="button" className="btn btn--sm" onClick={() => setSelected(clue)}>查看</button>
-                <button type="button" className="btn btn--sm" disabled={!canOperate || clue.status === '已核实'} onClick={() => onUpdate(clue.id, '已核实')}>核实</button>
-                <button type="button" className="icon-btn" disabled={!canOperate || clue.status === '已忽略'} title="忽略" onClick={() => onUpdate(clue.id, '已忽略')}><Ban size={13} /></button>
+                <button type="button" className="btn btn--sm" disabled={!canOperate || pendingId === clue.id || clue.status === '已核实'} onClick={() => void act(clue.id, '已核实')}>核实</button>
+                <button type="button" className="icon-btn" disabled={!canOperate || pendingId === clue.id || clue.status === '已忽略'} title="忽略" aria-label="忽略线索" onClick={() => void act(clue.id, '已忽略')}><Ban size={13} /></button>
               </div>
             </div>
           );
@@ -1541,8 +1555,8 @@ function CluesView({
                 <div><span>位置</span><strong className="mono">{selected.lng.toFixed(5)}, {selected.lat.toFixed(5)}</strong></div>
               </div>
               <div className="clue-detail__actions">
-                <button type="button" className="btn btn--primary btn--sm" disabled={!canOperate || selected.status === '已核实'} onClick={() => { onUpdate(selected.id, '已核实'); setSelected({ ...selected, status: '已核实' }); }}><Check size={12} /> 核实线索</button>
-                <button type="button" className="btn btn--sm" disabled={!canOperate || selected.status === '已忽略'} onClick={() => { onUpdate(selected.id, '已忽略'); setSelected({ ...selected, status: '已忽略' }); }}><Ban size={12} /> 标记忽略</button>
+                <button type="button" className="btn btn--primary btn--sm" disabled={!canOperate || pendingId === selected.id || selected.status === '已核实'} onClick={() => void act(selected.id, '已核实')}><Check size={12} /> 核实线索</button>
+                <button type="button" className="btn btn--sm" disabled={!canOperate || pendingId === selected.id || selected.status === '已忽略'} onClick={() => void act(selected.id, '已忽略')}><Ban size={12} /> 标记忽略</button>
                 <button type="button" className="btn btn--sm" onClick={() => setSelected(null)}>关闭</button>
               </div>
             </div>
