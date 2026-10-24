@@ -901,7 +901,7 @@ export function PlatformPage() {
       setDisplayedId(id);
       setFading(false);
       fadeTimer.current = null;
-    }, 260);
+    }, 170);
   };
   useEffect(() => () => {
     if (fadeTimer.current) window.clearTimeout(fadeTimer.current);
