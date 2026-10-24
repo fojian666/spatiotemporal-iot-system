@@ -17,6 +17,9 @@
   --chart-axis-line: rgba(120, 170, 220, 0.14);
   --chart-halo: #040a12;
   --node-select: #ffffff;
+  --chart-tip-bg: rgba(5, 14, 26, 0.96);
+  --chart-tip-border: rgba(90, 180, 255, 0.22);
+  --chart-tip-text: #dcecff;
 }
 
 html[data-theme='light'] {
@@ -59,6 +62,9 @@ html[data-theme='light'] {
   --chart-axis-line: rgba(100, 116, 139, 0.22);
   --chart-halo: #ffffff;
   --node-select: #0f172a;
+  --chart-tip-bg: rgba(255, 255, 255, 0.98);
+  --chart-tip-border: rgba(15, 23, 42, 0.18);
+  --chart-tip-text: #1e293b;
 }
 
 html[data-theme='light'] ::selection {

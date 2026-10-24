@@ -199,7 +199,7 @@ export function KnowledgeGraphPage() {
             color: meta.color,
             fontSize: 10,
             fontWeight: 600,
-            backgroundColor: 'rgba(6,16,29,.82)',
+            backgroundColor: palette.tipBg,
             borderColor: `${meta.color}44`,
             borderWidth: 1,
             borderRadius: 4,
@@ -241,18 +241,19 @@ export function KnowledgeGraphPage() {
       animationDurationUpdate: 460,
       animationEasingUpdate: 'cubicOut',
       tooltip: {
-        backgroundColor: 'rgba(5,14,26,.96)',
-        borderColor: 'rgba(90,180,255,.22)',
+        backgroundColor: palette.tipBg,
+        borderColor: palette.tipBorder,
         borderWidth: 1,
         padding: [10, 12],
-        textStyle: { color: '#dcecff', fontSize: 11 },
+        confine: true,
+        textStyle: { color: palette.tipText, fontSize: 11 },
         formatter: (params: unknown) => {
           const data = (params as { data?: { nodeId?: string; name?: string } }).data;
           if (!data?.nodeId) return '';
           const node = getNode(data.nodeId);
           if (!node) return '';
           const meta = CATEGORY_META[node.category];
-          return `<div style="max-width:250px"><div style="color:${meta.color};font-size:10px;letter-spacing:.12em;margin-bottom:4px">${meta.label}</div><div style="font-size:13px;font-weight:600;color:#f0f8ff;margin-bottom:4px">${node.name}</div><div style="color:#8aa7c2;line-height:1.6">${node.desc.slice(0, 82)}…</div><div style="margin-top:6px;color:#587792;font-size:10px">关联度 ${degrees.get(node.id) ?? 0} · 点击查看知识子图</div></div>`;
+          return `<div style="max-width:250px"><div style="color:${themeAwareLabelColor(theme, meta.color)};font-size:10px;letter-spacing:.12em;margin-bottom:4px">${meta.label}</div><div style="font-size:13px;font-weight:600;color:${palette.tipText};margin-bottom:4px">${node.name}</div><div style="color:${palette.label};line-height:1.6">${node.desc.slice(0, 82)}…</div><div style="margin-top:6px;color:${palette.dim};font-size:10px">关联度 ${degrees.get(node.id) ?? 0} · 点击查看知识子图</div></div>`;
         },
       },
       series: [

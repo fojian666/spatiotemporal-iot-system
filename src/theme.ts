@@ -46,6 +46,9 @@ export interface ChartPalette {
   axisLine: string;
   halo: string;
   nodeSelect: string;
+  tipBg: string;
+  tipBorder: string;
+  tipText: string;
 }
 
 /** Read chart text colors from the active theme's CSS tokens. */
@@ -61,6 +64,9 @@ export function chartPalette(): ChartPalette {
     axisLine: read('--chart-axis-line', 'rgba(120,170,220,.14)'),
     halo: read('--chart-halo', '#040a12'),
     nodeSelect: read('--node-select', '#ffffff'),
+    tipBg: read('--chart-tip-bg', 'rgba(5,14,26,.96)'),
+    tipBorder: read('--chart-tip-border', 'rgba(90,180,255,.22)'),
+    tipText: read('--chart-tip-text', '#dcecff'),
   };
 }
 
