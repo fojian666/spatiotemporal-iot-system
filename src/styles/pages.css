@@ -4342,10 +4342,11 @@
 
 /* ===== 文档切换淡入淡出 ===== */
 .docs-content {
-  transition: opacity 200ms ease;
+  transition: opacity 400ms ease;
 }
 .docs-content.is-fading {
   opacity: 0;
+  transition-duration: 260ms;
 }
 @media (prefers-reduced-motion: reduce) {
   .docs-content { transition: none; }
