@@ -333,10 +333,12 @@ async def health(session: AsyncSession = Depends(get_session)) -> dict[str, Any]
     service: TelemetryService = app.state.service
     try:
         await session.execute(text("SELECT 1"))
+        postgis = await session.scalar(text("SELECT postgis_version()"))
         database = "ok"
-    except Exception as exc:  # noqa: BLE001
-        database = f"error: {exc}"
-    postgis = await session.scalar(text("SELECT postgis_version()"))
+    except Exception:  # noqa: BLE001
+        logger.exception("Health check database probe failed")
+        database = "error"
+        postgis = None
     return {
         "status": "ok" if database == "ok" else "degraded",
         "serverTime": now_local().isoformat(timespec="milliseconds"),
