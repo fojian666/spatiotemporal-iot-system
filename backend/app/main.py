@@ -87,14 +87,19 @@ class ConnectionManager:
                 pass
 
     async def broadcast(self, payload: dict[str, Any]) -> None:
-        dead: list[WebSocket] = []
-        for websocket in list(self.active):
+        sockets = list(self.active)
+
+        async def send(websocket: WebSocket) -> bool:
             try:
-                await websocket.send_json(payload)
+                await asyncio.wait_for(websocket.send_json(payload), timeout=2)
+                return True
             except Exception:  # noqa: BLE001
-                dead.append(websocket)
-        for websocket in dead:
-            self.disconnect(websocket)
+                return False
+
+        results = await asyncio.gather(*(send(websocket) for websocket in sockets))
+        for websocket, ok in zip(sockets, results):
+            if not ok:
+                self.disconnect(websocket)
 
 
 async def persist_telemetry(service: TelemetryService, last_persisted: dict[str, datetime]) -> None:
