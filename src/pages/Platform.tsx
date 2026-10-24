@@ -1,11 +1,13 @@
 import { useMemo, useState, type CSSProperties } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import {
+  Activity,
   Boxes,
   Check,
   ChevronRight,
   Circle,
   CloudCog,
+  CloudDownload,
   Code2,
   Cpu,
   Database,
@@ -14,39 +16,49 @@ import {
   Minus,
   Radar,
   RadioTower,
-  Route as RouteIcon,
   Send,
   ShieldCheck,
+  Sparkles,
   Workflow,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { PageHeader } from '../components/Shell';
-import { DeviceIcon, LevelPill, Panel, ProgressBar, StatusPill, StatusText } from '../components/ui';
+import { DeviceIcon, LevelPill, Panel, StatusPill, StatusText } from '../components/ui';
 import { DEVICES, KIND_META, type DeviceDefinition, type DeviceKind, type MetricDef } from '../data/devices';
 import { useSimulation } from '../engine/simulation';
 
 /* ------------------------------------------------------------------ */
-/* 对标数据：OneNET / CTWing / 涂鸦 与本平台                          */
+/* 自家平台产品能力定义                                                */
 /* ------------------------------------------------------------------ */
 
-type CapState = 'have' | 'partial' | 'plan';
+type CapStatus = 'live' | 'demo' | 'plan';
 
-const CAP_STATE_META: Record<CapState, { label: string; className: string }> = {
-  have: { label: '已具备', className: 'cap-state--have' },
-  partial: { label: '部分具备', className: 'cap-state--partial' },
-  plan: { label: '规划中', className: 'cap-state--plan' },
+const CAP_STATUS_META: Record<CapStatus, { label: string; className: string }> = {
+  live: { label: '在线服务', className: 'pf-status--live' },
+  demo: { label: '演示能力', className: 'pf-status--demo' },
+  plan: { label: '规划中', className: 'pf-status--plan' },
 };
 
-const CAP_MATRIX: { name: string; onenet: string; ctwing: string; tuya: string; ours: CapState; note: string }[] = [
-  { name: '设备接入', onenet: 'MQTT / NB-IoT 套件', ctwing: 'MQTT / HTTP / LwM2M / CoAP', tuya: 'TuyaOS / MCU / 网关接入', ours: 'partial', note: 'MQTT over TLS（契约 v1），LwM2M/CoAP 规划中' },
-  { name: '产品与设备管理', onenet: '产品 → 设备台账', ctwing: '产品创建 / 生命周期', tuya: '创建产品 → 量产', ours: 'have', note: '按产品线组织的设备台账 + 实时影子' },
-  { name: '物模型', onenet: '物模型（属性/事件/服务）', ctwing: '物模型定义', tuya: '功能定义（DP 点）', ours: 'partial', note: '属性模型带阈值已具备，服务下发为演示指令' },
-  { name: '规则引擎', onenet: '规则引擎', ctwing: '规则引擎联动', tuya: '场景联动', ours: 'partial', note: '阈值规则驱动告警与状态机，复杂编排规划中' },
-  { name: '数据流转', onenet: '消息队列 MQ', ctwing: '数据流转（天翼云/MQ）', tuya: '数据 Broker / 数据流', ours: 'have', note: 'MQTT 上行 + WebSocket 秒级广播 + PostGIS 落库' },
-  { name: 'OTA 升级', onenet: '远程升级 OTA', ctwing: 'OTA 升级', tuya: 'OTA 固件管理', ours: 'plan', note: '预留：设备清单与版本字段可承载' },
-  { name: '开放 API', onenet: '开放 API', ctwing: '能力开放网关', tuya: '云开发 API / IoT Core', ours: 'have', note: 'REST 34 端点 + WS，JWT/RBAC 鉴权' },
-  { name: '数据可视化', onenet: 'View 可视化', ctwing: '行业组件大屏', tuya: '面板 / 小程序', ours: 'have', note: '态势总览 / 时空一张图 / 仿真沙盘' },
-  { name: 'AI 能力', onenet: 'AI 能力平台', ctwing: '行业智能', tuya: '智能体开发', ours: 'partial', note: '规则引擎 Copilot（证据链），可替换真实模型' },
+const CAPABILITIES: {
+  key: string;
+  name: string;
+  desc: string;
+  icon: LucideIcon;
+  status: CapStatus;
+  color: string;
+  anchor?: string;
+  to?: string;
+}[] = [
+  { key: 'access', name: '设备接入服务', desc: 'MQTT over TLS 统一接入，契约 v1 严格校验，QoS 1 送达保障', icon: RadioTower, status: 'live', color: '#4be1ff', anchor: 'console-flow' },
+  { key: 'product', name: '产品与设备管理', desc: '产品线台账、设备实时影子与生命周期状态管理', icon: Boxes, status: 'live', color: '#23e6b0', anchor: 'console-products' },
+  { key: 'tsl', name: '物模型 TSL', desc: '属性 / 事件 / 服务三段式物模型，阈值随产品定义下发', icon: FileJson, status: 'live', color: '#7aa2ff', anchor: 'console-tsl' },
+  { key: 'rules', name: '规则引擎', desc: '阈值规则实时驱动设备状态机与告警事件生成', icon: Workflow, status: 'live', color: '#ffbc5c', anchor: 'console-rules' },
+  { key: 'flow', name: '数据流转', desc: 'MQTT 上行 → WebSocket 秒级广播 → PostGIS 批量入库', icon: Send, status: 'live', color: '#5eead4', anchor: 'console-flow' },
+  { key: 'open', name: '开放平台', desc: 'REST 28 端点 + WebSocket 推送，JWT 与三角色 RBAC 鉴权', icon: Code2, status: 'live', color: '#a78bfa', anchor: 'console-api' },
+  { key: 'viz', name: '数据可视化', desc: '态势总览、时空一张图与仿真沙盘三屏联动', icon: Activity, status: 'live', color: '#ff84a8', to: '/' },
+  { key: 'edge', name: '边缘协同', desc: '边缘网关协议转换、时空对齐与断网续传', icon: Cpu, status: 'demo', color: '#93c5fd', anchor: 'console-products' },
+  { key: 'ai', name: 'AI 服务', desc: '物联大模型 Copilot，回答绑定遥测、告警与图谱证据链', icon: Sparkles, status: 'demo', color: '#f0abfc', to: '/copilot' },
+  { key: 'ota', name: 'OTA 升级', desc: '设备固件远程升级与版本灰度策略', icon: CloudDownload, status: 'plan', color: '#8aa7c2' },
 ];
 
 const API_GROUPS: { name: string; items: string[] }[] = [
@@ -58,12 +70,12 @@ const API_GROUPS: { name: string; items: string[] }[] = [
 ];
 
 const BOOK_MAP: { part: string; chapters: string; topic: string; module: string; to: string }[] = [
-  { part: '第一篇 基础与体系', chapters: '第1–4章', topic: '对象-状态-事件模型、五层体系与智能闭环', module: '平台能力矩阵 / 系统架构', to: '/' },
-  { part: '第二篇 智能感知', chapters: '第5–10章', topic: '传感器、信号处理、遥感与组合导航、多源融合', module: '设备台账 11 类感知节点', to: '/simulation' },
-  { part: '第三篇 通信与网络', chapters: '第11–14章', topic: '低功耗通信、网络协议、空天地一体化网络', module: '接入与数据流转（MQTT/NB-IoT/LoRaWAN）', to: '/platform' },
-  { part: '第四篇 时空数据', chapters: '第15–17章', topic: '时空数据库、云边端计算、GIS 处理', module: 'PostGIS 存储 / 时空一张图', to: '/map' },
-  { part: '第五篇 时空智能', chapters: '第18–19章', topic: '时空数据学习、认知预测与智能决策', module: '物联大模型 Copilot / 知识图谱', to: '/copilot' },
-  { part: '第六篇 系统与应用', chapters: '第20章', topic: '时空数字孪生与系统应用', module: '仿真沙盘场景推演 / 一网统飞', to: '/drone' },
+  { part: '第一篇 基础与体系', chapters: '第1–4章', topic: '对象-状态-事件模型、五层体系与智能闭环', module: '平台架构 / 物模型 TSL', to: '/platform' },
+  { part: '第二篇 智能感知', chapters: '第5–10章', topic: '传感器、信号处理、遥感与组合导航、多源融合', module: '11 条产品线感知节点', to: '/simulation' },
+  { part: '第三篇 通信与网络', chapters: '第11–14章', topic: '低功耗通信、网络协议、空天地一体化网络', module: '设备接入与数据流转', to: '/platform' },
+  { part: '第四篇 时空数据', chapters: '第15–17章', topic: '时空数据库、云边端计算、GIS 处理', module: 'PostGIS 时空底座 / 一张图', to: '/map' },
+  { part: '第五篇 时空智能', chapters: '第18–19章', topic: '时空数据学习、认知预测与智能决策', module: 'AI 服务 / 知识图谱', to: '/copilot' },
+  { part: '第六篇 系统与应用', chapters: '第20章', topic: '时空数字孪生与系统应用', module: '仿真沙盘 / 一网统飞', to: '/drone' },
 ];
 
 const SERVICES_BY_KIND: Partial<Record<DeviceKind, { name: string; desc: string; real: boolean }[]>> = {
@@ -88,6 +100,7 @@ const TSL_EVENTS = [
 
 export function PlatformPage() {
   const { readings, deviceStatuses, stats } = useSimulation();
+  const navigate = useNavigate();
   const [productKind, setProductKind] = useState<DeviceKind>('water');
 
   const products = useMemo(() => {
@@ -103,73 +116,117 @@ export function PlatformPage() {
     });
   }, [deviceStatuses]);
 
+  const rules = useMemo(
+    () =>
+      products.flatMap((p) =>
+        p.properties.map((def) => ({
+          id: `${p.kind}.${def.key}`,
+          product: KIND_META[p.kind].label,
+          warn:
+            def.direction === 'low'
+              ? `${def.label} ≤ ${def.warn}${def.unit}`
+              : def.direction === 'range'
+                ? `${def.label} < ${def.low ?? 0}${def.unit} 或 > ${def.warn}${def.unit}`
+                : `${def.label} ≥ ${def.warn}${def.unit}`,
+          crit: def.direction === 'low' ? `≤ ${def.crit}${def.unit}` : `≥ ${def.crit}${def.unit}`,
+        })),
+      ),
+    [products],
+  );
+
   const selected = products.find((p) => p.kind === productKind) ?? products[0];
   const services = SERVICES_BY_KIND[selected.kind] ?? [
     { name: '属性上报', desc: '周期上报 metrics（契约 v1）', real: true },
     { name: '事件上报', desc: '阈值/状态事件上抛', real: true },
   ];
 
+  const liveRules = rules.length;
+  const endpointCount = API_GROUPS.reduce((sum, g) => sum + g.items.length, 0);
+
+  const openCapability = (cap: (typeof CAPABILITIES)[number]) => {
+    if (cap.anchor) {
+      document.getElementById(cap.anchor)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    } else if (cap.to) {
+      navigate(cap.to);
+    }
+  };
+
   return (
     <div className="page platform-page">
       <PageHeader
         icon={CloudCog}
-        overline="IOT PLATFORM SERVICES · CONSOLE"
+        overline="ST-IOT PLATFORM · PRODUCT CENTER"
         title="平台服务"
-        description="对标 OneNET / 天翼 CTWing / 涂鸦的平台能力形态：产品与设备、物模型、接入与数据流转、开放 API"
+        description="平安区时空智能物联网平台的核心产品能力：设备接入、物模型、规则引擎、数据流转与开放平台"
         actions={
           <div className="model-status">
-            <StatusPill tone="online" dot>{stats.online}/{stats.total} 设备在线</StatusPill>
+            <StatusPill tone="online" dot>平台运行中</StatusPill>
             <span className="mono">MQTT · WS · REST · POSTGIS</span>
           </div>
         }
       />
 
-      <section className="cap-strip">
-        {[
-          { label: '产品线', value: products.length, unit: '类', icon: Boxes },
-          { label: '接入设备', value: stats.total, unit: '台', icon: RadioTower },
-          { label: '开放端点', value: API_GROUPS.reduce((sum, g) => sum + g.items.length, 0), unit: '个', icon: Code2 },
-          { label: '教材映射', value: 20, unit: '章', icon: GitBranch },
-        ].map((item) => {
-          const Icon = item.icon;
-          return (
-            <div className="cap-kpi" key={item.label}>
-              <span className="cap-kpi__icon"><Icon size={15} /></span>
-              <div>
-                <strong className="mono">{item.value}<em>{item.unit}</em></strong>
-                <span>{item.label}</span>
-              </div>
+      <section className="pf-hero">
+        <div className="pf-hero__grid" aria-hidden="true" />
+        <div className="pf-hero__glow" aria-hidden="true" />
+        <div className="pf-hero__main">
+          <span className="overline">ONE PLATFORM · SENSING TO ACTION</span>
+          <h2>从设备接入到智能决策的一站式物联网平台</h2>
+          <p>
+            平台以统一时空基准组织空天地 21 个感知节点与 5 套无人系统，提供设备接入、产品管理、
+            物模型、规则引擎、数据流转与开放 API 全链路服务，支撑水务、防火、应急与低空巡检场景。
+          </p>
+          <div className="pf-hero__badges">
+            <StatusPill tone="online" dot>MQTT TLS 已接入</StatusPill>
+            <StatusPill tone="ai" dot>{liveRules} 条规则实时生效</StatusPill>
+            <StatusPill tone="muted">{endpointCount} 个开放端点</StatusPill>
+          </div>
+        </div>
+        <div className="pf-hero__stats">
+          {[
+            { label: '产品线', value: products.length, unit: '条' },
+            { label: '在线设备', value: `${stats.online}/${stats.total}`, unit: '台' },
+            { label: '启用规则', value: liveRules, unit: '条' },
+            { label: '消息速率', value: stats.messageRate.toLocaleString(), unit: 'msg/s' },
+          ].map((item) => (
+            <div className="pf-stat" key={item.label}>
+              <strong className="mono">{item.value}<em>{item.unit}</em></strong>
+              <span>{item.label}</span>
             </div>
+          ))}
+        </div>
+      </section>
+
+      <section className="pf-caps">
+        {CAPABILITIES.map((cap) => {
+          const Icon = cap.icon;
+          const meta = CAP_STATUS_META[cap.status];
+          return (
+            <button
+              key={cap.key}
+              type="button"
+              className={`pf-cap ${cap.anchor || cap.to ? 'is-clickable' : ''}`}
+              style={{ '--cap': cap.color } as CSSProperties}
+              onClick={() => openCapability(cap)}
+            >
+              <span className="pf-cap__icon"><Icon size={18} /></span>
+              <strong>{cap.name}</strong>
+              <p>{cap.desc}</p>
+              <span className={`pf-status ${meta.className}`}>
+                {cap.status === 'live' ? <Check size={10} /> : cap.status === 'demo' ? <Circle size={8} /> : <Minus size={10} />}
+                {meta.label}
+              </span>
+            </button>
           );
         })}
       </section>
 
-      <Panel overline="BENCHMARK · ONENET / CTWING / TUYA" title="平台能力对标" icon={Workflow} className="cap-panel" noPad>
-        <div className="cap-matrix">
-          <div className="cap-matrix__head">
-            <span>能力项</span><span>OneNET</span><span>CTWing</span><span>涂鸦</span><span>本平台</span><span>说明</span>
-          </div>
-          {CAP_MATRIX.map((row) => (
-            <div className="cap-matrix__row" key={row.name}>
-              <strong>{row.name}</strong>
-              <span>{row.onenet}</span>
-              <span>{row.ctwing}</span>
-              <span>{row.tuya}</span>
-              <span className={`cap-state ${CAP_STATE_META[row.ours].className}`}>
-                {row.ours === 'have' ? <Check size={10} /> : row.ours === 'partial' ? <Circle size={8} /> : <Minus size={10} />}
-                {CAP_STATE_META[row.ours].label}
-              </span>
-              <span className="cap-matrix__note">{row.note}</span>
-            </div>
-          ))}
-        </div>
-      </Panel>
-
       <section className="platform-grid">
         <div className="platform-main">
           <Panel
-            overline="PRODUCTS & DEVICES"
-            title="产品与设备"
+            id="console-products"
+            overline="PRODUCT LIFECYCLE · DEVICE SHADOW"
+            title="产品与设备管理"
             icon={Boxes}
             extra={<span className="mono detail-text">影子数据实时刷新</span>}
           >
@@ -239,7 +296,29 @@ export function PlatformPage() {
             </div>
           </Panel>
 
-          <Panel overline="THING MODEL · TSL" title={`物模型 · ${KIND_META[selected.kind].label}`} icon={FileJson}>
+          <Panel id="console-rules" overline="RULE ENGINE · THRESHOLD RULES" title="规则引擎" icon={Workflow}>
+            <div className="platform-subhead">
+              <span className="overline">规则清单</span>
+              <span className="mono">{liveRules} 条已启用 · 每秒随遥测执行</span>
+            </div>
+            <div className="cap-matrix cap-matrix--tsl">
+              <div className="cap-matrix__head cap-matrix__head--tsl pf-rules__head">
+                <span>规则 ID</span><span>所属产品</span><span>预警条件</span><span>严重阈值</span><span>动作</span><span>状态</span>
+              </div>
+              {rules.map((rule) => (
+                <div className="cap-matrix__row" key={rule.id}>
+                  <strong className="mono">{rule.id}</strong>
+                  <span>{rule.product}</span>
+                  <span className="mono">{rule.warn}</span>
+                  <span className="mono">{rule.crit}</span>
+                  <span>状态置预警 · 生成告警事件</span>
+                  <span className="cap-state cap-state--have"><Check size={10} />已启用</span>
+                </div>
+              ))}
+            </div>
+          </Panel>
+
+          <Panel id="console-tsl" overline="THING MODEL · TSL" title={`物模型 · ${KIND_META[selected.kind].label}`} icon={FileJson}>
             <div className="platform-subhead"><span className="overline">属性（PROPERTIES）</span><span className="mono">{selected.properties.length} 项 · 类型 double · 带阈值</span></div>
             <div className="cap-matrix cap-matrix--tsl">
               <div className="cap-matrix__head cap-matrix__head--tsl">
@@ -281,7 +360,7 @@ export function PlatformPage() {
         </div>
 
         <aside className="platform-side">
-          <Panel overline="ACCESS & DATA FLOW" title="接入与数据流转" icon={Send}>
+          <Panel id="console-flow" overline="ACCESS & DATA FLOW" title="设备接入与数据流转" icon={Send}>
             <div className="access-flow mono">
               <span>设备 / 仿真源</span><ChevronRight size={11} />
               <span>MQTT :8883 TLS</span><ChevronRight size={11} />
@@ -296,13 +375,13 @@ export function PlatformPage() {
               <code>&#123; "version": 1, "device_id": "WQ-01",<br />&nbsp;&nbsp;"ts": "2026-10-24T10:00:00+08:00",<br />&nbsp;&nbsp;"metrics": &#123; "ph": 7.62, "turbidity": 18 &#125; &#125;</code>
             </div>
             <div className="platform-bullets">
-              <div><ShieldCheck size={12} /><span>TLS + 账号 + ACL（readwrite iot/pingan/#），独立设备账号</span></div>
+              <div><ShieldCheck size={12} /><span>TLS + 账号 + ACL 设备级授权，支持独立设备账号</span></div>
               <div><Database size={12} /><span>非法消息拒收计数（messagesRejected），未知设备丢弃</span></div>
-              <div><Radar size={12} /><span>IOT_SIMULATION_ENABLED=false 切换为真实设备只接收模式</span></div>
+              <div><Radar size={12} /><span>支持切换只接收模式，真实设备直驱全链路</span></div>
             </div>
           </Panel>
 
-          <Panel overline="OPEN API" title="开放接口" icon={Code2}>
+          <Panel id="console-api" overline="OPEN PLATFORM" title="开放接口" icon={Code2}>
             <div className="api-groups">
               {API_GROUPS.map((group) => (
                 <div className="api-group" key={group.name}>
@@ -318,19 +397,16 @@ export function PlatformPage() {
             <Link className="btn btn--sm btn--block" to="/copilot">在物联大模型中查询接口用法 <ChevronRight size={11} /></Link>
           </Panel>
 
-          <Panel overline="TEXTBOOK MAPPING · 20261008 目录" title="教材章节映射" icon={GitBranch}>
+          <Panel overline="KNOWLEDGE SYSTEM · 教材衔接" title="知识体系" icon={GitBranch}>
             <div className="book-map">
               {BOOK_MAP.map((row) => (
                 <Link className="book-map__row" key={row.part} to={row.to}>
                   <span className="book-map__part">{row.part}<em>{row.chapters}</em></span>
                   <span className="book-map__topic">{row.topic}</span>
-                  <span className="book-map__module"><RouteIcon size={11} />{row.module}</span>
+                  <span className="book-map__module"><GitBranch size={11} />{row.module}</span>
                   <ChevronRight size={12} />
                 </Link>
               ))}
-            </div>
-            <div className="platform-bullets">
-              <div><Cpu size={12} /><span>知识图谱 56 实体与教材知识链对应，Copilot 回答可溯源</span></div>
             </div>
           </Panel>
         </aside>

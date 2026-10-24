@@ -26,6 +26,7 @@ import type { DeviceKind, DeviceStatus } from '../data/devices';
 import type { AlertLevel, SimEvent } from '../engine/simulation';
 
 export function Panel({
+  id,
   title,
   overline,
   icon: Icon,
@@ -34,6 +35,7 @@ export function Panel({
   className = '',
   noPad = false,
 }: {
+  id?: string;
   title?: string;
   overline?: string;
   icon?: LucideIcon;
@@ -43,7 +45,7 @@ export function Panel({
   noPad?: boolean;
 }) {
   return (
-    <section className={`panel ${className}`}>
+    <section id={id} className={`panel ${className}`}>
       {(title || extra) && (
         <header className="panel-head">
           <div className="panel-title-wrap">
