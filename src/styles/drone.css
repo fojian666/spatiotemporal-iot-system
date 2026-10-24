@@ -1559,7 +1559,7 @@
   margin: 4px 0 2px;
   font-size: 13px;
   font-weight: 500;
-  color: #e3f6ff;
+  color: var(--text);
 }
 
 .cockpit-head > div > span:last-child {
@@ -2095,7 +2095,7 @@
 .clue-donut strong {
   font-size: 22px;
   font-weight: 500;
-  color: #e7f8ff;
+  color: var(--text);
 }
 
 .clue-donut span {
@@ -2323,7 +2323,7 @@
   margin: 2px 0 0;
   font-size: 13px;
   font-weight: 500;
-  color: #e4f7ff;
+  color: var(--text);
 }
 
 .clue-detail__actions {

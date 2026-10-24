@@ -1,4 +1,4 @@
-import { type CSSProperties, type ReactNode } from 'react';
+import { useState, type CSSProperties, type ReactNode } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import {
   Bot,
@@ -11,6 +11,8 @@ import {
   Map as MapIcon,
   Moon,
   Network,
+  PanelLeftClose,
+  PanelLeftOpen,
   Plane,
   RadioTower,
   Sun,
@@ -65,10 +67,35 @@ function Logo() {
   );
 }
 
+const RAIL_KEY = 'stiot-rail';
+
+function useRailCollapsed() {
+  const [collapsed, setCollapsed] = useState(() => {
+    try {
+      return window.localStorage.getItem(RAIL_KEY) === '1';
+    } catch {
+      return false;
+    }
+  });
+  const toggle = () => {
+    setCollapsed((current) => {
+      const next = !current;
+      try {
+        window.localStorage.setItem(RAIL_KEY, next ? '1' : '0');
+      } catch {
+        // storage blocked
+      }
+      return next;
+    });
+  };
+  return { collapsed, toggle };
+}
+
 export function Shell({ children }: { children: ReactNode }) {
   const { simTime, scenario, running, speed, stats, source, linkStatus } = useSimulation();
   const { user, logout, isRemote } = useAuth();
   const theme = useTheme();
+  const { collapsed: railCollapsed, toggle: toggleRail } = useRailCollapsed();
   const roleLabel = user?.role === 'admin' ? '管理员' : user?.role === 'operator' ? '值班长' : user?.role === 'viewer' ? '观察员（只读）' : '本地演示';
   const displayName = user?.displayName ?? '值班长';
   const avatarText = user ? user.displayName.slice(0, 2) : 'LOCAL';
@@ -79,7 +106,7 @@ export function Shell({ children }: { children: ReactNode }) {
 
   return (
     <div className="app-shell" style={{ '--scenario-color': scenario.color } as CSSProperties}>
-      <aside className="rail">
+      <aside className={`rail ${railCollapsed ? 'is-collapsed' : ''}`}>
         <Logo />
         <nav className="rail__nav" aria-label="主导航">
           {NAV.map((item) => {
@@ -97,6 +124,18 @@ export function Shell({ children }: { children: ReactNode }) {
               </NavLink>
             );
           })}
+        </nav>
+        <nav className="rail__nav" aria-label="侧栏收起">
+          <button
+            type="button"
+            className="rail__item rail__toggle"
+            onClick={toggleRail}
+            title={railCollapsed ? '展开导航' : '收起导航'}
+            aria-label={railCollapsed ? '展开导航' : '收起导航'}
+          >
+            {railCollapsed ? <PanelLeftOpen size={17} strokeWidth={1.7} /> : <PanelLeftClose size={17} strokeWidth={1.7} />}
+            <span>{railCollapsed ? '展开' : '收起'}</span>
+          </button>
         </nav>
         <div className="rail__foot">
           <div className="rail__pulse">

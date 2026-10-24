@@ -646,7 +646,7 @@
 
 .place-label--city span {
   font-size: 12px;
-  color: #e9f7ff;
+  color: var(--text);
   letter-spacing: 0.16em;
 }
 

@@ -142,7 +142,7 @@
   line-height: 1.2;
   font-weight: 500;
   letter-spacing: 0.02em;
-  color: #e8f8ff;
+  color: var(--text);
 }
 
 .auth-visual h1 em {
