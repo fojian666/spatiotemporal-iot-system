@@ -193,45 +193,80 @@
   width: 200px;
   height: 200px;
   margin: 24px auto 4px;
+  perspective: 760px;
+  perspective-origin: 50% 45%;
+}
+
+.auth-orbit__stage {
+  position: absolute;
+  inset: 0;
   display: grid;
   place-items: center;
+  transform-style: preserve-3d;
+  transform: rotateX(var(--orbit-tilt-x, 0deg)) rotateY(var(--orbit-tilt-y, 0deg));
+  transition: transform 380ms var(--ease-out);
+  will-change: transform;
 }
 
 .auth-orbit__ring {
   position: absolute;
   border-radius: 50%;
-  border: 1px solid rgba(88, 216, 239, 0.16);
+  border: 1px solid rgba(88, 216, 239, 0.24);
+  filter: drop-shadow(0 0 6px rgba(88, 216, 239, 0.12));
 }
 
 .auth-orbit__ring--outer {
   inset: 0;
   border-style: dashed;
-  animation: orbitSpin 26s linear infinite;
+  transform: rotateX(60deg);
+  animation: authOrbitPlaneOuter 44s linear infinite;
 }
 
 .auth-orbit__ring--inner {
   inset: 36px;
-  border-color: rgba(var(--edge-rgb), 0.22);
-  animation: orbitSpin 18s linear infinite reverse;
+  border-color: rgba(88, 216, 239, 0.18);
+  transform: rotateX(72deg);
+  animation: authOrbitPlaneInner 30s linear infinite reverse;
+}
+
+.auth-orbit__track {
+  position: absolute;
+  transform-style: preserve-3d;
+}
+
+.auth-orbit__track--one {
+  inset: 0;
+  transform: rotateX(60deg);
+  animation: authOrbitPlaneOuter 44s linear infinite;
+}
+
+.auth-orbit__track--two {
+  inset: 36px;
+  transform: rotateX(72deg);
+  animation: authOrbitPlaneInner 30s linear infinite reverse;
 }
 
 .auth-orbit__dot {
   position: absolute;
+  top: 50%;
+  left: 50%;
   width: 5px;
   height: 5px;
+  margin: -2.5px 0 0 -2.5px;
   border-radius: 50%;
   background: #58d8ef;
   box-shadow: 0 0 10px #58d8ef;
 }
 
-.auth-orbit__dot--one {
-  top: 12px;
-  left: 96px;
+.auth-orbit__track--one .auth-orbit__dot {
+  transform: translateX(100px);
+}
+
+.auth-orbit__track--two .auth-orbit__dot {
+  transform: translateX(64px);
 }
 
 .auth-orbit__dot--two {
-  right: 36px;
-  bottom: 44px;
   background: #7fa8ff;
   box-shadow: 0 0 10px #7fa8ff;
 }
@@ -742,14 +777,6 @@
   pointer-events: none;
 }
 
-.auth-orbit__ring--outer {
-  animation-duration: 44s;
-}
-
-.auth-orbit__ring--inner {
-  animation-duration: 30s;
-}
-
 .auth-orbit__core {
   animation:
     floatSoft 7.5s var(--ease-in-out) infinite,
@@ -816,9 +843,14 @@
   to { transform: translate3d(24px, -16px, 0) scale(1.06); }
 }
 
-@keyframes orbitSpin {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
+@keyframes authOrbitPlaneOuter {
+  from { transform: rotateX(60deg) rotateZ(0deg); }
+  to { transform: rotateX(60deg) rotateZ(360deg); }
+}
+
+@keyframes authOrbitPlaneInner {
+  from { transform: rotateX(72deg) rotateZ(0deg); }
+  to { transform: rotateX(72deg) rotateZ(360deg); }
 }
 
 @media (max-width: 920px) {

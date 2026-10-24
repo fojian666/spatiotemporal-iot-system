@@ -1,4 +1,4 @@
-import { useEffect, useState, type FormEvent } from 'react';
+import { useEffect, useRef, useState, type FormEvent, type PointerEvent as ReactPointerEvent } from 'react';
 import {
   AlertTriangle,
   ArrowRight,
@@ -31,9 +31,35 @@ export function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [demoRoles, setDemoRoles] = useState<DemoRoleInfo[]>([]);
   const [pendingRole, setPendingRole] = useState<UserRole | null>(null);
+  const orbitRef = useRef<HTMLDivElement | null>(null);
   const secure = API_BASE.startsWith('https://') || window.location.protocol === 'https:';
   const apiHost = API_BASE.replace(/^https?:\/\//, '');
   const busy = loading || pendingRole !== null;
+
+  const handleOrbitMove = (event: ReactPointerEvent<HTMLDivElement>) => {
+    if (event.pointerType !== 'mouse') return;
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    const node = orbitRef.current;
+    if (!node) return;
+    const rect = node.getBoundingClientRect();
+    const x = (event.clientX - rect.left) / rect.width - 0.5;
+    const y = (event.clientY - rect.top) / rect.height - 0.5;
+    node.style.setProperty('--orbit-tilt-x', `${(-y * 5).toFixed(2)}deg`);
+    node.style.setProperty('--orbit-tilt-y', `${(x * 6).toFixed(2)}deg`);
+  };
+
+  const resetOrbit = () => {
+    const node = orbitRef.current;
+    if (!node) return;
+    node.style.setProperty('--orbit-tilt-x', '0deg');
+    node.style.setProperty('--orbit-tilt-y', '0deg');
+  };
+
+  const handleOrbitOut = (event: ReactPointerEvent<HTMLDivElement>) => {
+    const next = event.relatedTarget as Node | null;
+    if (next && event.currentTarget.contains(next)) return;
+    resetOrbit();
+  };
 
   useEffect(() => {
     const controller = new AbortController();
@@ -103,12 +129,22 @@ export function LoginPage() {
             <span><Database size={13} /> PostGIS</span>
           </div>
 
-          <div className="auth-orbit" aria-hidden="true">
-            <span className="auth-orbit__ring auth-orbit__ring--outer" />
-            <span className="auth-orbit__ring auth-orbit__ring--inner" />
-            <span className="auth-orbit__dot auth-orbit__dot--one" />
-            <span className="auth-orbit__dot auth-orbit__dot--two" />
-            <span className="auth-orbit__core"><LockKeyhole size={18} /></span>
+          <div
+            className="auth-orbit"
+            ref={orbitRef}
+            onPointerMove={handleOrbitMove}
+            onPointerOut={handleOrbitOut}
+            onPointerLeave={resetOrbit}
+            onPointerCancel={resetOrbit}
+            aria-hidden="true"
+          >
+            <div className="auth-orbit__stage">
+              <span className="auth-orbit__ring auth-orbit__ring--outer" />
+              <span className="auth-orbit__ring auth-orbit__ring--inner" />
+              <span className="auth-orbit__track auth-orbit__track--one"><i className="auth-orbit__dot" /></span>
+              <span className="auth-orbit__track auth-orbit__track--two"><i className="auth-orbit__dot auth-orbit__dot--two" /></span>
+              <span className="auth-orbit__core"><LockKeyhole size={18} /></span>
+            </div>
             <em>403 / 401 GUARDED</em>
           </div>
 
