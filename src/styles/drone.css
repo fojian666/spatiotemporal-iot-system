@@ -1431,7 +1431,9 @@
   object-fit: cover;
   opacity: 0.88;
   filter: saturate(0.9) contrast(1.04);
-  animation: videoDrift 26s ease-in-out infinite alternate;
+  animation:
+    flightCamIn 320ms var(--ease-out) backwards,
+    videoDrift 26s ease-in-out infinite alternate;
 }
 
 .flight-video.is-ai img {
@@ -1503,6 +1505,11 @@
 
 .flight-visual .detect-box {
   border-color: rgba(255, 105, 115, 0.85);
+  animation: detectIn 280ms var(--ease-out) backwards;
+}
+
+.flight-visual .detect-box--b {
+  animation-delay: 70ms;
 }
 
 .flight-visual .detect-box em {
@@ -2485,5 +2492,75 @@
   .ops-table--plans .ops-table__head > span:nth-child(6),
   .ops-table--plans .ops-table__row > span:nth-child(6) {
     display: none;
+  }
+}
+
+
+/* ===== 状态变化与筛选反馈 ===== */
+.plan-status,
+.clue-status {
+  transition:
+    color 220ms var(--ease-out),
+    background-color 220ms var(--ease-out),
+    border-color 220ms var(--ease-out),
+    box-shadow 220ms var(--ease-out);
+}
+
+.plan-status.is-pulsing,
+.clue-status.is-pulsing {
+  animation: statusPulse 420ms var(--ease-out);
+}
+
+.media-card,
+.clue-row {
+  animation-delay: calc(var(--i, 0) * 24ms);
+}
+
+.ops-toast.is-leaving {
+  animation: toastOut 180ms var(--ease-out) forwards;
+}
+
+.ops-modal.is-closing {
+  animation: fadeOut 180ms var(--ease-out) forwards;
+}
+
+.ops-modal.is-closing .ops-modal__card {
+  animation: modalOut 180ms var(--ease-out) forwards;
+}
+
+@keyframes flightCamIn {
+  from {
+    opacity: 0;
+    filter: saturate(0.55) brightness(0.62);
+  }
+  to {
+    opacity: 0.88;
+    filter: saturate(0.9) contrast(1.04);
+  }
+}
+
+@keyframes detectIn {
+  from {
+    transform: scale(0.92);
+    filter: blur(2px);
+  }
+  to {
+    transform: none;
+    filter: none;
+  }
+}
+
+@keyframes statusPulse {
+  0% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 transparent;
+  }
+  45% {
+    transform: scale(1.06);
+    box-shadow: 0 0 14px -2px currentColor;
+  }
+  100% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 transparent;
   }
 }

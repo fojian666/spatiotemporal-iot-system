@@ -42,6 +42,7 @@ import { RouteEditorMap } from '../components/RouteEditorMap';
 import { DeviceIcon, Panel, StatusPill, StatusText } from '../components/ui';
 import { useAuth } from '../auth/AuthContext';
 import { useSimulation } from '../engine/simulation';
+import { useAnimatedNumber } from '../hooks/useAnimatedNumber';
 import type { DeviceKind } from '../data/devices';
 import {
   createDronePlan,
@@ -127,8 +128,33 @@ function distanceKm(points: DroneWaypoint[]) {
   return total;
 }
 
+function useStatusPulse(status: string): string {
+  const [pulsing, setPulsing] = useState(false);
+  const previous = useRef(status);
+  useEffect(() => {
+    if (previous.current === status) return undefined;
+    previous.current = status;
+    setPulsing(true);
+    const timer = window.setTimeout(() => setPulsing(false), 420);
+    return () => window.clearTimeout(timer);
+  }, [status]);
+  return pulsing ? 'is-pulsing' : '';
+}
+
+function AnimatedCount({ value }: { value: number }) {
+  const shown = useAnimatedNumber(value);
+  return <>{Math.round(shown)}</>;
+}
+
 function PlanStatus({ status }: { status: string }) {
-  return <span className={`plan-status plan-status--${PLAN_STATUS_CLASS[status] ?? 'pending'}`}><i />{status}</span>;
+  const pulse = useStatusPulse(status);
+  return <span className={`plan-status plan-status--${PLAN_STATUS_CLASS[status] ?? 'pending'} ${pulse}`}><i />{status}</span>;
+}
+
+function ClueStatus({ status }: { status: AiClue['status'] }) {
+  const pulse = useStatusPulse(status);
+  const tone = status === '待处理' ? 'pending' : status === '已核实' ? 'done' : 'ignored';
+  return <span className={`clue-status clue-status--${tone} ${pulse}`}><i />{status}</span>;
 }
 
 function OpsModal({
@@ -144,15 +170,28 @@ function OpsModal({
   children: ReactNode;
   wide?: boolean;
 }) {
+  const [closing, setClosing] = useState(false);
+  const closeTimer = useRef<number | null>(null);
+
+  useEffect(() => () => {
+    if (closeTimer.current) window.clearTimeout(closeTimer.current);
+  }, []);
+
+  const requestClose = () => {
+    if (closing) return;
+    setClosing(true);
+    closeTimer.current = window.setTimeout(onClose, 180);
+  };
+
   return (
-    <div className="ops-modal" role="presentation" onClick={onClose}>
+    <div className={`ops-modal ${closing ? 'is-closing' : ''}`} role="presentation" onClick={requestClose}>
       <div className={`ops-modal__card ${wide ? 'is-wide' : ''}`} role="dialog" aria-modal="true" onClick={(event) => event.stopPropagation()}>
         <header className="ops-modal__head">
           <div>
             <span className="overline">{subtitle ?? 'DRONE OPERATIONS'}</span>
             <h3>{title}</h3>
           </div>
-          <button type="button" className="icon-btn" onClick={onClose} aria-label="关闭"><X size={15} /></button>
+          <button type="button" className="icon-btn" onClick={requestClose} aria-label="关闭"><X size={15} /></button>
         </header>
         <div className="ops-modal__body">{children}</div>
       </div>
@@ -170,12 +209,24 @@ export function DroneOpsPage() {
   const [tab, setTab] = useState<TabKey>('assets');
   const [activePlanId, setActivePlanId] = useState<string | null>(null);
   const [toast, setToast] = useState('');
+  const [toastLeaving, setToastLeaving] = useState(false);
   const toastTimer = useRef<number | null>(null);
+  const toastLeaveTimer = useRef<number | null>(null);
 
   const notify = useCallback((message: string) => {
     setToast(message);
+    setToastLeaving(false);
     if (toastTimer.current) window.clearTimeout(toastTimer.current);
-    toastTimer.current = window.setTimeout(() => setToast(''), 3600);
+    if (toastLeaveTimer.current) window.clearTimeout(toastLeaveTimer.current);
+    toastTimer.current = window.setTimeout(() => {
+      setToastLeaving(true);
+      toastLeaveTimer.current = window.setTimeout(() => {
+        setToast('');
+        setToastLeaving(false);
+        toastLeaveTimer.current = null;
+      }, 180);
+      toastTimer.current = null;
+    }, 3400);
   }, []);
 
   const load = useCallback(async (background = false) => {
@@ -203,6 +254,7 @@ export function DroneOpsPage() {
     void load();
     return () => {
       if (toastTimer.current) window.clearTimeout(toastTimer.current);
+      if (toastLeaveTimer.current) window.clearTimeout(toastLeaveTimer.current);
     };
   }, [load]);
 
@@ -347,7 +399,7 @@ export function DroneOpsPage() {
         {headerStats.map((item) => (
           <div className={`ops-summary__item ops-summary__item--${item.tone}`} key={item.label}>
             <span>{item.label}</span>
-            <strong className="mono">{item.value}</strong>
+            <strong className="mono">{typeof item.value === 'number' ? <AnimatedCount value={item.value} /> : item.value}</strong>
           </div>
         ))}
         <div className="ops-summary__link">
@@ -468,7 +520,7 @@ export function DroneOpsPage() {
         </div>
       )}
 
-      {toast && <div className="ops-toast"><Activity size={13} />{toast}</div>}
+      {toast && <div className={`ops-toast ${toastLeaving ? 'is-leaving' : ''}`}><Activity size={13} />{toast}</div>}
     </div>
   );
 }
@@ -1371,9 +1423,9 @@ function MediaView({ data }: { data: DroneOverview }) {
         <div className="ops-space-usage__legend"><span><i className="is-cyan" /> 图片</span><span><i className="is-violet" /> 视频</span><span><i className="is-amber" /> 压缩文件</span><span><i className="is-muted" /> 剩余</span></div>
       </div>
 
-      <div className="media-grid">
-        {media.map((asset) => (
-          <button type="button" className="media-card" key={asset.id} onClick={() => setSelected(asset)}>
+      <div className="media-grid" key={filter}>
+        {media.map((asset, index) => (
+          <button type="button" className="media-card" key={asset.id} style={{ '--i': index } as CSSProperties} onClick={() => setSelected(asset)}>
             <div className={`media-card__thumb ${asset.mediaType === 'archive' ? 'is-archive' : ''}`}>
               {asset.mediaType === 'archive' ? (
                 <FolderArchive size={32} />
@@ -1505,12 +1557,12 @@ function CluesView({
         <div className="ops-subbar__right"><span className="mono">CLUE CLOSED LOOP · {data.models.length} MODELS ONLINE</span></div>
       </div>
 
-      <div className="clue-list">
-        {clues.map((clue) => {
+      <div className="clue-list" key={status}>
+        {clues.map((clue, index) => {
           const asset = clue.mediaId ? mediaById.get(clue.mediaId) : undefined;
           const model = modelById.get(clue.modelId);
           return (
-            <div className="clue-row" key={clue.id} onClick={() => setSelected(clue)}>
+            <div className="clue-row" key={clue.id} style={{ '--i': index } as CSSProperties} onClick={() => setSelected(clue)}>
               <button type="button" className="clue-row__thumb" onClick={() => setSelected(clue)}>
                 {asset?.url ? <img src={asset.url} alt={clue.title} /> : <ScanEye size={20} />}
                 <span>{clue.objectCount}</span>
@@ -1521,7 +1573,7 @@ function CluesView({
                 <em>{clue.routeName ?? '—'} · {clue.planId ?? '—'} · {formatDateTime(clue.capturedAt)}</em>
               </div>
               <div className="clue-row__objects"><strong className="mono">{clue.objectCount}</strong><span>目标</span></div>
-              <div className="clue-row__status"><span className={`clue-status clue-status--${clue.status === '待处理' ? 'pending' : clue.status === '已核实' ? 'done' : 'ignored'}`}><i />{clue.status}</span></div>
+              <div className="clue-row__status"><ClueStatus status={clue.status} /></div>
               <div className="clue-row__actions" onClick={(event) => event.stopPropagation()}>
                 <button type="button" className="btn btn--sm" onClick={() => setSelected(clue)}>查看</button>
                 <button type="button" className="btn btn--sm" disabled={!canOperate || pendingId === clue.id || clue.status === '已核实'} onClick={() => void act(clue.id, '已核实')}>核实</button>

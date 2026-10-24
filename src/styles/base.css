@@ -218,7 +218,11 @@ ul {
   font-size: 10px;
   letter-spacing: 0.02em;
   position: relative;
-  transition: color var(--dur-base) var(--ease-out), background var(--dur-base) var(--ease-out), border-color var(--dur-base) var(--ease-out);
+  transition:
+    color var(--dur-base) var(--ease-out),
+    background var(--dur-base) var(--ease-out),
+    border-color var(--dur-base) var(--ease-out),
+    height var(--dur-base) var(--ease-out);
   border: 1px solid transparent;
 }
 
@@ -1670,6 +1674,10 @@ select {
   to { opacity: 0; }
 }
 
+@keyframes toastOut {
+  to { opacity: 0; transform: translateY(6px); }
+}
+
 @keyframes floatSoft {
   0%, 100% { transform: translateY(0); }
   50% { transform: translateY(-4px); }
@@ -1907,10 +1915,23 @@ select {
   width: 58px;
   flex: 0 0 58px;
 }
+.brand__text,
+.rail__item span,
+.rail__version {
+  max-height: 18px;
+  overflow: hidden;
+  transition:
+    opacity 160ms var(--ease-out),
+    transform 220ms var(--ease-out),
+    max-height 220ms var(--ease-out);
+}
 .rail.is-collapsed .brand__text,
 .rail.is-collapsed .rail__item span,
 .rail.is-collapsed .rail__version {
-  display: none;
+  opacity: 0;
+  transform: translateX(-6px);
+  max-height: 0;
+  pointer-events: none;
 }
 .rail.is-collapsed .rail__item {
   height: 46px;

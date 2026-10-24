@@ -239,6 +239,7 @@ export function CopilotPage() {
   const [input, setInput] = useState('');
   const [pending, setPending] = useState(false);
   const [toast, setToast] = useState('');
+  const [toastLeaving, setToastLeaving] = useState(false);
   const [lastPipeline, setLastPipeline] = useState<CopilotReply['pipeline'] | null>(null);
   const [lastEvidence, setLastEvidence] = useState<CopilotReply['evidence']>([]);
   const [lastIntent, setLastIntent] = useState('');
@@ -248,6 +249,7 @@ export function CopilotPage() {
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const timerRef = useRef<number | null>(null);
   const toastTimerRef = useRef<number | null>(null);
+  const toastLeaveTimerRef = useRef<number | null>(null);
   const lastInitialQueryRef = useRef<string | null>(null);
 
   const time = formatSimTime(simTime);
@@ -275,6 +277,7 @@ export function CopilotPage() {
     return () => {
       if (timerRef.current) window.clearTimeout(timerRef.current);
       if (toastTimerRef.current) window.clearTimeout(toastTimerRef.current);
+      if (toastLeaveTimerRef.current) window.clearTimeout(toastLeaveTimerRef.current);
     };
   }, []);
 
@@ -323,8 +326,18 @@ export function CopilotPage() {
 
   const showToast = (text: string) => {
     setToast(text);
+    setToastLeaving(false);
     if (toastTimerRef.current) window.clearTimeout(toastTimerRef.current);
-    toastTimerRef.current = window.setTimeout(() => setToast(''), 4200);
+    if (toastLeaveTimerRef.current) window.clearTimeout(toastLeaveTimerRef.current);
+    toastTimerRef.current = window.setTimeout(() => {
+      setToastLeaving(true);
+      toastLeaveTimerRef.current = window.setTimeout(() => {
+        setToast('');
+        setToastLeaving(false);
+        toastLeaveTimerRef.current = null;
+      }, 180);
+      toastTimerRef.current = null;
+    }, 4000);
   };
 
   const handleAction = (action: CopilotReply['actions'][number]) => {
@@ -496,7 +509,7 @@ export function CopilotPage() {
           )}
 
           {toast && (
-            <div className="copilot-toast">
+            <div className={`copilot-toast ${toastLeaving ? 'is-leaving' : ''}`}>
               <Activity size={13} /> {toast}
             </div>
           )}

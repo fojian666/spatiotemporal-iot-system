@@ -21,6 +21,7 @@ import {
 } from 'lucide-react';
 import { graphic, type EChartsOption } from 'echarts';
 import { PageHeader } from '../components/Shell';
+import { useAnimatedNumber } from '../hooks/useAnimatedNumber';
 import { MapView } from '../components/MapView';
 import {
   DeviceIcon,
@@ -60,6 +61,11 @@ function KpiCard({
   footer: ReactNode;
   spark?: number[];
 }) {
+  const animated = useAnimatedNumber(typeof value === 'number' ? value : 0);
+  const shownValue = typeof value === 'number'
+    ? (Number.isInteger(value) ? Math.round(animated) : animated.toFixed(1))
+    : value;
+
   return (
     <article className="kpi" style={{ '--kpi': color } as CSSProperties}>
       <div className="kpi__top">
@@ -70,7 +76,7 @@ function KpiCard({
         <span className="kpi__corner" />
       </div>
       <div className="kpi__main">
-        <strong className="mono">{value}</strong>
+        <strong className="mono">{shownValue}</strong>
         {unit && <span className="kpi__unit">{unit}</span>}
       </div>
       <div className="kpi__foot">

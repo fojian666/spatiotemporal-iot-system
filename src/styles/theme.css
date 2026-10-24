@@ -153,3 +153,33 @@ textarea {
   -webkit-user-select: text;
   user-select: text;
 }
+
+/* ===== 主题切换转场 ===== */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: 380ms;
+  animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+::view-transition-old(root) {
+  animation-name: themeOut;
+}
+
+::view-transition-new(root) {
+  animation-name: themeIn;
+}
+
+@keyframes themeOut {
+  to { opacity: 0; }
+}
+
+@keyframes themeIn {
+  from { opacity: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-old(root),
+  ::view-transition-new(root) {
+    animation: none;
+  }
+}

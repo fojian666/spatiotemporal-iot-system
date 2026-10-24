@@ -18,15 +18,31 @@ function subscribe(listener: () => void): () => void {
   };
 }
 
+type ViewTransitionCapableDocument = Document & {
+  startViewTransition?: (callback: () => void) => unknown;
+};
+
 export function setTheme(theme: Theme): void {
-  current = theme;
-  document.documentElement.dataset.theme = theme;
-  try {
-    window.localStorage.setItem(KEY, theme);
-  } catch {
-    // storage may be blocked in hardened contexts
+  const apply = () => {
+    current = theme;
+    document.documentElement.dataset.theme = theme;
+    try {
+      window.localStorage.setItem(KEY, theme);
+    } catch {
+      // storage may be blocked in hardened contexts
+    }
+    listeners.forEach((listener) => listener());
+  };
+  const doc = document as ViewTransitionCapableDocument;
+  if (doc.startViewTransition && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    try {
+      doc.startViewTransition(apply);
+      return;
+    } catch {
+      // fall through to the instant switch
+    }
   }
-  listeners.forEach((listener) => listener());
+  apply();
 }
 
 export function toggleTheme(): void {

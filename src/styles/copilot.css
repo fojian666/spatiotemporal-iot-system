@@ -1412,3 +1412,8 @@
     margin-top: 9px;
   }
 }
+
+
+.copilot-toast.is-leaving {
+  animation: toastOut 180ms var(--ease-out) forwards;
+}
