@@ -131,6 +131,24 @@ html[data-theme='light'] .map-hud-label em {
   color: #1e293b;
 }
 
+/* 登录页原子视觉：浅色主题下整体加深配色 */
+html[data-theme='light'] .auth-atom__orbit { --tint: 8, 145, 178; }
+html[data-theme='light'] .auth-atom__orbit--b { --tint: 67, 56, 202; }
+html[data-theme='light'] .auth-atom__orbit--c { --tint: 14, 116, 144; }
+html[data-theme='light'] .auth-atom__nucleon {
+  background: radial-gradient(circle at 30% 26%, #ffffff, #22b8dd 46%, #0e7490 100%);
+  box-shadow: 0 0 12px -3px rgba(8, 145, 178, 0.55);
+}
+html[data-theme='light'] .auth-atom__nucleon:nth-of-type(2),
+html[data-theme='light'] .auth-atom__nucleon:nth-of-type(4) {
+  background: radial-gradient(circle at 30% 26%, #ffffff, #6366f1 46%, #3730a3 100%);
+  box-shadow: 0 0 12px -3px rgba(67, 56, 202, 0.55);
+}
+html[data-theme='light'] .auth-atom__core {
+  background: radial-gradient(circle at 42% 38%, #ffffff, rgba(34, 184, 221, 0.9) 36%, rgba(14, 116, 144, 0.4) 68%, rgba(14, 116, 144, 0) 100%);
+  box-shadow: 0 0 30px 3px rgba(8, 145, 178, 0.35);
+}
+
 /* ===== 文本选择策略：大屏内容默认不可选，阅读/交互区可复制 ===== */
 .app-shell,
 .auth-screen,

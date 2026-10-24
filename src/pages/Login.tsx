@@ -31,34 +31,34 @@ export function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [demoRoles, setDemoRoles] = useState<DemoRoleInfo[]>([]);
   const [pendingRole, setPendingRole] = useState<UserRole | null>(null);
-  const orbitRef = useRef<HTMLDivElement | null>(null);
+  const atomRef = useRef<HTMLDivElement | null>(null);
   const secure = API_BASE.startsWith('https://') || window.location.protocol === 'https:';
   const apiHost = API_BASE.replace(/^https?:\/\//, '');
   const busy = loading || pendingRole !== null;
 
-  const handleOrbitMove = (event: ReactPointerEvent<HTMLDivElement>) => {
+  const handleAtomMove = (event: ReactPointerEvent<HTMLDivElement>) => {
     if (event.pointerType !== 'mouse') return;
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-    const node = orbitRef.current;
+    const node = atomRef.current;
     if (!node) return;
     const rect = node.getBoundingClientRect();
     const x = (event.clientX - rect.left) / rect.width - 0.5;
     const y = (event.clientY - rect.top) / rect.height - 0.5;
-    node.style.setProperty('--orbit-tilt-x', `${(-y * 5).toFixed(2)}deg`);
-    node.style.setProperty('--orbit-tilt-y', `${(x * 6).toFixed(2)}deg`);
+    node.style.setProperty('--atom-tilt-x', `${(-y * 7).toFixed(2)}deg`);
+    node.style.setProperty('--atom-tilt-y', `${(x * 9).toFixed(2)}deg`);
   };
 
-  const resetOrbit = () => {
-    const node = orbitRef.current;
+  const resetAtom = () => {
+    const node = atomRef.current;
     if (!node) return;
-    node.style.setProperty('--orbit-tilt-x', '0deg');
-    node.style.setProperty('--orbit-tilt-y', '0deg');
+    node.style.setProperty('--atom-tilt-x', '0deg');
+    node.style.setProperty('--atom-tilt-y', '0deg');
   };
 
-  const handleOrbitOut = (event: ReactPointerEvent<HTMLDivElement>) => {
+  const handleAtomOut = (event: ReactPointerEvent<HTMLDivElement>) => {
     const next = event.relatedTarget as Node | null;
     if (next && event.currentTarget.contains(next)) return;
-    resetOrbit();
+    resetAtom();
   };
 
   useEffect(() => {
@@ -130,22 +130,52 @@ export function LoginPage() {
           </div>
 
           <div
-            className="auth-orbit"
-            ref={orbitRef}
-            onPointerMove={handleOrbitMove}
-            onPointerOut={handleOrbitOut}
-            onPointerLeave={resetOrbit}
-            onPointerCancel={resetOrbit}
+            className="auth-atom"
+            ref={atomRef}
+            onPointerMove={handleAtomMove}
+            onPointerOut={handleAtomOut}
+            onPointerLeave={resetAtom}
+            onPointerCancel={resetAtom}
             aria-hidden="true"
           >
-            <div className="auth-orbit__stage">
-              <span className="auth-orbit__ring auth-orbit__ring--outer" />
-              <span className="auth-orbit__ring auth-orbit__ring--inner" />
-              <span className="auth-orbit__track auth-orbit__track--one"><i className="auth-orbit__dot" /></span>
-              <span className="auth-orbit__track auth-orbit__track--two"><i className="auth-orbit__dot auth-orbit__dot--two" /></span>
-              <span className="auth-orbit__core"><LockKeyhole size={18} /></span>
+            <div className="auth-atom__stage">
+              <div className="auth-atom__cage">
+                <span className="auth-atom__orbit auth-atom__orbit--a">
+                  <i className="auth-atom__ring" />
+                  <span className="auth-atom__shell">
+                    <i className="auth-atom__trail" />
+                    <i className="auth-atom__electron" />
+                  </span>
+                </span>
+                <span className="auth-atom__orbit auth-atom__orbit--b">
+                  <i className="auth-atom__ring" />
+                  <span className="auth-atom__shell">
+                    <i className="auth-atom__trail" />
+                    <i className="auth-atom__electron" />
+                  </span>
+                  <span className="auth-atom__shell auth-atom__shell--lag">
+                    <i className="auth-atom__trail" />
+                    <i className="auth-atom__electron" />
+                  </span>
+                </span>
+                <span className="auth-atom__orbit auth-atom__orbit--c">
+                  <i className="auth-atom__ring" />
+                  <span className="auth-atom__shell">
+                    <i className="auth-atom__trail" />
+                    <i className="auth-atom__electron" />
+                  </span>
+                </span>
+                <span className="auth-atom__core">
+                  <i className="auth-atom__nucleon" />
+                  <i className="auth-atom__nucleon" />
+                  <i className="auth-atom__nucleon" />
+                  <i className="auth-atom__nucleon" />
+                  <i className="auth-atom__nucleon" />
+                  <i className="auth-atom__nucleon" />
+                </span>
+              </div>
             </div>
-            <em>403 / 401 GUARDED</em>
+            <em>3 SHELLS · 4 ELECTRONS</em>
           </div>
 
           <div className="auth-endpoint mono">
