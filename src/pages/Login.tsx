@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from 'react';
+import { useEffect, useState, type FormEvent } from 'react';
 import {
   AlertTriangle,
   ArrowRight,
@@ -9,25 +9,45 @@ import {
   LockKeyhole,
   Orbit,
   RadioTower,
+  RefreshCw,
   ShieldCheck,
   UserRound,
 } from 'lucide-react';
 import { useAuth } from '../auth/AuthContext';
-import { API_BASE } from '../services/api';
+import { API_BASE, fetchDemoRoles, type DemoRoleInfo, type UserRole } from '../services/api';
+
+const ROLE_META: Record<UserRole, { label: string; note: string; icon: typeof ShieldCheck }> = {
+  admin: { label: '管理员', note: '全部权限', icon: ShieldCheck },
+  operator: { label: '值班长', note: '飞控与处置', icon: UserRound },
+  viewer: { label: '观察员', note: '只读查询', icon: Eye },
+};
 
 export function LoginPage() {
-  const { login } = useAuth();
+  const { login, loginWithRole } = useAuth();
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [demoRoles, setDemoRoles] = useState<DemoRoleInfo[]>([]);
+  const [pendingRole, setPendingRole] = useState<UserRole | null>(null);
   const secure = API_BASE.startsWith('https://') || window.location.protocol === 'https:';
   const apiHost = API_BASE.replace(/^https?:\/\//, '');
+  const busy = loading || pendingRole !== null;
+
+  useEffect(() => {
+    const controller = new AbortController();
+    fetchDemoRoles(controller.signal)
+      .then((payload) => {
+        if (payload.enabled) setDemoRoles(payload.roles);
+      })
+      .catch(() => undefined);
+    return () => controller.abort();
+  }, []);
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (loading) return;
+    if (busy) return;
     if (!username.trim() || !password) {
       setError('请输入账号和密码');
       return;
@@ -40,6 +60,19 @@ export function LoginPage() {
       setError(reason instanceof Error ? reason.message : '登录失败，请稍后重试');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleRoleLogin = async (role: UserRole) => {
+    if (busy) return;
+    setError('');
+    setPendingRole(role);
+    try {
+      await loginWithRole(role);
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : '演示登录失败，请稍后重试');
+    } finally {
+      setPendingRole(null);
     }
   };
 
@@ -93,6 +126,39 @@ export function LoginPage() {
             <p>使用已分配的账号继续。观察员为只读角色。</p>
           </div>
 
+          {demoRoles.length > 0 && (
+            <div className="auth-demo">
+              <div className="auth-demo__head">
+                <span className="overline">DEMO QUICK ACCESS</span>
+                <span>一键进入演示角色</span>
+              </div>
+              <div className="auth-demo__grid">
+                {demoRoles.map((item) => {
+                  const meta = ROLE_META[item.role];
+                  const Icon = meta.icon;
+                  const pending = pendingRole === item.role;
+                  return (
+                    <button
+                      key={item.role}
+                      type="button"
+                      className={`auth-demo__btn ${pending ? 'is-pending' : ''}`}
+                      disabled={busy}
+                      title={`${item.displayName} · ${meta.note}`}
+                      aria-label={`以${meta.label}身份登录`}
+                      onClick={() => void handleRoleLogin(item.role)}
+                    >
+                      <span className="auth-demo__icon"><Icon size={15} /></span>
+                      <span className="auth-demo__text"><strong>{meta.label}</strong><em>{item.username}</em></span>
+                      {pending ? <RefreshCw size={13} className="is-spinning" /> : <ArrowRight size={13} />}
+                    </button>
+                  );
+                })}
+              </div>
+              <p className="auth-demo__hint">账号由服务端配置；点击直接签发对应角色会话，密码不会下发到浏览器。</p>
+              <div className="auth-divider"><span>或使用账号密码登录</span></div>
+            </div>
+          )}
+
           <form className="auth-form" onSubmit={handleSubmit}>
             <label className="auth-field">
               <span>账号</span>
@@ -105,7 +171,7 @@ export function LoginPage() {
                   placeholder="输入账号"
                   autoComplete="username"
                   autoFocus
-                  disabled={loading}
+                  disabled={busy}
                 />
               </div>
             </label>
@@ -120,7 +186,7 @@ export function LoginPage() {
                   onChange={(event) => setPassword(event.target.value)}
                   placeholder="输入密码"
                   autoComplete="current-password"
-                  disabled={loading}
+                  disabled={busy}
                 />
                 <button
                   type="button"
@@ -141,7 +207,7 @@ export function LoginPage() {
               </div>
             )}
 
-            <button type="submit" className="btn btn--primary auth-submit" disabled={loading}>
+            <button type="submit" className="btn btn--primary auth-submit" disabled={busy}>
               {loading ? '正在验证…' : '进入系统'}
               {!loading && <ArrowRight size={15} />}
             </button>

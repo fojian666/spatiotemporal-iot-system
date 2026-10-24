@@ -3,10 +3,12 @@ import {
   AUTH_EXPIRED_EVENT,
   ApiError,
   REMOTE_ENABLED,
+  demoLoginRequest,
   fetchMe,
   loginRequest,
   logoutRequest,
   type AuthUser,
+  type UserRole,
 } from '../services/api';
 import { clearAuthToken, getAuthToken, setAuthToken } from '../services/authToken';
 import { AuthContext, useAuth, type AuthContextValue, type AuthStatus } from '../auth/AuthContext';
@@ -67,6 +69,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setStatus('authenticated');
   }, []);
 
+  const loginWithRole = useCallback(async (role: UserRole) => {
+    const response = await demoLoginRequest(role);
+    setAuthToken(response.access_token);
+    setUser(response.user);
+    setStatus('authenticated');
+  }, []);
+
   const logout = useCallback(() => {
     void logoutRequest().catch(() => undefined);
     clearAuthToken();
@@ -86,10 +95,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       isRemote: REMOTE_ENABLED,
       canOperate: !REMOTE_ENABLED || user?.role === 'admin' || user?.role === 'operator',
       login,
+      loginWithRole,
       logout,
       retrySession,
     }),
-    [user, status, login, logout, retrySession],
+    [user, status, login, loginWithRole, logout, retrySession],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

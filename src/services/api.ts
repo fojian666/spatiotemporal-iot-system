@@ -150,6 +150,23 @@ export async function loginRequest(username: string, password: string): Promise<
   });
 }
 
+export async function demoLoginRequest(role: UserRole): Promise<LoginResponse> {
+  return request<LoginResponse>('/api/auth/demo-login', {
+    method: 'POST',
+    body: JSON.stringify({ role }),
+  });
+}
+
+export interface DemoRoleInfo {
+  role: UserRole;
+  username: string;
+  displayName: string;
+}
+
+export async function fetchDemoRoles(signal?: AbortSignal): Promise<{ enabled: boolean; roles: DemoRoleInfo[] }> {
+  return request('/api/auth/demo-roles', { signal });
+}
+
 export async function fetchMe(signal?: AbortSignal): Promise<AuthUser> {
   return request<AuthUser>('/api/auth/me', { signal });
 }

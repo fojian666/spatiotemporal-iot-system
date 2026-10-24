@@ -37,6 +37,8 @@ class Settings(BaseSettings):
     login_max_attempts: int = 5
     login_window_seconds: int = 300
 
+    demo_login_enabled: bool = True
+
     admin_username: str = "admin"
     admin_password: str = ""
     admin_display_name: str = "系统管理员"

@@ -1,5 +1,5 @@
 import { createContext, useContext } from 'react';
-import type { AuthUser } from '../services/api';
+import type { AuthUser, UserRole } from '../services/api';
 
 export type AuthStatus = 'checking' | 'anonymous' | 'authenticated' | 'error';
 
@@ -9,6 +9,7 @@ export interface AuthContextValue {
   isRemote: boolean;
   canOperate: boolean;
   login: (username: string, password: string) => Promise<void>;
+  loginWithRole: (role: UserRole) => Promise<void>;
   logout: () => void;
   retrySession: () => void;
 }

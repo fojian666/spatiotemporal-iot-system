@@ -5,7 +5,7 @@ import logging
 from contextlib import asynccontextmanager
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Any
+from typing import Any, Literal
 from zoneinfo import ZoneInfo
 
 from fastapi import Depends, FastAPI, HTTPException, Query, Request, WebSocket, WebSocketDisconnect
@@ -295,6 +295,67 @@ async def login(
     await session.commit()
     token, expires_in = create_access_token(user)
     logger.info("User %s logged in from %s", user.username, client)
+    return {
+        "access_token": token,
+        "token_type": "bearer",
+        "expires_in": expires_in,
+        "user": user_to_dict(user),
+    }
+
+
+class DemoLoginRequest(BaseModel):
+    role: Literal["admin", "operator", "viewer"]
+
+
+@app.get("/api/auth/demo-roles")
+async def demo_roles() -> dict[str, Any]:
+    """Configured demo accounts for the quick-login panel (never passwords)."""
+    if not settings.demo_login_enabled:
+        return {"enabled": False, "roles": []}
+    accounts = {
+        "admin": (settings.admin_username, settings.admin_display_name),
+        "operator": (settings.operator_username, settings.operator_display_name),
+        "viewer": (settings.viewer_username, settings.viewer_display_name),
+    }
+    roles = [
+        {"role": role, "username": username, "displayName": display_name}
+        for role, (username, display_name) in accounts.items()
+        if username
+    ]
+    return {"enabled": True, "roles": roles}
+
+
+@app.post("/api/auth/demo-login")
+async def demo_login(
+    payload: DemoLoginRequest,
+    request: Request,
+    session: AsyncSession = Depends(get_session),
+) -> dict[str, Any]:
+    """One-click demo login: issue a token for a configured role account.
+
+    Passwords never leave the server; disable with IOT_DEMO_LOGIN_ENABLED=false.
+    """
+    if not settings.demo_login_enabled:
+        raise HTTPException(status_code=404, detail="demo login is disabled")
+    username = {
+        "admin": settings.admin_username,
+        "operator": settings.operator_username,
+        "viewer": settings.viewer_username,
+    }[payload.role]
+    if not username:
+        raise HTTPException(status_code=404, detail="role not configured")
+    client = request.client.host if request.client else "unknown"
+    rate_key = f"{client}:{username}"
+    allowed, retry_after = check_login_rate(rate_key)
+    if not allowed:
+        raise HTTPException(status_code=429, detail="登录尝试过于频繁，请稍后再试", headers={"Retry-After": str(retry_after)})
+    user = await session.scalar(select(User).where(User.username == username))
+    if user is None or not user.active:
+        raise HTTPException(status_code=404, detail="账号未配置，请检查 IOT_*_USERNAME/PASSWORD")
+    user.last_login_at = now_local()
+    await session.commit()
+    token, expires_in = create_access_token(user)
+    logger.info("Demo login as %s from %s", user.username, client)
     return {
         "access_token": token,
         "token_type": "bearer",

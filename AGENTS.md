@@ -66,6 +66,7 @@ backend/app/schemas.py       遥测消息契约 v1（pydantic，拒收计数进 
 
 - `.env`、`backend/certs/`、`backend/mosquitto/passwd` 永不入库（.gitignore 已配，提交前 `git status` 复核）；
 - JWT 密钥、角色密码只经环境变量注入；勿在前端硬编码任何凭据；
+- 一键演示登录（`IOT_DEMO_LOGIN_ENABLED`）只用于本地演示：密码永不下发前端，角色会话由 `/api/auth/demo-login` 在服务端签发；对外部署前关闭；
 - WS 用一次性票据（60s）而非长期 token；CORS/TrustedHost 仅限 localhost。
 
 ## 演示性内容清单（刻意保留，勿"修复"）

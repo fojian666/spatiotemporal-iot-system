@@ -57,7 +57,7 @@ cd .. && cp .env.example .env.local   # VITE_DATA_SOURCE=api
 npm install && npm run dev
 ```
 
-角色：`admin`（管理员）/ `operator`（值班长）/ `viewer`（观察员只读），账号密码由 `IOT_*_PASSWORD` 环境变量注入。
+角色：`admin`（管理员）/ `operator`（值班长）/ `viewer`（观察员只读），账号密码由 `IOT_*_PASSWORD` 环境变量注入。登录页提供三个角色的一键演示入口（`IOT_DEMO_LOGIN_ENABLED`，默认开启）：密码始终留在服务端，点击后由 `/api/auth/demo-login` 直接签发对应角色会话；对外部署时请关闭。
 
 ## 接入真实设备（预留接口）
 
