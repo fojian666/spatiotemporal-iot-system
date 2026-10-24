@@ -1,7 +1,7 @@
 import { createContext, useContext } from 'react';
 import type { AuthUser } from '../services/api';
 
-export type AuthStatus = 'checking' | 'anonymous' | 'authenticated';
+export type AuthStatus = 'checking' | 'anonymous' | 'authenticated' | 'error';
 
 export interface AuthContextValue {
   user: AuthUser | null;
@@ -10,6 +10,7 @@ export interface AuthContextValue {
   canOperate: boolean;
   login: (username: string, password: string) => Promise<void>;
   logout: () => void;
+  retrySession: () => void;
 }
 
 export const AuthContext = createContext<AuthContextValue | null>(null);

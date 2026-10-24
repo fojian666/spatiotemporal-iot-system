@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react';
 import {
   AUTH_EXPIRED_EVENT,
+  ApiError,
   REMOTE_ENABLED,
   fetchMe,
   loginRequest,
@@ -14,6 +15,7 @@ import { LoginPage } from '../pages/Login';
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null);
+  const [attempt, setAttempt] = useState(0);
   const [status, setStatus] = useState<AuthStatus>(() => {
     if (!REMOTE_ENABLED) return 'authenticated';
     return getAuthToken() ? 'checking' : 'anonymous';
@@ -26,22 +28,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return undefined;
     }
     let cancelled = false;
+    setStatus('checking');
     fetchMe()
       .then((current) => {
         if (cancelled) return;
         setUser(current);
         setStatus('authenticated');
       })
-      .catch(() => {
+      .catch((reason) => {
         if (cancelled) return;
-        clearAuthToken();
-        setUser(null);
-        setStatus('anonymous');
+        if (reason instanceof ApiError && reason.status === 401) {
+          clearAuthToken();
+          setUser(null);
+          setStatus('anonymous');
+          return;
+        }
+        setStatus('error');
       });
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [attempt]);
 
   useEffect(() => {
     const handleExpired = () => {
@@ -67,6 +74,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setStatus('anonymous');
   }, []);
 
+  const retrySession = useCallback(() => {
+    setStatus('checking');
+    setAttempt((value) => value + 1);
+  }, []);
+
   const value = useMemo<AuthContextValue>(
     () => ({
       user,
@@ -75,18 +87,36 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       canOperate: !REMOTE_ENABLED || user?.role === 'admin' || user?.role === 'operator',
       login,
       logout,
+      retrySession,
     }),
-    [user, status, login, logout],
+    [user, status, login, logout, retrySession],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 
 export function AuthGate({ children }: { children: ReactNode }) {
-  const { status } = useAuth();
+  const { status, retrySession } = useAuth();
   if (!REMOTE_ENABLED) return <>{children}</>;
   if (status === 'checking') {
-    return <BootSplash title="正在验证安全会话" detail="JWT · TLS · SESSION CHECK" />;
+    return <BootSplash title="正在验证安全会话" detail="JWT · SESSION CHECK" />;
+  }
+  if (status === 'error') {
+    return (
+      <div className="boot-splash">
+        <div className="boot-splash__mark">
+          <span />
+          <span />
+          <span />
+        </div>
+        <span className="overline">SESSION CHECK FAILED</span>
+        <strong>无法验证登录会话</strong>
+        <p>服务端暂时不可达，本地会话未被清除。请确认后端已启动后重试。</p>
+        <button type="button" className="btn btn--primary" onClick={retrySession}>
+          重新验证
+        </button>
+      </div>
+    );
   }
   if (status === 'anonymous') return <LoginPage />;
   return <>{children}</>;

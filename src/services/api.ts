@@ -78,16 +78,53 @@ export interface LoginResponse {
   user: AuthUser;
 }
 
+const REQUEST_TIMEOUT_MS = 15_000;
+
+function withTimeout(timeoutMs: number, external?: AbortSignal) {
+  const controller = new AbortController();
+  let timedOut = false;
+  const timer = window.setTimeout(() => {
+    timedOut = true;
+    controller.abort();
+  }, timeoutMs);
+  const onAbort = () => controller.abort();
+  if (external) {
+    if (external.aborted) controller.abort();
+    else external.addEventListener('abort', onAbort, { once: true });
+  }
+  return {
+    signal: controller.signal,
+    didTimeout: () => timedOut,
+    dispose: () => {
+      window.clearTimeout(timer);
+      external?.removeEventListener('abort', onAbort);
+    },
+  };
+}
+
 async function request<T>(path: string, options?: RequestInit): Promise<T> {
   const token = getAuthToken();
-  const response = await fetch(`${API_BASE}${path}`, {
-    ...options,
-    headers: {
-      'Content-Type': 'application/json',
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      ...(options?.headers ?? {}),
-    },
-  });
+  const timeout = withTimeout(REQUEST_TIMEOUT_MS, options?.signal ?? undefined);
+  let response: Response;
+  try {
+    response = await fetch(`${API_BASE}${path}`, {
+      ...options,
+      signal: timeout.signal,
+      headers: {
+        'Content-Type': 'application/json',
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        ...(options?.headers ?? {}),
+      },
+    });
+  } catch (reason) {
+    if (timeout.didTimeout()) {
+      throw new ApiError(0, '请求超时，请检查后端是否在线');
+    }
+    if (options?.signal?.aborted) throw reason;
+    throw new ApiError(0, '无法连接服务端，请检查后端与网络');
+  } finally {
+    timeout.dispose();
+  }
   if (!response.ok) {
     const raw = await response.text();
     let message = raw || `请求失败 (${response.status})`;
