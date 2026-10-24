@@ -176,6 +176,10 @@ export function MapView({
   const activeRouteRef = useRef<RouteWaypoint[]>(DRONE_ROUTE);
   const droneDeviceIdRef = useRef('UAV-01');
   const onSelectRef = useRef(onSelect);
+  const flyToSelectedRef = useRef(flyToSelected);
+  const selectedIdRef = useRef(selectedId);
+  flyToSelectedRef.current = flyToSelected;
+  selectedIdRef.current = selectedId;
   const [loaded, setLoaded] = useState(false);
   const [mapError, setMapError] = useState(false);
   const [layers, setLayers] = useState<MapLayers>({
@@ -428,6 +432,8 @@ export function MapView({
       DEVICES.forEach((device) => fittedBounds.extend([device.lng, device.lat]));
       window.setTimeout(() => {
         map.resize();
+        // A deep-linked focus owns the camera; fitting here would override its flyTo.
+        if (flyToSelectedRef.current && selectedIdRef.current) return;
         map.fitBounds(fittedBounds, {
           padding: detailed
             ? { top: 160, right: 390, bottom: 100, left: 390 }
