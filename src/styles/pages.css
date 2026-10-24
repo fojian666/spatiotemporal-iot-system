@@ -4307,3 +4307,35 @@
   .geo-page .map-tools { right: 16px; }
   .geo-page .map-coords { display: none; }
 }
+
+
+/* ===== 字体分角色应用 ===== */
+/* 页面大标题：Rajdhani 作用于英文与数字，中文回退系统黑体 */
+.page-header h1,
+.page-header h2 {
+  font-family: var(--font-display);
+  letter-spacing: 0.03em;
+}
+/* 大数字与数据强调 */
+.kpi__main strong,
+.pf-stat strong,
+.cap-kpi strong,
+.ops-summary__item strong,
+.pf-hero__stats strong,
+.learn-step strong {
+  font-family: var(--font-num);
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+/* 顶栏时钟 */
+.topbar__time {
+  font-family: var(--font-num);
+  font-weight: 600;
+}
+/* 图表等英文小提示 */
+.graph-hint,
+.graph-footnote,
+.detail-text {
+  font-family: var(--font-display);
+  letter-spacing: 0.08em;
+}
