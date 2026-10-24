@@ -30,6 +30,8 @@ interface DocGroup {
   docs: Doc[];
 }
 
+type DocEntry = Doc & { group: string };
+
 /* ------------------------------------------------------------------ */
 /* 文档内容（本页主体）                                                */
 /* ------------------------------------------------------------------ */
@@ -881,31 +883,131 @@ const DOC_GROUPS: DocGroup[] = [
 /* 文档中心页面                                                        */
 /* ------------------------------------------------------------------ */
 
+function DocBody({ doc }: { doc: DocEntry }) {
+  return (
+    <>
+      <header className="docs-content__head">
+        <span className="overline">{doc.group.toUpperCase()}</span>
+        <h2>{doc.title}</h2>
+      </header>
+
+      {doc.sections.map((section, i) => (
+        <section className="docs-section" key={section.heading ?? i}>
+          {section.heading && <h3>{section.heading}</h3>}
+          {section.paras?.map((para) => <p key={para.slice(0, 24)}>{para}</p>)}
+          {section.list && (
+            <ul>
+              {section.list.map((item) => <li key={item}>{item}</li>)}
+            </ul>
+          )}
+          {section.table && (
+            <div className="docs-table">
+              <div className="docs-table__head">
+                {section.table.head.map((cell) => <span key={cell}>{cell}</span>)}
+              </div>
+              {section.table.rows.map((row) => (
+                <div className="docs-table__row" key={row.join('|')}>
+                  {row.map((cell, ci) => <span key={`${cell}-${ci}`} className={ci === 0 ? 'is-key' : ''}>{cell}</span>)}
+                </div>
+              ))}
+            </div>
+          )}
+          {section.code && <pre className="docs-code mono"><code>{section.code}</code></pre>}
+          {section.note && <div className="docs-note">{section.note}</div>}
+          {section.links && (
+            <div className="docs-links">
+              {section.links.map((link) => (
+                <Link key={link.to + link.label} className="btn btn--sm btn--primary" to={link.to}>
+                  {link.label} <ChevronRight size={11} />
+                </Link>
+              ))}
+            </div>
+          )}
+        </section>
+      ))}
+    </>
+  );
+}
+
 export function PlatformPage() {
-  const flat = useMemo(
+  const flat = useMemo<DocEntry[]>(
     () => DOC_GROUPS.flatMap((group) => group.docs.map((doc) => ({ ...doc, group: group.name }))),
     [],
   );
   const [activeId, setActiveId] = useState(flat[0].id);
   const [displayedId, setDisplayedId] = useState(flat[0].id);
   const [fading, setFading] = useState(false);
+  const [flip, setFlip] = useState<{
+    doc: DocEntry;
+    direction: 'next' | 'prev';
+    scrollTop: number;
+    seq: number;
+  } | null>(null);
   const fadeTimer = useRef<number | null>(null);
+  const flipTimer = useRef<number | null>(null);
+  const flipSeq = useRef(0);
+  const contentRef = useRef<HTMLElement | null>(null);
 
-  // 淡入淡出切换：旧内容快速淡出后换页，新内容淡入
+  const clearTimers = () => {
+    if (fadeTimer.current) {
+      window.clearTimeout(fadeTimer.current);
+      fadeTimer.current = null;
+    }
+    if (flipTimer.current) {
+      window.clearTimeout(flipTimer.current);
+      flipTimer.current = null;
+    }
+  };
+
+  useEffect(() => {
+    if (contentRef.current) contentRef.current.scrollTop = 0;
+  }, [displayedId]);
+
+  useEffect(() => () => clearTimers(), []);
+
   const switchDoc = (id: string) => {
     setActiveId(id);
     if (id === displayedId) return;
-    setFading(true);
-    if (fadeTimer.current) window.clearTimeout(fadeTimer.current);
-    fadeTimer.current = window.setTimeout(() => {
-      setDisplayedId(id);
+
+    const fromIndex = flat.findIndex((doc) => doc.id === displayedId);
+    const toIndex = flat.findIndex((doc) => doc.id === id);
+    const fromDoc = flat[fromIndex];
+    if (!fromDoc || toIndex < 0) return;
+
+    const direction: 'next' | 'prev' = toIndex >= fromIndex ? 'next' : 'prev';
+    const scrollTop = contentRef.current?.scrollTop ?? 0;
+    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const narrow = window.matchMedia('(max-width: 1100px)').matches;
+
+    clearTimers();
+
+    if (reduceMotion) {
+      setFlip(null);
       setFading(false);
-      fadeTimer.current = null;
-    }, 170);
+      setDisplayedId(id);
+      return;
+    }
+
+    if (narrow) {
+      setFlip(null);
+      setFading(true);
+      fadeTimer.current = window.setTimeout(() => {
+        setDisplayedId(id);
+        setFading(false);
+        fadeTimer.current = null;
+      }, 170);
+      return;
+    }
+
+    flipSeq.current += 1;
+    setFading(false);
+    setFlip({ doc: fromDoc, direction, scrollTop, seq: flipSeq.current });
+    setDisplayedId(id);
+    flipTimer.current = window.setTimeout(() => {
+      setFlip(null);
+      flipTimer.current = null;
+    }, 780);
   };
-  useEffect(() => () => {
-    if (fadeTimer.current) window.clearTimeout(fadeTimer.current);
-  }, []);
 
   const index = Math.max(0, flat.findIndex((doc) => doc.id === displayedId));
   const doc = flat[index];
@@ -941,60 +1043,47 @@ export function PlatformPage() {
           ))}
         </aside>
 
-        <article className={`docs-content ${fading ? "is-fading" : ""}`}>
-          <header className="docs-content__head">
-            <span className="overline">{doc.group.toUpperCase()}</span>
-            <h2>{doc.title}</h2>
-          </header>
+        <div className="docs-stage">
+          <article
+            className={`docs-content ${fading ? 'is-fading' : ''}`}
+            ref={contentRef}
+          >
+            <DocBody doc={doc} />
 
-          {doc.sections.map((section, i) => (
-            <section className="docs-section" key={section.heading ?? i}>
-              {section.heading && <h3>{section.heading}</h3>}
-              {section.paras?.map((para) => <p key={para.slice(0, 24)}>{para}</p>)}
-              {section.list && (
-                <ul>
-                  {section.list.map((item) => <li key={item}>{item}</li>)}
-                </ul>
-              )}
-              {section.table && (
-                <div className="docs-table">
-                  <div className="docs-table__head">
-                    {section.table.head.map((cell) => <span key={cell}>{cell}</span>)}
-                  </div>
-                  {section.table.rows.map((row) => (
-                    <div className="docs-table__row" key={row.join('|')}>
-                      {row.map((cell, ci) => <span key={`${cell}-${ci}`} className={ci === 0 ? 'is-key' : ''}>{cell}</span>)}
-                    </div>
-                  ))}
-                </div>
-              )}
-              {section.code && <pre className="docs-code mono"><code>{section.code}</code></pre>}
-              {section.note && <div className="docs-note">{section.note}</div>}
-              {section.links && (
-                <div className="docs-links">
-                  {section.links.map((link) => (
-                    <Link key={link.to + link.label} className="btn btn--sm btn--primary" to={link.to}>
-                      {link.label} <ChevronRight size={11} />
-                    </Link>
-                  ))}
-                </div>
-              )}
-            </section>
-          ))}
+            <footer className="docs-pager">
+              {prev ? (
+                <button type="button" className="docs-pager__btn" onClick={() => switchDoc(prev.id)}>
+                  <ChevronLeft size={13} /> <span><em>上一篇</em>{prev.title}</span>
+                </button>
+              ) : <span />}
+              <span className="docs-pager__folio mono">
+                PAGE {String(index + 1).padStart(2, '0')} / {String(flat.length).padStart(2, '0')}
+              </span>
+              {next ? (
+                <button type="button" className="docs-pager__btn is-next" onClick={() => switchDoc(next.id)}>
+                  <span><em>下一篇</em>{next.title}</span> <ChevronRight size={13} />
+                </button>
+              ) : <span />}
+            </footer>
+          </article>
 
-          <footer className="docs-pager">
-            {prev ? (
-              <button type="button" className="docs-pager__btn" onClick={() => switchDoc(prev.id)}>
-                <ChevronLeft size={13} /> <span><em>上一篇</em>{prev.title}</span>
-              </button>
-            ) : <span />}
-            {next ? (
-              <button type="button" className="docs-pager__btn is-next" onClick={() => switchDoc(next.id)}>
-                <span><em>下一篇</em>{next.title}</span> <ChevronRight size={13} />
-              </button>
-            ) : <span />}
-          </footer>
-        </article>
+          {flip && (
+            <div
+              className={`docs-page-turn ${flip.direction === 'prev' ? 'is-prev' : ''}`}
+              key={flip.seq}
+              aria-hidden="true"
+            >
+              <div
+                className="docs-page-turn__scroll"
+                style={{ transform: `translateY(-${flip.scrollTop}px)` }}
+              >
+                <DocBody doc={flip.doc} />
+              </div>
+              <span className="docs-page-turn__shade" />
+              <span className="docs-page-turn__edge" />
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
