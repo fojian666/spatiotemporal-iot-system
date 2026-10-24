@@ -4339,3 +4339,16 @@
   font-family: var(--font-display);
   letter-spacing: 0.08em;
 }
+
+/* ===== 文档切换淡入淡出 ===== */
+.docs-content {
+  transition: opacity 170ms var(--ease-out), transform 170ms var(--ease-out);
+}
+.docs-content.is-fading {
+  opacity: 0;
+  transform: translateY(6px);
+}
+@media (prefers-reduced-motion: reduce) {
+  .docs-content,
+  .docs-content.is-fading { transition: none; transform: none; }
+}

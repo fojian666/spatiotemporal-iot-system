@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { BookOpen, ChevronLeft, ChevronRight, FileText } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
@@ -887,7 +887,27 @@ export function PlatformPage() {
     [],
   );
   const [activeId, setActiveId] = useState(flat[0].id);
-  const index = Math.max(0, flat.findIndex((doc) => doc.id === activeId));
+  const [displayedId, setDisplayedId] = useState(flat[0].id);
+  const [fading, setFading] = useState(false);
+  const fadeTimer = useRef<number | null>(null);
+
+  // 淡入淡出切换：旧内容快速淡出后换页，新内容淡入
+  const switchDoc = (id: string) => {
+    setActiveId(id);
+    if (id === displayedId) return;
+    setFading(true);
+    if (fadeTimer.current) window.clearTimeout(fadeTimer.current);
+    fadeTimer.current = window.setTimeout(() => {
+      setDisplayedId(id);
+      setFading(false);
+      fadeTimer.current = null;
+    }, 170);
+  };
+  useEffect(() => () => {
+    if (fadeTimer.current) window.clearTimeout(fadeTimer.current);
+  }, []);
+
+  const index = Math.max(0, flat.findIndex((doc) => doc.id === displayedId));
   const doc = flat[index];
   const prev = index > 0 ? flat[index - 1] : null;
   const next = index < flat.length - 1 ? flat[index + 1] : null;
@@ -911,7 +931,7 @@ export function PlatformPage() {
                   key={item.id}
                   type="button"
                   className={`docs-nav__item ${item.id === activeId ? 'is-active' : ''}`}
-                  onClick={() => setActiveId(item.id)}
+                  onClick={() => switchDoc(item.id)}
                 >
                   <FileText size={12} />
                   {item.title}
@@ -921,7 +941,7 @@ export function PlatformPage() {
           ))}
         </aside>
 
-        <article className="docs-content">
+        <article className={`docs-content ${fading ? "is-fading" : ""}`}>
           <header className="docs-content__head">
             <span className="overline">{doc.group.toUpperCase()}</span>
             <h2>{doc.title}</h2>
@@ -964,12 +984,12 @@ export function PlatformPage() {
 
           <footer className="docs-pager">
             {prev ? (
-              <button type="button" className="docs-pager__btn" onClick={() => setActiveId(prev.id)}>
+              <button type="button" className="docs-pager__btn" onClick={() => switchDoc(prev.id)}>
                 <ChevronLeft size={13} /> <span><em>上一篇</em>{prev.title}</span>
               </button>
             ) : <span />}
             {next ? (
-              <button type="button" className="docs-pager__btn is-next" onClick={() => setActiveId(next.id)}>
+              <button type="button" className="docs-pager__btn is-next" onClick={() => switchDoc(next.id)}>
                 <span><em>下一篇</em>{next.title}</span> <ChevronRight size={13} />
               </button>
             ) : <span />}
