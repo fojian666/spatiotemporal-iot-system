@@ -41,7 +41,7 @@ src/engine/simulation.tsx    双模式引擎（local 引擎 + remote WS 消费�
 src/services/llm.ts          "物联大模型"= 规则引擎（纯函数 askCopilot，无外部模型调用）
 src/services/api.ts          全部 API 客户端 + REMOTE_ENABLED/API_BASE
 src/pages/DroneOps.tsx       一网统飞（唯一强依赖后端的页面，local 模式显示指引）
-src/pages/Platform.tsx       教学中心（面向学生的使用导览/教材知识地图/动手实验）
+src/pages/Platform.tsx       文档中心（侧栏目录树+正文阅读区；文档内容在该文件 DOC_GROUPS 内维护）
 src/components/MapView.tsx   MapLibre + Esri 在线瓦片（离线环境无底图）
 backend/app/main.py          ~22 端点 + lifespan + 安全中间件三件套 + dist 静态挂载
 backend/app/drone_api.py     无人机域 REST（航线/计划/8 种飞控指令状态机/线索）
