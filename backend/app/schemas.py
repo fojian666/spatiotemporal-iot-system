@@ -7,7 +7,11 @@ drops anything invalid. Bump `version` on breaking changes and keep old
 fields intact.
 """
 
-from pydantic import BaseModel, ConfigDict, Field
+import math
+
+from pydantic import BaseModel, ConfigDict, Field, field_validator
+
+MAX_METRICS = 32
 
 
 class DeviceReadingPayload(BaseModel):
@@ -19,5 +23,17 @@ class DeviceReadingPayload(BaseModel):
     # Metric name -> numeric value. Kept open-ended on purpose so devices can
     # report any sensor set; threshold definitions live in the device registry.
     metrics: dict[str, float] = Field(default_factory=dict)
+
+    @field_validator("metrics")
+    @classmethod
+    def _validate_metrics(cls, value: dict[str, float]) -> dict[str, float]:
+        if len(value) > MAX_METRICS:
+            raise ValueError(f"metrics 数量超过 {MAX_METRICS}")
+        for key, item in value.items():
+            if not key or len(key) > 40:
+                raise ValueError("metric 名称长度必须在 1-40 之间")
+            if not math.isfinite(item):
+                raise ValueError(f"metric '{key}' 必须是有限数值")
+        return value
 
     model_config = ConfigDict(extra="ignore")

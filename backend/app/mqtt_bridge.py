@@ -14,6 +14,18 @@ from .schemas import DeviceReadingPayload
 
 
 logger = logging.getLogger(__name__)
+TELEMETRY_SUFFIX = "/telemetry"
+
+
+def topic_device_id(topic: str) -> str | None:
+    """Extract the device id from `<prefix>/devices/<id>/telemetry`."""
+    prefix = f"{settings.mqtt_topic_prefix.rstrip('/')}/devices/"
+    if not topic.startswith(prefix) or not topic.endswith(TELEMETRY_SUFFIX):
+        return None
+    device_id = topic[len(prefix) : -len(TELEMETRY_SUFFIX)]
+    if not device_id or "/" in device_id:
+        return None
+    return device_id
 
 
 class MQTTBridge:
@@ -75,12 +87,25 @@ class MQTTBridge:
         logger.warning("MQTT subscriber disconnected: %s", reason_code)
 
     def _on_message(self, client, userdata, message) -> None:
+        topic_id = topic_device_id(message.topic)
+        if topic_id is None:
+            self.messages_rejected += 1
+            logger.warning("Rejected telemetry on unexpected topic %s", message.topic)
+            return
         try:
             raw = json.loads(message.payload.decode("utf-8"))
             payload = DeviceReadingPayload.model_validate(raw)
         except Exception as exc:  # noqa: BLE001
             self.messages_rejected += 1
             logger.warning("Rejected telemetry payload on %s: %s", message.topic, exc)
+            return
+        if payload.device_id != topic_id:
+            self.messages_rejected += 1
+            logger.warning(
+                "Rejected telemetry on %s: payload device_id %s does not match topic",
+                message.topic,
+                payload.device_id,
+            )
             return
         self.messages_received += 1
         self.on_reading(payload.model_dump())
