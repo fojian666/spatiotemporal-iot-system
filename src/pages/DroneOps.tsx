@@ -1089,11 +1089,13 @@ function FlightView({
   const [progress, setProgress] = useState(0);
   const [view, setView] = useState<'first' | 'ai'>('first');
   const [localLog, setLocalLog] = useState<FlightCommand[]>([]);
+  const [busy, setBusy] = useState(false);
   const completeRef = useRef(false);
 
   useEffect(() => {
     completeRef.current = false;
     setLocalLog([]);
+    setBusy(false);
     if (!activePlan) {
       setPhase('ready');
       setProgress(0);
@@ -1122,38 +1124,60 @@ function FlightView({
     return () => window.clearInterval(timer);
   }, [phase]);
 
+  const completeMission = useCallback(async () => {
+    if (!activePlan || busy) return;
+    setBusy(true);
+    try {
+      const result = await sendDroneCommand(activePlan.id, 'complete');
+      onPlanUpdated(result.plan, result.command);
+      setLocalLog((items) => [result.command, ...items]);
+      setPhase('done');
+      notify('任务已完成，媒体上传与 AI 线索已归档');
+    } catch (reason) {
+      completeRef.current = false;
+      setPhase('paused');
+      notify(reason instanceof Error ? reason.message : '任务完成状态回写失败，可重试归档');
+    } finally {
+      setBusy(false);
+    }
+  }, [activePlan, busy, notify, onPlanUpdated]);
+
   useEffect(() => {
-    if (!activePlan || phase !== 'running' || progress < 100 || completeRef.current) return;
+    if (!activePlan || busy || phase !== 'running' || progress < 100 || completeRef.current) return;
     completeRef.current = true;
-    setPhase('done');
-    void sendDroneCommand(activePlan.id, 'complete')
-      .then((result) => {
-        onPlanUpdated(result.plan, result.command);
-        setLocalLog((items) => [result.command, ...items]);
-        notify('任务已完成，媒体上传与 AI 线索已归档');
-      })
-      .catch(() => notify('任务完成状态回写失败'));
-  }, [activePlan, notify, onPlanUpdated, phase, progress]);
+    void completeMission();
+  }, [activePlan, busy, completeMission, phase, progress]);
+
+  const attach = () => {
+    if (!activePlan || !canOperate) return;
+    completeRef.current = false;
+    setProgress((value) => (value >= 100 ? 0 : value));
+    setPhase('running');
+    notify('已接续正在执行的计划，进入本地飞控视角');
+  };
 
   const command = async (name: 'takeoff' | 'pause' | 'resume' | 'hover' | 'return' | 'land') => {
-    if (!activePlan || !canOperate) return;
-    if (name === 'takeoff' || name === 'resume') {
-      completeRef.current = false;
-      if (progress >= 100) setProgress(0);
-      setPhase('running');
-    }
-    if (name === 'pause') setPhase('paused');
-    if (name === 'land') {
-      setProgress(100);
-      setPhase('done');
-    }
+    if (!activePlan || !canOperate || busy) return;
+    setBusy(true);
     try {
       const result = await sendDroneCommand(activePlan.id, name);
       onPlanUpdated(result.plan, result.command);
       setLocalLog((items) => [result.command, ...items]);
+      if (name === 'takeoff' || name === 'resume' || name === 'return') {
+        completeRef.current = false;
+        if (name !== 'return' && progress >= 100) setProgress(0);
+        setPhase('running');
+      } else if (name === 'pause') {
+        setPhase('paused');
+      } else if (name === 'land') {
+        setProgress(100);
+        setPhase('done');
+      }
       notify(`指令已下发：${COMMAND_LABELS[name] ?? name}`);
     } catch (reason) {
       notify(reason instanceof Error ? reason.message : '飞控指令下发失败');
+    } finally {
+      setBusy(false);
     }
   };
 
@@ -1182,11 +1206,33 @@ function FlightView({
     .slice(0, 8);
   const planOptions = data.plans;
   const videoImage = view === 'first' ? '/assets/aerial-river.jpg' : '/assets/aerial-fire.jpg';
-  const primaryLabel =
+  const needsCompletionRetry = progress >= 100 && phase === 'paused';
+  const airborne = phase === 'running' || phase === 'paused' || activePlan.status === '执行中';
+  const primaryLabel = busy ? '下发中' :
     phase === 'running' ? '执行中' :
-      phase === 'paused' ? '继续' :
-        phase === 'done' ? '已完成' :
-          activePlan.status === '执行中' ? '接续飞控' : '起飞';
+      needsCompletionRetry ? '重试归档' :
+        phase === 'paused' ? '继续' :
+          phase === 'done' ? '已完成' :
+            activePlan.status === '执行中' ? '接续飞控' :
+              activePlan.status === '未开始' ? '起飞' : '不可操作';
+  const primaryDisabled =
+    !canOperate || busy || phase === 'running' || phase === 'done' ||
+    (phase === 'ready' && activePlan.status !== '执行中' && activePlan.status !== '未开始');
+  const primaryAction = () => {
+    if (needsCompletionRetry) {
+      void completeMission();
+      return;
+    }
+    if (phase === 'paused') {
+      void command('resume');
+      return;
+    }
+    if (phase === 'ready' && activePlan.status === '执行中') {
+      attach();
+      return;
+    }
+    void command('takeoff');
+  };
 
   return (
     <div className="ops-flight">
@@ -1262,11 +1308,11 @@ function FlightView({
           <div className="flight-commands">
             <span className="overline">FLIGHT COMMANDS</span>
             <div className="command-grid">
-              <button type="button" className={`command command--primary ${phase === 'running' ? 'is-live' : ''}`} disabled={!canOperate || phase === 'running' || phase === 'done'} onClick={() => void command(phase === 'paused' ? 'resume' : 'takeoff')}><ArrowUp size={16} /><span>{primaryLabel}</span></button>
-              <button type="button" className="command" disabled={!canOperate || phase !== 'running'} onClick={() => void command('pause')}><Pause size={15} /><span>暂停</span></button>
-              <button type="button" className="command" disabled={!canOperate || phase !== 'running'} onClick={() => void command('hover')}><Home size={15} /><span>悬停</span></button>
-              <button type="button" className="command" disabled={!canOperate || phase === 'done'} onClick={() => void command('return')}><Navigation size={15} /><span>返航</span></button>
-              <button type="button" className="command command--danger" disabled={!canOperate || phase === 'done'} onClick={() => void command('land')}><ArrowDown size={15} /><span>降落</span></button>
+              <button type="button" className={`command command--primary ${phase === 'running' ? 'is-live' : ''}`} disabled={primaryDisabled} onClick={primaryAction}><ArrowUp size={16} /><span>{primaryLabel}</span></button>
+              <button type="button" className="command" disabled={!canOperate || busy || phase !== 'running'} onClick={() => void command('pause')}><Pause size={15} /><span>暂停</span></button>
+              <button type="button" className="command" disabled={!canOperate || busy || !airborne} onClick={() => void command('hover')}><Home size={15} /><span>悬停</span></button>
+              <button type="button" className="command" disabled={!canOperate || busy || !airborne} onClick={() => void command('return')}><Navigation size={15} /><span>返航</span></button>
+              <button type="button" className="command command--danger" disabled={!canOperate || busy || !airborne} onClick={() => void command('land')}><ArrowDown size={15} /><span>降落</span></button>
             </div>
             {!canOperate && <div className="flight-readonly"><ShieldCheck size={12} /> 观察员只读 · 飞控指令不可用</div>}
           </div>
