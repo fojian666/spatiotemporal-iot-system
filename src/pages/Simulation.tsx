@@ -33,6 +33,7 @@ import {
 import { DEVICES, KIND_META, type DeviceKind } from '../data/devices';
 import { SCENARIO_LIST, type ScenarioKey } from '../data/scenarios';
 import { formatSimTime, metricState, useSimulation } from '../engine/simulation';
+import { chartPalette, useTheme } from '../theme';
 import { useAuth } from '../auth/AuthContext';
 
 const SCENARIO_ICONS: Record<ScenarioKey, LucideIcon> = {
@@ -82,6 +83,8 @@ export function SimulationPage() {
   const [chartGroup, setChartGroup] = useState<ChartGroup>('water');
   const [filter, setFilter] = useState<'all' | 'online' | 'warning' | 'offline'>('all');
   const [search, setSearch] = useState('');
+  const theme = useTheme();
+  const palette = useMemo(() => chartPalette(), [theme]);
   const time = formatSimTime(simTime);
   const selectedDevice = DEVICES.find((device) => device.id === selectedId) ?? DEVICES[0];
   const selectedReading = readings[selectedDevice.id] ?? {};
@@ -129,23 +132,23 @@ export function SimulationPage() {
         itemWidth: 9,
         itemHeight: 3,
         itemGap: 14,
-        textStyle: { color: '#8aa7c2', fontSize: 10 },
+        textStyle: { color: palette.label, fontSize: 10 },
       },
       grid: { top: 32, left: 44, right: 18, bottom: 24 },
       xAxis: {
         type: 'category',
         boundaryGap: false,
         data: labels,
-        axisLine: { lineStyle: { color: 'rgba(120,170,220,.14)' } },
+        axisLine: { lineStyle: { color: palette.axisLine } },
         axisTick: { show: false },
-        axisLabel: { color: '#587792', fontSize: 9, interval: 3, fontFamily: 'SF Mono, monospace' },
+        axisLabel: { color: palette.dim, fontSize: 9, interval: 3, fontFamily: 'SF Mono, monospace' },
       },
       yAxis: {
         type: 'value',
         name: meta.unit,
-        nameTextStyle: { color: '#587792', fontSize: 9 },
-        axisLabel: { color: '#587792', fontSize: 9 },
-        splitLine: { lineStyle: { color: 'rgba(120,170,220,.08)' } },
+        nameTextStyle: { color: palette.dim, fontSize: 9 },
+        axisLabel: { color: palette.dim, fontSize: 9 },
+        splitLine: { lineStyle: { color: palette.grid } },
       },
       series: devices.map((device, index) => {
         const current = readings[device.id]?.[meta.metric] ?? 0;
@@ -169,7 +172,7 @@ export function SimulationPage() {
         };
       }),
     };
-  }, [chartGroup, readings, tick, simTime, deviceStatuses]);
+  }, [chartGroup, readings, tick, simTime, deviceStatuses, palette]);
 
   const primaryMetric = (deviceId: string) => {
     const device = DEVICES.find((item) => item.id === deviceId)!;

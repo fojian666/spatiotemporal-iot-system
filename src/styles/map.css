@@ -3,7 +3,7 @@
   width: 100%;
   height: 100%;
   overflow: hidden;
-  background: #06101c;
+  background: var(--bg-soft);
   isolation: isolate;
 }
 
@@ -23,8 +23,8 @@
   z-index: 1;
   pointer-events: none;
   background:
-    linear-gradient(180deg, rgba(3, 12, 23, 0.18) 0%, rgba(3, 10, 18, 0.1) 42%, rgba(3, 9, 17, 0.42) 100%),
-    radial-gradient(ellipse at 50% 45%, transparent 35%, rgba(3, 9, 16, 0.28) 100%);
+    linear-gradient(180deg, rgba(var(--panel-rgb), 0.18) 0%, rgba(var(--panel-rgb), 0.1) 42%, rgba(var(--panel-rgb), 0.42) 100%),
+    radial-gradient(ellipse at 50% 45%, transparent 35%, rgba(var(--panel-rgb), 0.28) 100%);
 }
 
 .map-view__grid {
@@ -49,12 +49,12 @@
   height: 27px;
   border-radius: 50%;
   border: 1px solid color-mix(in srgb, var(--node-color) 62%, transparent);
-  background: rgba(3, 12, 22, 0.78);
+  background: rgba(var(--panel-rgb), 0.78);
   display: grid;
   place-items: center;
   color: var(--node-color);
   cursor: pointer;
-  box-shadow: 0 0 0 3px rgba(3, 10, 19, 0.28), 0 0 16px color-mix(in srgb, var(--node-color) 28%, transparent);
+  box-shadow: 0 0 0 3px rgba(var(--panel-rgb), 0.28), 0 0 16px color-mix(in srgb, var(--node-color) 28%, transparent);
   backdrop-filter: blur(2px);
   transition: box-shadow var(--dur-base) var(--ease-out), border-color var(--dur-base) var(--ease-out), transform var(--dur-base) var(--ease-out);
   z-index: 2;
@@ -76,7 +76,7 @@
   font-size: 9px;
   font-weight: 500;
   color: var(--node-color);
-  background: color-mix(in srgb, var(--node-color) 14%, rgba(3, 12, 22, 0.94));
+  background: color-mix(in srgb, var(--node-color) 14%, rgba(var(--panel-rgb), 0.94));
   border: 1px solid color-mix(in srgb, var(--node-color) 26%, transparent);
 }
 
@@ -109,7 +109,7 @@
   padding: 3px 6px;
   border-radius: 4px;
   border: 1px solid rgba(95, 185, 255, 0.16);
-  background: rgba(4, 13, 24, 0.92);
+  background: rgba(var(--panel-rgb), 0.92);
   color: #d3eaff;
   font-size: 9px;
   white-space: nowrap;
@@ -136,7 +136,7 @@
 
 .map-node.is-selected {
   border-color: #ffffff;
-  box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.09), 0 0 24px color-mix(in srgb, var(--node-color) 65%, transparent);
+  box-shadow: 0 0 0 4px rgba(var(--text-rgb), 0.09), 0 0 24px color-mix(in srgb, var(--node-color) 65%, transparent);
   z-index: 6;
 }
 
@@ -197,7 +197,7 @@
   place-items: center;
   font-size: 10px;
   color: var(--node-color);
-  background: rgba(4, 15, 26, 0.92);
+  background: rgba(var(--panel-rgb), 0.92);
   border: 1px solid color-mix(in srgb, var(--node-color) 58%, transparent);
   box-shadow: 0 0 16px color-mix(in srgb, var(--node-color) 45%, transparent);
   z-index: 1;
@@ -214,7 +214,7 @@
   padding: 3px 6px;
   border-radius: 4px;
   border: 1px solid rgba(95, 185, 255, 0.16);
-  background: rgba(4, 13, 24, 0.9);
+  background: rgba(var(--panel-rgb), 0.9);
   color: #cde8ff;
   font-size: 8.5px;
   white-space: nowrap;
@@ -246,7 +246,7 @@
 
 .map-moving.is-selected .map-moving__core {
   border-color: #ffffff;
-  box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.08), 0 0 22px var(--node-color);
+  box-shadow: 0 0 0 4px rgba(var(--text-rgb), 0.08), 0 0 22px var(--node-color);
 }
 
 .map-moving--sat {
@@ -259,8 +259,8 @@
   position: absolute;
   inset: -26px;
   border-radius: 50%;
-  background: radial-gradient(circle, rgba(240, 171, 252, 0.14), rgba(240, 171, 252, 0.03) 45%, transparent 70%);
-  border: 1px solid rgba(240, 171, 252, 0.14);
+  background: radial-gradient(circle, rgba(var(--text-rgb), 0.14), rgba(var(--text-rgb), 0.03) 45%, transparent 70%);
+  border: 1px solid rgba(var(--text-rgb), 0.14);
   animation: satScan 5s ease-in-out infinite;
   pointer-events: none;
 }
@@ -273,7 +273,7 @@
 
 .map-moving--sat .map-moving__ring {
   border-style: solid;
-  border-color: rgba(240, 171, 252, 0.25);
+  border-color: rgba(var(--text-rgb), 0.25);
   animation-duration: 24s;
 }
 
@@ -296,7 +296,7 @@
   font-family: var(--font-mono);
   font-size: 7.5px;
   color: #9feaff;
-  background: rgba(4, 14, 25, 0.9);
+  background: rgba(var(--panel-rgb), 0.9);
   border: 1px solid rgba(75, 225, 255, 0.38);
   box-shadow: 0 0 8px rgba(75, 225, 255, 0.16);
 }
@@ -305,7 +305,7 @@
   font-style: normal;
   font-size: 8px;
   color: #82a4c0;
-  background: rgba(4, 13, 24, 0.72);
+  background: rgba(var(--panel-rgb), 0.72);
   padding: 1px 4px;
   border-radius: 3px;
   opacity: 0.8;
@@ -325,7 +325,7 @@
 .fence-label span {
   font-size: 8.5px;
   color: var(--fence-color);
-  background: rgba(4, 13, 24, 0.74);
+  background: rgba(var(--panel-rgb), 0.74);
   border: 1px solid color-mix(in srgb, var(--fence-color) 30%, transparent);
   padding: 2px 6px;
   border-radius: 3px;
@@ -350,7 +350,7 @@
   padding: 9px 10px 8px;
   border-radius: 9px;
   border: 1px solid var(--line);
-  background: rgba(4, 13, 24, 0.84);
+  background: rgba(var(--panel-rgb), 0.84);
   backdrop-filter: blur(12px);
   box-shadow: 0 16px 34px -22px rgba(0, 0, 0, 0.9);
 }
@@ -416,7 +416,7 @@
   flex-direction: column;
   border-radius: 8px;
   border: 1px solid var(--line);
-  background: rgba(4, 13, 24, 0.84);
+  background: rgba(var(--panel-rgb), 0.84);
   backdrop-filter: blur(12px);
   overflow: hidden;
 }
@@ -451,7 +451,7 @@
   padding: 4px 8px;
   border-radius: 4px;
   border: 1px solid var(--line);
-  background: rgba(4, 12, 22, 0.72);
+  background: rgba(var(--panel-rgb), 0.72);
   color: #6c8aa4;
   font-size: 8px;
   letter-spacing: 0.05em;
@@ -485,7 +485,7 @@
   padding: 5px 9px;
   border-radius: 5px;
   border: 1px solid var(--line);
-  background: rgba(4, 12, 22, 0.76);
+  background: rgba(var(--panel-rgb), 0.76);
   backdrop-filter: blur(8px);
 }
 
@@ -536,7 +536,7 @@
   align-items: center;
   justify-content: center;
   gap: 6px;
-  background: rgba(4, 11, 20, 0.94);
+  background: rgba(var(--panel-rgb), 0.94);
   z-index: 20;
   text-align: center;
   padding: 24px;
@@ -553,7 +553,7 @@
 }
 
 .maplibregl-ctrl-attrib {
-  background: rgba(4, 12, 22, 0.68) !important;
+  background: rgba(var(--panel-rgb), 0.68) !important;
   color: #5f7d96 !important;
   font-size: 8px !important;
   border-radius: 4px !important;
@@ -628,7 +628,7 @@
 .place-label span {
   font-size: 9px;
   letter-spacing: 0.12em;
-  color: rgba(211, 236, 252, 0.88);
+  color: rgba(var(--text-rgb), 0.88);
 }
 
 .place-label em {
@@ -640,8 +640,8 @@
   width: 3px;
   height: 3px;
   border-radius: 50%;
-  background: rgba(160, 215, 245, 0.6);
-  box-shadow: 0 0 5px rgba(160, 215, 245, 0.5);
+  background: rgba(var(--text-rgb), 0.6);
+  box-shadow: 0 0 5px rgba(var(--text-rgb), 0.5);
 }
 
 .place-label--city span {
@@ -661,7 +661,7 @@
 }
 
 .place-label--forest span {
-  color: rgba(194, 224, 183, 0.75);
+  color: rgba(var(--text-rgb), 0.75);
 }
 
 .place-label--water span {

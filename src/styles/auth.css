@@ -11,7 +11,7 @@
   background:
     radial-gradient(1000px 620px at 18% 12%, rgba(23, 108, 136, 0.2), transparent 68%),
     radial-gradient(880px 620px at 86% 86%, rgba(44, 79, 160, 0.16), transparent 70%),
-    #040a12;
+    var(--bg-soft);
   animation: pageFade 620ms var(--ease-out) backwards;
 }
 
@@ -67,7 +67,7 @@
   border-radius: 12px;
   display: grid;
   place-items: center;
-  color: #06131d;
+  color: var(--bg-soft);
   background: linear-gradient(135deg, #8ff2ff, #4ea6ff);
   box-shadow: 0 0 28px -6px rgba(75, 225, 255, 0.55);
 }
@@ -82,7 +82,7 @@
   font-size: 15px;
   font-weight: 500;
   letter-spacing: 0.04em;
-  color: #e2f5ff;
+  color: var(--text);
 }
 
 .auth-brand span {
@@ -99,13 +99,13 @@
   display: grid;
   grid-template-columns: minmax(0, 1.12fr) minmax(360px, 0.88fr);
   border-radius: 22px;
-  border: 1px solid rgba(111, 174, 213, 0.18);
+  border: 1px solid rgba(var(--edge-rgb), 0.18);
   background:
-    linear-gradient(145deg, rgba(11, 27, 43, 0.97), rgba(5, 14, 25, 0.98)),
-    #06101b;
+    linear-gradient(145deg, rgba(var(--panel-rgb), 0.97), rgba(var(--panel-rgb), 0.98)),
+    var(--bg-soft);
   box-shadow:
     0 50px 120px -50px rgba(0, 0, 0, 0.95),
-    inset 0 1px 0 rgba(255, 255, 255, 0.045);
+    inset 0 1px 0 rgba(var(--text-rgb), 0.045);
   overflow: hidden;
   animation: authCardIn 700ms var(--ease-out) 80ms backwards;
 }
@@ -126,10 +126,10 @@
   padding: 46px 44px;
   display: flex;
   flex-direction: column;
-  border-right: 1px solid rgba(111, 174, 213, 0.1);
+  border-right: 1px solid rgba(var(--edge-rgb), 0.1);
   background:
     radial-gradient(600px 400px at 30% 20%, rgba(22, 91, 126, 0.2), transparent 70%),
-    linear-gradient(160deg, rgba(17, 39, 58, 0.5), transparent 70%);
+    linear-gradient(160deg, rgba(var(--panel-rgb), 0.5), transparent 70%);
 }
 
 .auth-visual > .overline {
@@ -175,8 +175,8 @@
   height: 26px;
   padding: 0 9px;
   border-radius: 5px;
-  border: 1px solid rgba(112, 177, 215, 0.14);
-  background: rgba(255, 255, 255, 0.018);
+  border: 1px solid rgba(var(--edge-rgb), 0.14);
+  background: rgba(var(--text-rgb), 0.018);
   font-family: var(--font-mono);
   font-size: 8px;
   color: #6e94aa;
@@ -209,7 +209,7 @@
 
 .auth-orbit__ring--inner {
   inset: 36px;
-  border-color: rgba(127, 168, 255, 0.22);
+  border-color: rgba(var(--edge-rgb), 0.22);
   animation: orbitSpin 18s linear infinite reverse;
 }
 
@@ -241,7 +241,7 @@
   display: grid;
   place-items: center;
   color: #8cefff;
-  background: rgba(11, 37, 56, 0.9);
+  background: rgba(var(--panel-rgb), 0.9);
   border: 1px solid rgba(88, 216, 239, 0.24);
   box-shadow: 0 0 50px -12px rgba(86, 219, 244, 0.5);
   animation: floatSoft 6s var(--ease-in-out) infinite;
@@ -293,7 +293,7 @@
   justify-content: center;
   gap: 22px;
   padding: 44px 42px;
-  background: rgba(3, 10, 18, 0.45);
+  background: rgba(var(--panel-rgb), 0.45);
 }
 
 .auth-form-head .overline {
@@ -305,7 +305,7 @@
   font-size: 24px;
   font-weight: 500;
   letter-spacing: 0.02em;
-  color: #e5f7ff;
+  color: var(--text);
 }
 
 .auth-form-head p {
@@ -341,8 +341,8 @@
   gap: 9px;
   padding: 0 13px;
   border-radius: 8px;
-  border: 1px solid rgba(112, 177, 215, 0.16);
-  background: rgba(2, 10, 18, 0.68);
+  border: 1px solid rgba(var(--edge-rgb), 0.16);
+  background: rgba(var(--panel-rgb), 0.68);
   transition:
     border-color var(--dur-base) var(--ease-out),
     background-color var(--dur-base) var(--ease-out),
@@ -351,7 +351,7 @@
 
 .auth-input:focus-within {
   border-color: rgba(88, 216, 239, 0.5);
-  background: rgba(3, 16, 27, 0.9);
+  background: rgba(var(--panel-rgb), 0.9);
   box-shadow: 0 0 0 3px rgba(88, 216, 239, 0.06);
 }
 
@@ -367,7 +367,7 @@
   border: 0;
   outline: 0;
   background: transparent;
-  color: #dff4ff;
+  color: var(--text);
   font-size: 12px;
   font-family: var(--font-sans);
 }
@@ -474,7 +474,7 @@
     min-height: 0;
     padding: 32px;
     border-right: 0;
-    border-bottom: 1px solid rgba(111, 174, 213, 0.1);
+    border-bottom: 1px solid rgba(var(--edge-rgb), 0.1);
   }
 
   .auth-orbit {

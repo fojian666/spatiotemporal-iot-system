@@ -1,4 +1,4 @@
-import { useEffect, useState, type CSSProperties, type ReactNode } from 'react';
+import { type CSSProperties, type ReactNode } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import {
   Bot,
@@ -18,6 +18,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../auth/AuthContext';
 import { formatSimTime, useSimulation } from '../engine/simulation';
+import { toggleTheme, useTheme } from '../theme';
 import { ArchitectureModal, useArchitectureModal } from './ArchitectureModal';
 import { StatusPill } from './ui';
 
@@ -64,32 +65,10 @@ function Logo() {
   );
 }
 
-const THEME_KEY = 'stiot-theme';
-type Theme = 'dark' | 'light';
-
-function useTheme() {
-  const [theme, setTheme] = useState<Theme>(() =>
-    document.documentElement.dataset.theme === 'light' ? 'light' : 'dark',
-  );
-  useEffect(() => {
-    document.documentElement.dataset.theme = theme;
-  }, [theme]);
-  const toggle = () => {
-    const next: Theme = theme === 'dark' ? 'light' : 'dark';
-    setTheme(next);
-    try {
-      window.localStorage.setItem(THEME_KEY, next);
-    } catch {
-      // hardened browser contexts may block storage
-    }
-  };
-  return { theme, toggle };
-}
-
 export function Shell({ children }: { children: ReactNode }) {
   const { simTime, scenario, running, speed, stats, source, linkStatus } = useSimulation();
   const { user, logout, isRemote } = useAuth();
-  const { theme, toggle: toggleTheme } = useTheme();
+  const theme = useTheme();
   const roleLabel = user?.role === 'admin' ? '管理员' : user?.role === 'operator' ? '值班长' : user?.role === 'viewer' ? '观察员（只读）' : '本地演示';
   const displayName = user?.displayName ?? '值班长';
   const avatarText = user ? user.displayName.slice(0, 2) : 'LOCAL';

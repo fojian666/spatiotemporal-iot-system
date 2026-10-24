@@ -11,6 +11,7 @@ import {
   X,
 } from 'lucide-react';
 import type { EChartsOption } from 'echarts';
+import { chartPalette, useTheme } from '../theme';
 import { PageHeader } from '../components/Shell';
 import { EChart, Panel, StatusPill } from '../components/ui';
 import {
@@ -88,6 +89,8 @@ function resolvePathLinks(path: KnowledgeNode[]) {
 }
 
 export function KnowledgeGraphPage() {
+  const theme = useTheme();
+  const palette = useMemo(() => chartPalette(), [theme]);
   const [searchParams] = useSearchParams();
   const focus = searchParams.get('focus');
   const [selectedId, setSelectedId] = useState(focus && getNode(focus) ? focus : 'root');
@@ -133,7 +136,7 @@ export function KnowledgeGraphPage() {
         const color = nodeColor(item);
         const degree = degrees.get(item.id) ?? 0;
         const size = isRoot ? 34 : HUB_IDS.has(item.id) ? 20 + Math.min(9, degree * 0.6) : 9 + Math.min(11, degree * 1.35);
-        const borderColor = isPath ? '#8affc1' : isSelected ? '#ffffff' : isSearchMatch ? '#ffe28a' : `${color}88`;
+        const borderColor = isPath ? '#8affc1' : isSelected ? palette.nodeSelect : isSearchMatch ? '#ffe28a' : `${color}88`;
         return {
           id: item.id,
           nodeId: item.id,
@@ -155,14 +158,16 @@ export function KnowledgeGraphPage() {
             show: true,
             position: 'right',
             distance: 5,
-            color: isDimmed ? 'rgba(190,215,240,.22)' : isSelected ? '#ffffff' : isNeighbor ? '#d6ebff' : 'rgba(186,213,238,.82)',
+            color: isDimmed ? palette.labelDim : isSelected ? palette.nodeSelect : isNeighbor ? palette.labelStrong : palette.label,
+            textBorderColor: palette.halo,
+            textBorderWidth: 2,
             fontSize: isRoot || HUB_IDS.has(item.id) ? 10.5 : 9.2,
             fontWeight: isRoot || isSelected ? 600 : 400,
             opacity: isDimmed ? 0.25 : 1,
           },
           emphasis: {
-            itemStyle: { borderColor: '#ffffff', borderWidth: 2, shadowBlur: 26 },
-            label: { color: '#ffffff', fontSize: 11 },
+            itemStyle: { borderColor: palette.nodeSelect, borderWidth: 2, shadowBlur: 26 },
+            label: { color: palette.nodeSelect, fontSize: 11, textBorderColor: palette.halo, textBorderWidth: 2 },
           },
         };
       }),
@@ -264,7 +269,7 @@ export function KnowledgeGraphPage() {
         },
       ],
     } as EChartsOption;
-  }, [hidden, pathIds, pathPairs, search, searchResults, selected.id, neighbors]);
+  }, [hidden, pathIds, pathPairs, search, searchResults, selected.id, neighbors, palette]);
 
   const toggleCategory = (category: KnowledgeCategory) => {
     setHidden((current) => {

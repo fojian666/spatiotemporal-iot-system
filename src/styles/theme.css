@@ -4,14 +4,26 @@
   --panel-rgb: 8, 20, 35;
   --code-rgb: 2, 8, 16;
   --edge-rgb: 120, 170, 220;
+  --text-rgb: 220, 238, 255;
+  --wash: rgba(255, 255, 255, 0.05);
   --accent-text: #8ff2ff;
+
+  /* 图表（ECharts 文字/网格，由 src/theme.ts 读取） */
+  --chart-label: #8aa7c2;
+  --chart-label-strong: #d6ebff;
+  --chart-label-dim: rgba(186, 213, 238, 0.28);
+  --chart-dim: #587792;
+  --chart-grid: rgba(120, 170, 220, 0.08);
+  --chart-axis-line: rgba(120, 170, 220, 0.14);
+  --chart-halo: #040a12;
+  --node-select: #ffffff;
 }
 
 html[data-theme='light'] {
   color-scheme: light;
 
   --bg: #eef1f6;
-  --bg-soft: #e3e9f1;
+  --bg-soft: #ffffff;
   --panel: rgba(255, 255, 255, 0.94);
   --panel-strong: #ffffff;
   --line: rgba(71, 85, 105, 0.16);
@@ -29,13 +41,24 @@ html[data-theme='light'] {
   --pink: #db2777;
 
   --text: #1e293b;
-  --muted: #46586e;
-  --dim: #64748b;
+  --muted: #3f5064;
+  --dim: #5b6b7f;
 
   --panel-rgb: 255, 255, 255;
-  --code-rgb: 241, 245, 249;
+  --code-rgb: 240, 244, 248;
   --edge-rgb: 148, 163, 184;
+  --text-rgb: 30, 41, 59;
+  --wash: rgba(15, 23, 42, 0.05);
   --accent-text: #0369a1;
+
+  --chart-label: #475569;
+  --chart-label-strong: #1e293b;
+  --chart-label-dim: rgba(51, 65, 85, 0.3);
+  --chart-dim: #64748b;
+  --chart-grid: rgba(100, 116, 139, 0.16);
+  --chart-axis-line: rgba(100, 116, 139, 0.22);
+  --chart-halo: #ffffff;
+  --node-select: #0f172a;
 }
 
 html[data-theme='light'] ::selection {

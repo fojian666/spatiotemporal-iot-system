@@ -38,6 +38,7 @@ import {
 import { DEVICES, KIND_META, PROTOCOL_STATS, ZONES } from '../data/devices';
 import { SCENARIO_LIST } from '../data/scenarios';
 import { formatSimTime, useSimulation } from '../engine/simulation';
+import { chartPalette, useTheme } from '../theme';
 import { useAuth } from '../auth/AuthContext';
 
 type ChartTab = 'weather' | 'water' | 'air';
@@ -100,6 +101,8 @@ export function OverviewPage() {
   const [expandedAlert, setExpandedAlert] = useState<string | null>(null);
   const [chartTab, setChartTab] = useState<ChartTab>('weather');
   const navigate = useNavigate();
+  const theme = useTheme();
+  const palette = useMemo(() => chartPalette(), [theme]);
   const time = formatSimTime(simTime);
 
   const selectedDevice = DEVICES.find((device) => device.id === selectedId) ?? null;
@@ -131,9 +134,9 @@ export function OverviewPage() {
         type: 'category' as const,
         boundaryGap: false,
         data: labels,
-        axisLine: { lineStyle: { color: 'rgba(120,170,220,.14)' } },
+        axisLine: { lineStyle: { color: palette.axisLine } },
         axisTick: { show: false },
-        axisLabel: { color: '#587792', fontSize: 9, interval: 9, fontFamily: 'SF Mono, monospace' },
+        axisLabel: { color: palette.dim, fontSize: 9, interval: 9, fontFamily: 'SF Mono, monospace' },
       },
       legend: {
         top: 0,
@@ -142,7 +145,7 @@ export function OverviewPage() {
         itemWidth: 9,
         itemHeight: 3,
         itemGap: 12,
-        textStyle: { color: '#7e9ab6', fontSize: 10 },
+        textStyle: { color: palette.label, fontSize: 10 },
       },
     };
 
@@ -150,8 +153,8 @@ export function OverviewPage() {
       return {
         ...common,
         yAxis: [
-          { type: 'value', name: '°C', nameTextStyle: { color: '#587792', fontSize: 9 }, axisLabel: { color: '#587792', fontSize: 9 }, splitLine: { lineStyle: { color: 'rgba(120,170,220,.08)' } } },
-          { type: 'value', name: '%', nameTextStyle: { color: '#587792', fontSize: 9 }, axisLabel: { color: '#587792', fontSize: 9 }, splitLine: { show: false } },
+          { type: 'value', name: '°C', nameTextStyle: { color: palette.dim, fontSize: 9 }, axisLabel: { color: palette.dim, fontSize: 9 }, splitLine: { lineStyle: { color: palette.grid } } },
+          { type: 'value', name: '%', nameTextStyle: { color: palette.dim, fontSize: 9 }, axisLabel: { color: palette.dim, fontSize: 9 }, splitLine: { show: false } },
         ],
         series: [
           {
@@ -179,8 +182,8 @@ export function OverviewPage() {
       return {
         ...common,
         yAxis: [
-          { type: 'value', name: 'm', nameTextStyle: { color: '#587792', fontSize: 9 }, axisLabel: { color: '#587792', fontSize: 9 }, splitLine: { lineStyle: { color: 'rgba(120,170,220,.08)' } } },
-          { type: 'value', name: 'NTU', nameTextStyle: { color: '#587792', fontSize: 9 }, axisLabel: { color: '#587792', fontSize: 9 }, splitLine: { show: false } },
+          { type: 'value', name: 'm', nameTextStyle: { color: palette.dim, fontSize: 9 }, axisLabel: { color: palette.dim, fontSize: 9 }, splitLine: { lineStyle: { color: palette.grid } } },
+          { type: 'value', name: 'NTU', nameTextStyle: { color: palette.dim, fontSize: 9 }, axisLabel: { color: palette.dim, fontSize: 9 }, splitLine: { show: false } },
         ],
         series: [
           {
@@ -207,7 +210,7 @@ export function OverviewPage() {
     return {
       ...common,
       yAxis: [
-        { type: 'value', name: 'µg/m³', nameTextStyle: { color: '#587792', fontSize: 9 }, axisLabel: { color: '#587792', fontSize: 9 }, splitLine: { lineStyle: { color: 'rgba(120,170,220,.08)' } } },
+        { type: 'value', name: 'µg/m³', nameTextStyle: { color: palette.dim, fontSize: 9 }, axisLabel: { color: palette.dim, fontSize: 9 }, splitLine: { lineStyle: { color: palette.grid } } },
       ],
       series: [
         {
@@ -221,7 +224,7 @@ export function OverviewPage() {
         },
       ],
     };
-  }, [chartTab, history]);
+  }, [chartTab, history, palette]);
 
   const zoneIssues = (zone: string) =>
     DEVICES.filter((device) => device.zone === zone && deviceStatuses[device.id] !== 'online').length;
