@@ -118,7 +118,10 @@ export function RouteEditorMap({ waypoints, editable, onChange, className = '', 
       setReady(true);
     });
     mapRef.current = map;
+    const observer = new ResizeObserver(() => map.resize());
+    observer.observe(containerRef.current);
     return () => {
+      observer.disconnect();
       markersRef.current.forEach((marker) => marker.remove());
       markersRef.current = [];
       map.remove();
