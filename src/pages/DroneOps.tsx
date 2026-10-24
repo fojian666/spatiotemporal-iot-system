@@ -177,11 +177,23 @@ function OpsModal({
     if (closeTimer.current) window.clearTimeout(closeTimer.current);
   }, []);
 
-  const requestClose = () => {
+  const requestClose = useCallback(() => {
     if (closing) return;
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      onClose();
+      return;
+    }
     setClosing(true);
     closeTimer.current = window.setTimeout(onClose, 180);
-  };
+  }, [closing, onClose]);
+
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') requestClose();
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [requestClose]);
 
   return (
     <div className={`ops-modal ${closing ? 'is-closing' : ''}`} role="presentation" onClick={requestClose}>
@@ -219,13 +231,18 @@ export function DroneOpsPage() {
     if (toastTimer.current) window.clearTimeout(toastTimer.current);
     if (toastLeaveTimer.current) window.clearTimeout(toastLeaveTimer.current);
     toastTimer.current = window.setTimeout(() => {
+      toastTimer.current = null;
+      if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        setToast('');
+        setToastLeaving(false);
+        return;
+      }
       setToastLeaving(true);
       toastLeaveTimer.current = window.setTimeout(() => {
         setToast('');
         setToastLeaving(false);
         toastLeaveTimer.current = null;
       }, 180);
-      toastTimer.current = null;
     }, 3400);
   }, []);
 
@@ -520,7 +537,7 @@ export function DroneOpsPage() {
         </div>
       )}
 
-      {toast && <div className={`ops-toast ${toastLeaving ? 'is-leaving' : ''}`}><Activity size={13} />{toast}</div>}
+      {toast && <div key={toast} className={`ops-toast ${toastLeaving ? 'is-leaving' : ''}`}><Activity size={13} />{toast}</div>}
     </div>
   );
 }

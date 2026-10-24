@@ -1675,7 +1675,7 @@ select {
 }
 
 @keyframes toastOut {
-  to { opacity: 0; transform: translateY(6px); }
+  to { opacity: 0; transform: translate(-50%, 6px); }
 }
 
 @keyframes floatSoft {

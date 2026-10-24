@@ -330,13 +330,18 @@ export function CopilotPage() {
     if (toastTimerRef.current) window.clearTimeout(toastTimerRef.current);
     if (toastLeaveTimerRef.current) window.clearTimeout(toastLeaveTimerRef.current);
     toastTimerRef.current = window.setTimeout(() => {
+      toastTimerRef.current = null;
+      if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        setToast('');
+        setToastLeaving(false);
+        return;
+      }
       setToastLeaving(true);
       toastLeaveTimerRef.current = window.setTimeout(() => {
         setToast('');
         setToastLeaving(false);
         toastLeaveTimerRef.current = null;
       }, 180);
-      toastTimerRef.current = null;
     }, 4000);
   };
 
@@ -509,7 +514,7 @@ export function CopilotPage() {
           )}
 
           {toast && (
-            <div className={`copilot-toast ${toastLeaving ? 'is-leaving' : ''}`}>
+            <div key={toast} className={`copilot-toast ${toastLeaving ? 'is-leaving' : ''}`}>
               <Activity size={13} /> {toast}
             </div>
           )}

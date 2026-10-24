@@ -5,17 +5,14 @@ function prefersReducedMotion(): boolean {
 }
 
 export function useAnimatedNumber(value: number, duration = 320): number {
-  const [display, setDisplay] = useState(value);
-  const displayRef = useRef(value);
+  const initial = Number.isFinite(value) ? value : 0;
+  const [display, setDisplay] = useState(initial);
+  const displayRef = useRef(initial);
   const frameRef = useRef<number | null>(null);
 
   useEffect(() => {
-    if (!Number.isFinite(value)) {
-      displayRef.current = value;
-      setDisplay(value);
-      return undefined;
-    }
-    const from = displayRef.current;
+    if (!Number.isFinite(value)) return undefined;
+    const from = Number.isFinite(displayRef.current) ? displayRef.current : value;
     if (from === value) return undefined;
     if (duration <= 0 || prefersReducedMotion()) {
       displayRef.current = value;

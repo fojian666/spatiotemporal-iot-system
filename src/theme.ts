@@ -18,8 +18,13 @@ function subscribe(listener: () => void): () => void {
   };
 }
 
+type ViewTransitionHandle = {
+  ready?: Promise<unknown>;
+  finished?: Promise<unknown>;
+};
+
 type ViewTransitionCapableDocument = Document & {
-  startViewTransition?: (callback: () => void) => unknown;
+  startViewTransition?: (callback: () => void) => ViewTransitionHandle;
 };
 
 export function setTheme(theme: Theme): void {
@@ -36,7 +41,9 @@ export function setTheme(theme: Theme): void {
   const doc = document as ViewTransitionCapableDocument;
   if (doc.startViewTransition && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
     try {
-      doc.startViewTransition(apply);
+      const transition = doc.startViewTransition(apply);
+      transition.ready?.catch(() => undefined);
+      transition.finished?.catch(() => undefined);
       return;
     } catch {
       // fall through to the instant switch
