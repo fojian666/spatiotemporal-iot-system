@@ -1,97 +1,181 @@
-import { useMemo, useState, type CSSProperties } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useState, type CSSProperties } from 'react';
+import { Link } from 'react-router-dom';
 import {
-  Activity,
-  Boxes,
+  ArrowRight,
+  Bot,
   Check,
   ChevronRight,
-  Circle,
-  CloudCog,
-  CloudDownload,
-  Code2,
-  Cpu,
-  Database,
-  FileJson,
-  GitBranch,
-  Minus,
+  CircleCheck,
+  FlaskConical,
+  GraduationCap,
+  Map as MapIcon,
+  MapPin,
+  Network,
+  Plane,
+  Play,
   Radar,
-  RadioTower,
-  Send,
-  ShieldCheck,
-  Sparkles,
-  Workflow,
+  Rocket,
+  Route as RouteIcon,
+  SquareTerminal,
+  Terminal,
+  type LucideIcon,
 } from 'lucide-react';
-import type { LucideIcon } from 'lucide-react';
 import { PageHeader } from '../components/Shell';
-import { DeviceIcon, LevelPill, Panel, StatusPill, StatusText } from '../components/ui';
-import { DEVICES, KIND_META, type DeviceDefinition, type DeviceKind, type MetricDef } from '../data/devices';
-import { useSimulation } from '../engine/simulation';
+import { Panel, StatusPill } from '../components/ui';
 
 /* ------------------------------------------------------------------ */
-/* 自家平台产品能力定义                                                */
+/* 教学内容数据                                                        */
 /* ------------------------------------------------------------------ */
 
-type CapStatus = 'live' | 'demo' | 'plan';
-
-const CAP_STATUS_META: Record<CapStatus, { label: string; className: string }> = {
-  live: { label: '在线服务', className: 'pf-status--live' },
-  demo: { label: '演示能力', className: 'pf-status--demo' },
-  plan: { label: '规划中', className: 'pf-status--plan' },
-};
-
-const CAPABILITIES: {
-  key: string;
+interface Tour {
+  path: string;
   name: string;
-  desc: string;
   icon: LucideIcon;
-  status: CapStatus;
   color: string;
-  anchor?: string;
-  to?: string;
-}[] = [
-  { key: 'access', name: '设备接入服务', desc: 'MQTT over TLS 统一接入，契约 v1 严格校验，QoS 1 送达保障', icon: RadioTower, status: 'live', color: '#4be1ff', anchor: 'console-flow' },
-  { key: 'product', name: '产品与设备管理', desc: '产品线台账、设备实时影子与生命周期状态管理', icon: Boxes, status: 'live', color: '#23e6b0', anchor: 'console-products' },
-  { key: 'tsl', name: '物模型 TSL', desc: '属性 / 事件 / 服务三段式物模型，阈值随产品定义下发', icon: FileJson, status: 'live', color: '#7aa2ff', anchor: 'console-tsl' },
-  { key: 'rules', name: '规则引擎', desc: '阈值规则实时驱动设备状态机与告警事件生成', icon: Workflow, status: 'live', color: '#ffbc5c', anchor: 'console-rules' },
-  { key: 'flow', name: '数据流转', desc: 'MQTT 上行 → WebSocket 秒级广播 → PostGIS 批量入库', icon: Send, status: 'live', color: '#5eead4', anchor: 'console-flow' },
-  { key: 'open', name: '开放平台', desc: 'REST 28 端点 + WebSocket 推送，JWT 与三角色 RBAC 鉴权', icon: Code2, status: 'live', color: '#a78bfa', anchor: 'console-api' },
-  { key: 'viz', name: '数据可视化', desc: '态势总览、时空一张图与仿真沙盘三屏联动', icon: Activity, status: 'live', color: '#ff84a8', to: '/' },
-  { key: 'edge', name: '边缘协同', desc: '边缘网关协议转换、时空对齐与断网续传', icon: Cpu, status: 'demo', color: '#93c5fd', anchor: 'console-products' },
-  { key: 'ai', name: 'AI 服务', desc: '物联大模型 Copilot，回答绑定遥测、告警与图谱证据链', icon: Sparkles, status: 'demo', color: '#f0abfc', to: '/copilot' },
-  { key: 'ota', name: 'OTA 升级', desc: '设备固件远程升级与版本灰度策略', icon: CloudDownload, status: 'plan', color: '#8aa7c2' },
+  what: string;
+  see: string[];
+  try_: string[];
+}
+
+const TOURS: Tour[] = [
+  {
+    path: '/',
+    name: '态势总览',
+    icon: Radar,
+    color: '#4be1ff',
+    what: '整个平台的开屏大屏：先看健康度、在线率、活动告警，再从右侧告警与智能体建议进入细节。',
+    see: ['五张 KPI 卡（节点 / 健康度 / 告警 / 无人系统 / 消息速率）', '平安区地图与设备标记', '多源趋势图（温湿度 / 水位浊度 / PM2.5）'],
+    try_: ['点击任意告警行展开详情，再点「联动处置」推动状态流转', '右上角「场景推演」切换到暴雨洪涝，观察 KPI 与地图联动变化', '点击地图上的设备标记，查看设备卡片并「问大模型」'],
+  },
+  {
+    path: '/drone',
+    name: '一网统飞',
+    icon: Plane,
+    color: '#5eead4',
+    what: '无人机作业工作区：从航线规划到飞控指令再到 AI 线索的完整闭环（需要完整后端模式）。',
+    see: ['六个标签页：设备机场 / 航线 / 计划 / 飞控 / 媒体 / 线索', '航点地图编辑器与航点序列表', '飞控指令日志与媒体成果库'],
+    try_: ['「航线规划」里点击地图添加航点，拖动调整位置，保存为新航线', '新建飞行计划后进入「实时飞控」，点起飞并观察进度与指令落库', '在「AI 线索」里核实 / 忽略识别线索，完成闭环'],
+  },
+  {
+    path: '/simulation',
+    name: '物联仿真',
+    icon: FlaskConical,
+    color: '#7ee787',
+    what: '仿真沙盘：注入四种场景，观察环境参数如何驱动 21 台设备的遥测与告警。',
+    see: ['场景卡（常态 / 暴雨 / 火情 / 污染）与 9 组环境参数', '感知 → 边缘 → 平台 → 智能四段管线', '设备观测矩阵与阈值详情'],
+    try_: ['点击「暴雨洪涝」注入场景，再看左侧水质/地灾曲线的变化', '本地模式下把速度切到 4×，观察趋势图加速滚动', '选中峡群沟地灾站，对照阈值条理解预警 / 严重两级判据'],
+  },
+  {
+    path: '/map',
+    name: '时空一张图',
+    icon: MapIcon,
+    color: '#7aa2ff',
+    what: '空间视角的一张图：设备、航线、电子围栏、热区与卫星过境全部叠加在卫星底图上。',
+    see: ['六类图层开关', '沿航线运动的无人机 / 无人车 / 无人船 / 卫星标记', '左侧侦察画面与右侧空间资产列表'],
+    try_: ['关闭/打开「电子围栏」「风险热区」图层感受叠加关系', '点击任意资产锁定目标，查看实时指标与 AI 线索', '切换火情场景后注意航线自动切换为 UAV-02 林火侦察'],
+  },
+  {
+    path: '/graph',
+    name: '知识图谱',
+    icon: Network,
+    color: '#a78bfa',
+    what: '课程知识的语义网络：56 个概念实体、126 条关系，支持检索与最短路径推理。',
+    see: ['七个知识域的聚类星图', '实体详情面板（属性 / 关系 / 度数）', '最短关系路径推演结果'],
+    try_: ['搜索「MQTT」，点击结果高亮实体与邻接关系', '起点选「智能传感器」终点选「物联大模型」，推演语义路径', '点击左侧知识域方块，隐藏/显示整类节点'],
+  },
+  {
+    path: '/copilot',
+    name: '物联大模型',
+    icon: Bot,
+    color: '#f0abfc',
+    what: '对话式助手：用自然语言查询实时态势、生成任务方案，每个回答都带证据链（本地规则引擎演示）。',
+    see: ['带打字机效果的回答与推理链面板', '四类证据卡（遥测 / 告警 / 图谱 / 文档）', '可执行动作与追问建议'],
+    try_: ['点击欢迎页建议「现在平安区有哪些风险？」', '回答里的「切换至暴雨洪涝」按钮可直接切换场景', '问「比较 MQTT 与 CoAP」，观察知识对比推理'],
+  },
 ];
 
-const API_GROUPS: { name: string; items: string[] }[] = [
-  { name: '认证与安全', items: ['POST /api/auth/login', 'GET /api/auth/me', 'POST /api/auth/ws-ticket', 'POST /api/auth/logout'] },
-  { name: '设备与遥测', items: ['GET /api/bootstrap', 'GET /api/devices', 'GET /api/devices/{id}', 'GET /api/telemetry/latest', 'GET /api/telemetry/history', 'WS /ws/telemetry'] },
-  { name: '告警与场景', items: ['GET /api/alerts', 'GET /api/alerts/history', 'POST /api/alerts/{id}/ack', 'GET /api/scenarios', 'POST /api/scenarios/{key}', 'POST /api/simulation/state'] },
-  { name: '空间与图谱', items: ['GET /api/spatial/nearby', 'GET /api/geo/devices', 'GET /api/geo/fences', 'GET /api/graph', 'GET /api/health'] },
-  { name: '一网统飞', items: ['GET /api/drone/overview', 'POST /api/drone/routes', 'PUT /api/drone/routes/{id}', 'DELETE /api/drone/routes/{id}', 'POST /api/drone/plans', 'POST /api/drone/plans/{id}/command', 'PATCH /api/drone/clues/{id}'] },
+const BOOK_PARTS: { part: string; chapters: string[]; topic: string; modules: { name: string; to: string }[] }[] = [
+  {
+    part: '第一篇 基础与体系', topic: '对象-状态-事件模型与五层智能闭环',
+    chapters: ['第1章 时空智能物联网概论', '第2章 时空信息的数学建模与不确定性', '第3章 对象、状态、事件与信息模型', '第4章 体系架构与智能闭环'],
+    modules: [{ name: '态势总览（系统形态）', to: '/' }, { name: '顶栏「系统架构」弹窗', to: '/' }],
+  },
+  {
+    part: '第二篇 智能感知与时空测量', topic: '传感器、信号处理、遥感与多源融合',
+    chapters: ['第5章 传感器原理与智能感知节点', '第6章 感知信号与图像信息处理', '第7章 视觉、雷达与三维时空感知', '第8章 遥感与广域时空感知', '第9章 时空定位与组合导航', '第10章 多传感器融合与时空状态估计'],
+    modules: [{ name: '物联仿真（设备观测矩阵）', to: '/simulation' }, { name: '一张图（空天地资产）', to: '/map' }],
+  },
+  {
+    part: '第三篇 通信与时空网络', topic: '低功耗通信、网络协议与空天地网络',
+    chapters: ['第11章 物联网通信原理与低功耗通信', '第12章 物联网网络体系与协议', '第13章 无线传感器与移动自组织网络', '第14章 空天地一体化时空网络'],
+    modules: [{ name: '接入契约与数据流转（本页）', to: '/platform' }, { name: '知识图谱（网络与连接域）', to: '/graph' }],
+  },
+  {
+    part: '第四篇 时空数据、计算与空间信息处理', topic: '时空数据库、云边端计算与 GIS',
+    chapters: ['第15章 时空数据模型、数据库与数据治理', '第16章 云边端时空计算与多源异构融合', '第17章 GIS 与地理时空信息处理'],
+    modules: [{ name: '时空一张图', to: '/map' }, { name: '态势总览趋势图', to: '/' }],
+  },
+  {
+    part: '第五篇 时空人工智能、认知与决策', topic: '时空数据学习与认知决策',
+    chapters: ['第18章 时空人工智能与时空数据学习', '第19章 时空认知、预测与智能决策'],
+    modules: [{ name: '物联大模型 Copilot', to: '/copilot' }, { name: '知识图谱', to: '/graph' }],
+  },
+  {
+    part: '第六篇 系统与应用', topic: '时空数字孪生与典型应用',
+    chapters: ['第20章 时空数字孪生与系统应用'],
+    modules: [{ name: '仿真沙盘场景推演', to: '/simulation' }, { name: '一网统飞作业闭环', to: '/drone' }],
+  },
 ];
 
-const BOOK_MAP: { part: string; chapters: string; topic: string; module: string; to: string }[] = [
-  { part: '第一篇 基础与体系', chapters: '第1–4章', topic: '对象-状态-事件模型、五层体系与智能闭环', module: '平台架构 / 物模型 TSL', to: '/platform' },
-  { part: '第二篇 智能感知', chapters: '第5–10章', topic: '传感器、信号处理、遥感与组合导航、多源融合', module: '11 条产品线感知节点', to: '/simulation' },
-  { part: '第三篇 通信与网络', chapters: '第11–14章', topic: '低功耗通信、网络协议、空天地一体化网络', module: '设备接入与数据流转', to: '/platform' },
-  { part: '第四篇 时空数据', chapters: '第15–17章', topic: '时空数据库、云边端计算、GIS 处理', module: 'PostGIS 时空底座 / 一张图', to: '/map' },
-  { part: '第五篇 时空智能', chapters: '第18–19章', topic: '时空数据学习、认知预测与智能决策', module: 'AI 服务 / 知识图谱', to: '/copilot' },
-  { part: '第六篇 系统与应用', chapters: '第20章', topic: '时空数字孪生与系统应用', module: '仿真沙盘 / 一网统飞', to: '/drone' },
+const CONCEPTS: { name: string; desc: string; focus: string }[] = [
+  { name: 'MQTT', desc: '轻量级发布/订阅协议，平台设备接入的基石（TLS:8883 / QoS1）', focus: 'mqtt' },
+  { name: 'CoAP', desc: '面向受限设备的 UDP 协议，与 MQTT 的选型对比见知识图谱', focus: 'coap' },
+  { name: 'NB-IoT / LoRaWAN', desc: '低功耗广域网两大路线，设备台账里的真实用法', focus: 'nbiot' },
+  { name: '时空基准', desc: '统一坐标与时间基准，全平台空间关联的前提', focus: 'spacetime' },
+  { name: 'GIS / 一张图', desc: '地理信息系统：设备、事件、围栏的空间叠加', focus: 'gis' },
+  { name: '数字孪生', desc: '物理流域的数字映射，仿真沙盘即其演示形态', focus: 'twin' },
+  { name: '知识图谱', desc: '56 实体 126 关系的课程知识网络，支撑检索与推理', focus: 'kg' },
+  { name: 'RAG 证据链', desc: '回答绑定实时数据与图谱出处，抑制幻觉', focus: 'rag' },
 ];
 
-const SERVICES_BY_KIND: Partial<Record<DeviceKind, { name: string; desc: string; real: boolean }[]>> = {
-  drone: [
-    { name: 'takeoff / pause / resume', desc: '飞行控制指令（真实 REST 状态机）', real: true },
-    { name: 'hover / return / land', desc: '悬停、返航与降落指令', real: true },
-    { name: '航线下发', desc: '按航点序列执行巡检任务', real: true },
-  ],
-  usv: [{ name: '采样任务下发', desc: '断面采样计划（演示联动）', real: false }],
-  gateway: [{ name: '断网续传', desc: '本地缓存与恢复续传（演示）', real: false }],
-};
-
-const TSL_EVENTS = [
-  { name: 'threshold.exceeded', level: 'critical' as const, desc: '指标越过严重阈值（crit）触发' },
-  { name: 'threshold.warning', level: 'warning' as const, desc: '指标越过预警阈值（warn）触发' },
-  { name: 'status.offline', level: 'info' as const, desc: '心跳丢失 / 只接收模式下未上报' },
+const LABS: { id: string; name: string; level: string; time: string; steps: string[]; code?: string }[] = [
+  {
+    id: 'lab-1',
+    name: '实验一 · 场景推演观察',
+    level: '入门',
+    time: '约 5 分钟',
+    steps: [
+      '进入「态势总览」，确认当前为常态场景，记住活动告警数量',
+      '右上角「场景推演」点击「暴雨洪涝」',
+      '回到本页观察：KPI 健康度下降、地图航线变化、告警切换为洪涝四条',
+      '进入「物联仿真」查看水位 / 浊度曲线是否同步抬升',
+    ],
+  },
+  {
+    id: 'lab-2',
+    name: '实验二 · 真实设备接入',
+    level: '进阶',
+    time: '约 10 分钟',
+    steps: [
+      '以只接收模式启动后端（IOT_SIMULATION_ENABLED=false）',
+      '另开终端运行下面的发布脚本，它以外部设备身份向 MQTT 灌数',
+      '回到「态势总览」：其余设备转为离线，WQ-01 显示真实上报值',
+      '观察 /api/health 中 messagesReceived / messagesRejected 的变化',
+    ],
+    code: 'cd backend\nIOT_SIMULATION_ENABLED=false ./run.sh          # 终端 1\n.venv/bin/python scripts/publish_device.py --device WQ-01 --seconds 60   # 终端 2',
+  },
+  {
+    id: 'lab-3',
+    name: '实验三 · 无人机作业全流程',
+    level: '进阶',
+    time: '约 15 分钟',
+    steps: [
+      '「一网统飞 → 航线规划」：点击地图添加 4-6 个航点，保存航线',
+      '「任务计划」新建计划并关联该航线',
+      '进入「实时飞控」，依次下发起飞 / 悬停 / 返航，观察状态机与指令日志',
+      '在「媒体成果」与「AI 线索」中查看本次任务归档并核实线索',
+    ],
+  },
 ];
 
 /* ------------------------------------------------------------------ */
@@ -99,311 +183,136 @@ const TSL_EVENTS = [
 /* ------------------------------------------------------------------ */
 
 export function PlatformPage() {
-  const { readings, deviceStatuses, stats } = useSimulation();
-  const navigate = useNavigate();
-  const [productKind, setProductKind] = useState<DeviceKind>('water');
-
-  const products = useMemo(() => {
-    const groups = new Map<DeviceKind, DeviceDefinition[]>();
-    DEVICES.forEach((device) => {
-      groups.set(device.kind, [...(groups.get(device.kind) ?? []), device]);
-    });
-    return [...groups.entries()].map(([kind, devices]) => {
-      const online = devices.filter((d) => deviceStatuses[d.id] !== 'offline').length;
-      const protocols = [...new Set(devices.map((d) => d.protocol))];
-      const properties = dedupeMetrics(devices);
-      return { kind, devices, online, protocols, properties };
-    });
-  }, [deviceStatuses]);
-
-  const rules = useMemo(
-    () =>
-      products.flatMap((p) =>
-        p.properties.map((def) => ({
-          id: `${p.kind}.${def.key}`,
-          product: KIND_META[p.kind].label,
-          warn:
-            def.direction === 'low'
-              ? `${def.label} ≤ ${def.warn}${def.unit}`
-              : def.direction === 'range'
-                ? `${def.label} < ${def.low ?? 0}${def.unit} 或 > ${def.warn}${def.unit}`
-                : `${def.label} ≥ ${def.warn}${def.unit}`,
-          crit: def.direction === 'low' ? `≤ ${def.crit}${def.unit}` : `≥ ${def.crit}${def.unit}`,
-        })),
-      ),
-    [products],
-  );
-
-  const selected = products.find((p) => p.kind === productKind) ?? products[0];
-  const services = SERVICES_BY_KIND[selected.kind] ?? [
-    { name: '属性上报', desc: '周期上报 metrics（契约 v1）', real: true },
-    { name: '事件上报', desc: '阈值/状态事件上抛', real: true },
-  ];
-
-  const liveRules = rules.length;
-  const endpointCount = API_GROUPS.reduce((sum, g) => sum + g.items.length, 0);
-
-  const openCapability = (cap: (typeof CAPABILITIES)[number]) => {
-    if (cap.anchor) {
-      document.getElementById(cap.anchor)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    } else if (cap.to) {
-      navigate(cap.to);
-    }
-  };
+  const [activePart, setActivePart] = useState(0);
+  const [activeLab, setActiveLab] = useState<string | null>('lab-1');
+  const part = BOOK_PARTS[activePart];
 
   return (
     <div className="page platform-page">
       <PageHeader
-        icon={CloudCog}
-        overline="ST-IOT PLATFORM · PRODUCT CENTER"
-        title="平台服务"
-        description="平安区时空智能物联网平台的核心产品能力：设备接入、物模型、规则引擎、数据流转与开放平台"
+        icon={GraduationCap}
+        overline="ST-IOT LEARNING CENTER"
+        title="教学中心"
+        description="傻瓜式上手整个平台：怎么跑起来、每个页面怎么用、每个功能对应教材哪些知识"
         actions={
           <div className="model-status">
-            <StatusPill tone="online" dot>平台运行中</StatusPill>
-            <span className="mono">MQTT · WS · REST · POSTGIS</span>
+            <StatusPill tone="ai" dot>6 篇 · 20 章 · 56 概念</StatusPill>
+            <Link className="btn btn--sm" to="/graph">打开知识图谱 <ChevronRight size={11} /></Link>
           </div>
         }
       />
 
-      <section className="pf-hero">
-        <div className="pf-hero__grid" aria-hidden="true" />
-        <div className="pf-hero__glow" aria-hidden="true" />
-        <div className="pf-hero__main">
-          <span className="overline">ONE PLATFORM · SENSING TO ACTION</span>
-          <h2>从设备接入到智能决策的一站式物联网平台</h2>
-          <p>
-            平台以统一时空基准组织空天地 21 个感知节点与 5 套无人系统，提供设备接入、产品管理、
-            物模型、规则引擎、数据流转与开放 API 全链路服务，支撑水务、防火、应急与低空巡检场景。
-          </p>
-          <div className="pf-hero__badges">
-            <StatusPill tone="online" dot>MQTT TLS 已接入</StatusPill>
-            <StatusPill tone="ai" dot>{liveRules} 条规则实时生效</StatusPill>
-            <StatusPill tone="muted">{endpointCount} 个开放端点</StatusPill>
-          </div>
-        </div>
-        <div className="pf-hero__stats">
-          {[
-            { label: '产品线', value: products.length, unit: '条' },
-            { label: '在线设备', value: `${stats.online}/${stats.total}`, unit: '台' },
-            { label: '启用规则', value: liveRules, unit: '条' },
-            { label: '消息速率', value: stats.messageRate.toLocaleString(), unit: 'msg/s' },
-          ].map((item) => (
-            <div className="pf-stat" key={item.label}>
-              <strong className="mono">{item.value}<em>{item.unit}</em></strong>
-              <span>{item.label}</span>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      <section className="pf-caps">
-        {CAPABILITIES.map((cap) => {
-          const Icon = cap.icon;
-          const meta = CAP_STATUS_META[cap.status];
+      <section className="learn-steps">
+        {[
+          { icon: Play, title: '第 1 步 · 跑起来', desc: '本地模式一行命令即可体验；完整模式见下方快速开始', tone: '#4be1ff' },
+          { icon: RouteIcon, title: '第 2 步 · 逐页导览', desc: '六个页面各自是什么、能看到什么、点什么', tone: '#23e6b0' },
+          { icon: Network, title: '第 3 步 · 对应知识', desc: '教材 6 篇 20 章与平台功能一一对应', tone: '#7aa2ff' },
+          { icon: Rocket, title: '第 4 步 · 动手实验', desc: '三个由浅入深的实验，做完即掌握全平台', tone: '#ffbc5c' },
+        ].map((step) => {
+          const Icon = step.icon;
           return (
-            <button
-              key={cap.key}
-              type="button"
-              className={`pf-cap ${cap.anchor || cap.to ? 'is-clickable' : ''}`}
-              style={{ '--cap': cap.color } as CSSProperties}
-              onClick={() => openCapability(cap)}
-            >
-              <span className="pf-cap__icon"><Icon size={18} /></span>
-              <strong>{cap.name}</strong>
-              <p>{cap.desc}</p>
-              <span className={`pf-status ${meta.className}`}>
-                {cap.status === 'live' ? <Check size={10} /> : cap.status === 'demo' ? <Circle size={8} /> : <Minus size={10} />}
-                {meta.label}
-              </span>
-            </button>
+            <div className="learn-step" key={step.title} style={{ '--ls': step.tone } as CSSProperties}>
+              <span className="learn-step__icon"><Icon size={16} /></span>
+              <strong>{step.title}</strong>
+              <p>{step.desc}</p>
+            </div>
           );
         })}
       </section>
 
+      <Panel overline="QUICK START" title="快速开始（复制即用）" icon={SquareTerminal} className="learn-quick">
+        <div className="learn-quick__grid">
+          <div>
+            <span className="overline">方式一 · 纯浏览器体验（推荐先用这个）</span>
+            <div className="code-block mono">
+              <code># .env.local 写一行 VITE_DATA_SOURCE=local，然后：{`\n`}npm install &amp;&amp; npm run dev{`\n`}# 打开 http://127.0.0.1:5173 ，无需登录</code>
+            </div>
+          </div>
+          <div>
+            <span className="overline">方式二 · 完整平台（登录后体验一网统飞）</span>
+            <div className="code-block mono">
+              <code>cd backend &amp;&amp; ./run.sh      # 需 PostgreSQL + PostGIS + Mosquitto{`\n`}# .env.local 改回 VITE_DATA_SOURCE=api{`\n`}# 登录账号见 backend/.env（观察员 viewer 为只读）</code>
+            </div>
+          </div>
+        </div>
+        <div className="platform-bullets">
+          <div><CircleCheck size={12} /><span>地图底图依赖 Esri 在线瓦片，离线环境地图区域为空属正常</span></div>
+          <div><CircleCheck size={12} /><span>观察员（viewer）登录后所有操作按钮只读，适合纯观看演示</span></div>
+          <div><CircleCheck size={12} /><span>页面右上角「系统架构」随时可看五层架构与数据流图解</span></div>
+        </div>
+      </Panel>
+
+      <Panel overline="PAGE TOUR" title="页面导览 · 每个页面怎么用" icon={MapPin} noPad>
+        <div className="learn-tours">
+          {TOURS.map((tour) => {
+            const Icon = tour.icon;
+            return (
+              <article className="learn-tour" key={tour.path} style={{ '--lt': tour.color } as CSSProperties}>
+                <header className="learn-tour__head">
+                  <span className="learn-tour__icon"><Icon size={17} /></span>
+                  <div>
+                    <h4>{tour.name}</h4>
+                    <span className="mono">{tour.path}</span>
+                  </div>
+                  <Link className="btn btn--sm" to={tour.path}>去体验 <ArrowRight size={11} /></Link>
+                </header>
+                <p className="learn-tour__what">{tour.what}</p>
+                <div className="learn-tour__cols">
+                  <div>
+                    <span className="overline">你会看到</span>
+                    <ul>{tour.see.map((item) => <li key={item}>{item}</li>)}</ul>
+                  </div>
+                  <div>
+                    <span className="overline">试试看</span>
+                    <ul>{tour.try_.map((item) => <li key={item}>{item}</li>)}</ul>
+                  </div>
+                </div>
+              </article>
+            );
+          })}
+        </div>
+      </Panel>
+
       <section className="platform-grid">
         <div className="platform-main">
-          <Panel
-            id="console-products"
-            overline="PRODUCT LIFECYCLE · DEVICE SHADOW"
-            title="产品与设备管理"
-            icon={Boxes}
-            extra={<span className="mono detail-text">影子数据实时刷新</span>}
-          >
+          <Panel overline="TEXTBOOK MAP · 20261008" title="知识地图 · 教材对应" icon={Network}>
             <div className="product-tabs">
-              {products.map((p) => {
-                const meta = KIND_META[p.kind];
-                return (
-                  <button
-                    key={p.kind}
-                    type="button"
-                    className={`product-tab ${selected.kind === p.kind ? 'is-active' : ''}`}
-                    style={{ '--pt': meta.color } as CSSProperties}
-                    onClick={() => setProductKind(p.kind)}
-                  >
-                    <span className="product-tab__icon"><DeviceIcon kind={p.kind} size={14} /></span>
-                    <span className="product-tab__name">{meta.label}</span>
-                    <b className="mono">{p.online}/{p.devices.length}</b>
-                  </button>
-                );
-              })}
+              {BOOK_PARTS.map((p, index) => (
+                <button
+                  key={p.part}
+                  type="button"
+                  className={`product-tab ${activePart === index ? 'is-active' : ''}`}
+                  onClick={() => setActivePart(index)}
+                >
+                  <span className="product-tab__name">{p.part}</span>
+                  <b className="mono">{p.chapters.length} 章</b>
+                </button>
+              ))}
             </div>
-
-            <div className="product-summary">
-              <div>
-                <span>产品标识</span>
-                <strong className="mono">{selected.kind.toUpperCase()}·{KIND_META[selected.kind].label}</strong>
-              </div>
-              <div>
-                <span>接入协议</span>
-                <strong>{selected.protocols.join(' / ')}</strong>
-              </div>
-              <div>
-                <span>在线率</span>
-                <strong className="mono">{Math.round((selected.online / selected.devices.length) * 100)}%</strong>
-              </div>
-              <div>
-                <span>物模型属性</span>
-                <strong className="mono">{selected.properties.length} 项</strong>
-              </div>
-            </div>
-
-            <div className="device-table platform-devices">
-              <div className="device-table__head platform-devices__head">
-                <span>设备 / 编号</span><span>区域</span><span>设备影子（实时）</span><span>状态</span>
-              </div>
-              <div className="device-table__body">
-                {selected.devices.map((device) => {
-                  const reading = readings[device.id] ?? {};
-                  const shadow = Object.entries(reading).slice(0, 4);
-                  return (
-                    <div className="platform-device__row" key={device.id}>
-                      <span className="device-table__name">
-                        <i style={{ color: KIND_META[device.kind].color }}><DeviceIcon kind={device.kind} size={15} /></i>
-                        <span><strong>{device.shortName}</strong><em className="mono">{device.id}</em></span>
-                      </span>
-                      <span className="device-table__zone">{device.zone}</span>
-                      <span className="platform-shadow mono">
-                        {shadow.length
-                          ? shadow.map(([key, value]) => `${key}=${value}`).join('  ')
-                          : device.status === 'offline' ? '（离线 · 无上报）' : '—'}
-                      </span>
-                      <span><StatusText status={deviceStatuses[device.id] ?? device.status} /></span>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          </Panel>
-
-          <Panel id="console-rules" overline="RULE ENGINE · THRESHOLD RULES" title="规则引擎" icon={Workflow}>
-            <div className="platform-subhead">
-              <span className="overline">规则清单</span>
-              <span className="mono">{liveRules} 条已启用 · 每秒随遥测执行</span>
-            </div>
-            <div className="cap-matrix cap-matrix--tsl">
-              <div className="cap-matrix__head cap-matrix__head--tsl pf-rules__head">
-                <span>规则 ID</span><span>所属产品</span><span>预警条件</span><span>严重阈值</span><span>动作</span><span>状态</span>
-              </div>
-              {rules.map((rule) => (
-                <div className="cap-matrix__row" key={rule.id}>
-                  <strong className="mono">{rule.id}</strong>
-                  <span>{rule.product}</span>
-                  <span className="mono">{rule.warn}</span>
-                  <span className="mono">{rule.crit}</span>
-                  <span>状态置预警 · 生成告警事件</span>
-                  <span className="cap-state cap-state--have"><Check size={10} />已启用</span>
+            <p className="learn-part__topic">{part.topic} —— 对应平台模块：{part.modules.map((m) => m.name).join('、')}</p>
+            <div className="learn-chapters">
+              {part.chapters.map((chapter) => (
+                <div className="learn-chapter" key={chapter}>
+                  <Check size={12} />
+                  <span>{chapter}</span>
                 </div>
               ))}
             </div>
-          </Panel>
-
-          <Panel id="console-tsl" overline="THING MODEL · TSL" title={`物模型 · ${KIND_META[selected.kind].label}`} icon={FileJson}>
-            <div className="platform-subhead"><span className="overline">属性（PROPERTIES）</span><span className="mono">{selected.properties.length} 项 · 类型 double · 带阈值</span></div>
-            <div className="cap-matrix cap-matrix--tsl">
-              <div className="cap-matrix__head cap-matrix__head--tsl">
-                <span>标识符</span><span>名称</span><span>单位</span><span>预警阈值</span><span>严重阈值</span><span>判据方向</span>
-              </div>
-              {selected.properties.map((def) => (
-                <div className="cap-matrix__row" key={def.key}>
-                  <strong className="mono">{def.key}</strong>
-                  <span>{def.label}</span>
-                  <span className="mono">{def.unit || '—'}</span>
-                  <span className="mono">{def.direction === 'low' ? '≤' : '≥'} {def.warn}</span>
-                  <span className="mono">{def.direction === 'low' ? '≤' : '≥'} {def.crit}</span>
-                  <span>{def.direction === 'high' ? '高限' : def.direction === 'low' ? '低限' : `区间 ${def.low ?? 0}~`}</span>
-                </div>
-              ))}
-              {!selected.properties.length && <div className="cap-matrix__row"><span className="cap-matrix__note">该产品线为资产类设备，物模型以状态与事件为主（电量/信号/进度）。</span></div>}
-            </div>
-            <div className="platform-subhead"><span className="overline">事件（EVENTS）</span><span className="mono">阈值规则驱动</span></div>
-            <div className="tsl-events">
-              {TSL_EVENTS.map((event) => (
-                <div className="tsl-event" key={event.name}>
-                  <LevelPill level={event.level} />
-                  <strong className="mono">{event.name}</strong>
-                  <span>{event.desc}</span>
-                </div>
-              ))}
-            </div>
-            <div className="platform-subhead"><span className="overline">服务（SERVICES）</span><span className="mono">{services.filter((s) => s.real).length} 项真实下发</span></div>
-            <div className="tsl-events">
-              {services.map((service) => (
-                <div className="tsl-event" key={service.name}>
-                  <StatusPill tone={service.real ? 'online' : 'muted'}>{service.real ? 'REST' : '演示'}</StatusPill>
-                  <strong className="mono">{service.name}</strong>
-                  <span>{service.desc}</span>
-                </div>
+            <div className="learn-part__links">
+              {part.modules.map((m) => (
+                <Link key={m.name} className="btn btn--sm" to={m.to}>{m.name} <ChevronRight size={11} /></Link>
               ))}
             </div>
           </Panel>
         </div>
 
         <aside className="platform-side">
-          <Panel id="console-flow" overline="ACCESS & DATA FLOW" title="设备接入与数据流转" icon={Send}>
-            <div className="access-flow mono">
-              <span>设备 / 仿真源</span><ChevronRight size={11} />
-              <span>MQTT :8883 TLS</span><ChevronRight size={11} />
-              <span>ingest 校验</span><ChevronRight size={11} />
-              <span>WS 广播</span><ChevronRight size={11} />
-              <span>PostGIS</span>
-            </div>
-            <div className="code-block mono">
-              <span className="overline">TOPIC · QoS 1</span>
-              <code>iot/pingan/devices/&#123;device_id&#125;/telemetry</code>
-              <span className="overline">PAYLOAD · 契约 v1</span>
-              <code>&#123; "version": 1, "device_id": "WQ-01",<br />&nbsp;&nbsp;"ts": "2026-10-24T10:00:00+08:00",<br />&nbsp;&nbsp;"metrics": &#123; "ph": 7.62, "turbidity": 18 &#125; &#125;</code>
-            </div>
-            <div className="platform-bullets">
-              <div><ShieldCheck size={12} /><span>TLS + 账号 + ACL 设备级授权，支持独立设备账号</span></div>
-              <div><Database size={12} /><span>非法消息拒收计数（messagesRejected），未知设备丢弃</span></div>
-              <div><Radar size={12} /><span>支持切换只接收模式，真实设备直驱全链路</span></div>
-            </div>
-          </Panel>
-
-          <Panel id="console-api" overline="OPEN PLATFORM" title="开放接口" icon={Code2}>
-            <div className="api-groups">
-              {API_GROUPS.map((group) => (
-                <div className="api-group" key={group.name}>
-                  <span className="api-group__name">{group.name}</span>
-                  <div className="api-group__items mono">
-                    {group.items.map((item) => (
-                      <span key={item} className={item.startsWith('WS') ? 'is-ws' : ''}>{item}</span>
-                    ))}
-                  </div>
-                </div>
-              ))}
-            </div>
-            <Link className="btn btn--sm btn--block" to="/copilot">在物联大模型中查询接口用法 <ChevronRight size={11} /></Link>
-          </Panel>
-
-          <Panel overline="KNOWLEDGE SYSTEM · 教材衔接" title="知识体系" icon={GitBranch}>
-            <div className="book-map">
-              {BOOK_MAP.map((row) => (
-                <Link className="book-map__row" key={row.part} to={row.to}>
-                  <span className="book-map__part">{row.part}<em>{row.chapters}</em></span>
-                  <span className="book-map__topic">{row.topic}</span>
-                  <span className="book-map__module"><GitBranch size={11} />{row.module}</span>
+          <Panel overline="CONCEPTS" title="核心概念速查" icon={Network}>
+            <div className="learn-concepts">
+              {CONCEPTS.map((concept) => (
+                <Link className="learn-concept" key={concept.name} to={`/graph?focus=${concept.focus}`}>
+                  <strong>{concept.name}</strong>
+                  <span>{concept.desc}</span>
                   <ChevronRight size={12} />
                 </Link>
               ))}
@@ -411,14 +320,44 @@ export function PlatformPage() {
           </Panel>
         </aside>
       </section>
+
+      <Panel overline="HANDS-ON LABS" title="动手实验 · 由浅入深" icon={FlaskConical} className="learn-labs" noPad>
+        <div className="learn-labs__list">
+          {LABS.map((lab) => {
+            const open = activeLab === lab.id;
+            return (
+              <div className={`learn-lab ${open ? 'is-open' : ''}`} key={lab.id}>
+                <button
+                  type="button"
+                  className="learn-lab__head"
+                  onClick={() => setActiveLab(open ? null : lab.id)}
+                  aria-expanded={open}
+                >
+                  <Terminal size={13} />
+                  <strong>{lab.name}</strong>
+                  <span className="learn-lab__meta">{lab.level} · {lab.time}</span>
+                  <ChevronRight size={13} />
+                </button>
+                {open && (
+                  <div className="learn-lab__body">
+                    <ol className="learn-lab__steps">
+                      {lab.steps.map((step, index) => (
+                        <li key={step}>
+                          <em className="mono">{index + 1}</em>
+                          <span>{step}</span>
+                        </li>
+                      ))}
+                    </ol>
+                    {lab.code && <div className="code-block mono"><code>{lab.code}</code></div>}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      </Panel>
     </div>
   );
-}
-
-function dedupeMetrics(devices: DeviceDefinition[]): MetricDef[] {
-  const map = new Map<string, MetricDef>();
-  devices.forEach((device) => device.metrics.forEach((def) => map.set(def.key, def)));
-  return [...map.values()];
 }
 
 export type { LucideIcon };
