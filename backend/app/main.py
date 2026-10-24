@@ -67,14 +67,24 @@ def user_to_dict(user: User) -> dict[str, Any]:
 
 class ConnectionManager:
     def __init__(self) -> None:
-        self.active: set[WebSocket] = set()
+        self.active: dict[WebSocket, int] = {}
 
-    async def connect(self, websocket: WebSocket) -> None:
+    async def connect(self, websocket: WebSocket, user_id: int) -> None:
         await websocket.accept()
-        self.active.add(websocket)
+        self.active[websocket] = user_id
 
     def disconnect(self, websocket: WebSocket) -> None:
-        self.active.discard(websocket)
+        self.active.pop(websocket, None)
+
+    async def close_user(self, user_id: int, code: int = 4401) -> None:
+        """Close every socket owned by a user (logout bumps token_version)."""
+        targets = [websocket for websocket, owner in self.active.items() if owner == user_id]
+        for websocket in targets:
+            self.active.pop(websocket, None)
+            try:
+                await websocket.close(code=code, reason="session revoked")
+            except Exception:  # noqa: BLE001
+                pass
 
     async def broadcast(self, payload: dict[str, Any]) -> None:
         dead: list[WebSocket] = []
@@ -87,57 +97,64 @@ class ConnectionManager:
             self.disconnect(websocket)
 
 
+async def persist_telemetry(service: TelemetryService, last_persisted: dict[str, datetime]) -> None:
+    """Write the latest snapshot; only mark timestamps after a successful commit."""
+    readings, reading_ts, alerts = await asyncio.to_thread(service.latest_for_persistence)
+    pending: dict[str, datetime] = {}
+    async with SessionLocal() as session:
+        for device_id, metrics in readings.items():
+            timestamp = reading_ts.get(device_id)
+            if timestamp is None or last_persisted.get(device_id) == timestamp:
+                continue
+            statement = (
+                pg_insert(Reading)
+                .values(
+                    device_id=device_id,
+                    ts=timestamp,
+                    scenario=service.store.scenario_key,
+                    tick=service.store.tick,
+                    metrics=metrics,
+                )
+                .on_conflict_do_nothing(index_elements=["device_id", "ts"])
+            )
+            await session.execute(statement)
+            pending[device_id] = timestamp
+        for alert in alerts:
+            statement = (
+                pg_insert(Alert)
+                .values(
+                    id=alert["id"],
+                    level=alert["level"],
+                    title=alert["title"],
+                    source=alert["source"],
+                    zone=alert["zone"],
+                    ts=alert["ts"],
+                    detail=alert["detail"],
+                    status=alert["status"],
+                    scenario=service.store.scenario_key,
+                    geom=WKTElement(f"POINT({alert['lng']} {alert['lat']})", srid=4326),
+                )
+                .on_conflict_do_update(
+                    index_elements=["id"],
+                    set_={
+                        "status": alert["status"],
+                        "detail": alert["detail"],
+                        "scenario": service.store.scenario_key,
+                    },
+                )
+            )
+            await session.execute(statement)
+        await session.commit()
+    last_persisted.update(pending)
+
+
 async def persistence_loop(service: TelemetryService) -> None:
     """Persist MQTT-ingested telemetry and alert changes regularly."""
     last_persisted: dict[str, datetime] = {}
     while True:
         try:
             await asyncio.sleep(settings.persist_interval_seconds)
-            readings, reading_ts, alerts = await asyncio.to_thread(service.latest_for_persistence)
-            async with SessionLocal() as session:
-                for device_id, metrics in readings.items():
-                    timestamp = reading_ts.get(device_id)
-                    if timestamp is None or last_persisted.get(device_id) == timestamp:
-                        continue
-                    statement = (
-                        pg_insert(Reading)
-                        .values(
-                            device_id=device_id,
-                            ts=timestamp,
-                            scenario=service.store.scenario_key,
-                            tick=service.store.tick,
-                            metrics=metrics,
-                        )
-                        .on_conflict_do_nothing(index_elements=["device_id", "ts"])
-                    )
-                    await session.execute(statement)
-                    last_persisted[device_id] = timestamp
-                for alert in alerts:
-                    statement = (
-                        pg_insert(Alert)
-                        .values(
-                            id=alert["id"],
-                            level=alert["level"],
-                            title=alert["title"],
-                            source=alert["source"],
-                            zone=alert["zone"],
-                            ts=alert["ts"],
-                            detail=alert["detail"],
-                            status=alert["status"],
-                            scenario=service.store.scenario_key,
-                            geom=WKTElement(f"POINT({alert['lng']} {alert['lat']})", srid=4326),
-                        )
-                        .on_conflict_do_update(
-                            index_elements=["id"],
-                            set_={
-                                "status": alert["status"],
-                                "detail": alert["detail"],
-                                "scenario": service.store.scenario_key,
-                            },
-                        )
-                    )
-                    await session.execute(statement)
-                await session.commit()
+            await persist_telemetry(service, last_persisted)
         except asyncio.CancelledError:
             raise
         except Exception:  # noqa: BLE001
@@ -178,6 +195,10 @@ async def lifespan(app: FastAPI):
         persist_task.cancel()
         ws_task.cancel()
         await asyncio.gather(persist_task, ws_task, return_exceptions=True)
+        try:
+            await asyncio.wait_for(persist_telemetry(service, {}), timeout=5)
+        except Exception:  # noqa: BLE001
+            logger.exception("Final telemetry flush failed")
         service.stop()
         await engine.dispose()
 
@@ -290,11 +311,15 @@ async def auth_ws_ticket(current_user: User = Depends(get_current_user)) -> dict
 
 @app.post("/api/auth/logout")
 async def auth_logout(
+    request: Request,
     current_user: User = Depends(get_current_user),
     session: AsyncSession = Depends(get_session),
 ) -> dict[str, str]:
     current_user.token_version += 1
     await session.commit()
+    manager: ConnectionManager | None = getattr(request.app.state, "manager", None)
+    if manager is not None:
+        await manager.close_user(current_user.id)
     return {"status": "ok"}
 
 
@@ -568,25 +593,28 @@ async def telemetry_socket(websocket: WebSocket) -> None:
     service: TelemetryService = app.state.service
     manager: ConnectionManager = app.state.manager
     ticket = websocket.query_params.get("ticket")
-    user_id = consume_ws_ticket(ticket) if ticket else None
-    if user_id is None:
+    ticket_info = consume_ws_ticket(ticket) if ticket else None
+    if ticket_info is None:
         await websocket.accept()
         await websocket.close(code=4401, reason="invalid or expired ws ticket")
         return
+    user_id, token_version = ticket_info
     async with SessionLocal() as session:
         user = await session.get(User, user_id)
-        if user is None or not user.active:
+        if user is None or not user.active or user.token_version != token_version:
             await websocket.accept()
-            await websocket.close(code=4401, reason="user disabled")
+            await websocket.close(code=4401, reason="session revoked")
             return
-    await manager.connect(websocket)
+    await manager.connect(websocket, user_id)
     try:
         await websocket.send_json(await asyncio.to_thread(service.snapshot))
         while True:
             await websocket.receive_text()
     except WebSocketDisconnect:
-        manager.disconnect(websocket)
+        pass
     except Exception:  # noqa: BLE001
+        pass
+    finally:
         manager.disconnect(websocket)
 
 

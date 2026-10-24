@@ -22,7 +22,7 @@ bearer_scheme = HTTPBearer(auto_error=False)
 ROLES = {"admin", "operator", "viewer"}
 
 _ticket_lock = threading.Lock()
-_ws_tickets: dict[str, tuple[int, float]] = {}
+_ws_tickets: dict[str, tuple[int, int, float]] = {}
 _login_lock = threading.Lock()
 _login_attempts: defaultdict[str, deque[float]] = defaultdict(deque)
 
@@ -122,21 +122,21 @@ def issue_ws_ticket(user: User) -> tuple[str, int]:
     expires_at = time.time() + settings.ws_ticket_seconds
     with _ticket_lock:
         now = time.time()
-        for key in [key for key, (_, exp) in _ws_tickets.items() if exp <= now]:
+        for key in [key for key, (_, _, exp) in _ws_tickets.items() if exp <= now]:
             _ws_tickets.pop(key, None)
-        _ws_tickets[ticket] = (user.id, expires_at)
+        _ws_tickets[ticket] = (user.id, user.token_version, expires_at)
     return ticket, settings.ws_ticket_seconds
 
 
-def consume_ws_ticket(ticket: str) -> int | None:
+def consume_ws_ticket(ticket: str) -> tuple[int, int] | None:
     with _ticket_lock:
         item = _ws_tickets.pop(ticket, None)
     if not item:
         return None
-    user_id, expires_at = item
+    user_id, token_version, expires_at = item
     if expires_at < time.time():
         return None
-    return user_id
+    return user_id, token_version
 
 
 def check_login_rate(key: str) -> tuple[bool, int]:
