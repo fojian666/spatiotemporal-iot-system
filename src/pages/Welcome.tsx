@@ -151,7 +151,7 @@ export function WelcomePage({ onEnter }: { onEnter: (path: string) => void }) {
               <span className="welcome-card__index mono" aria-hidden="true">NOTE</span>
               <span className="welcome-card__title">演示与真实</span>
               <span className="welcome-card__desc">
-                遥测数值由仿真合成，视频为静态影像叠加检测框，物联大模型为本地规则引擎；
+                遥测数值由仿真合成，视频为静态影像叠加检测框，物联大模型由云端生成、本地规则引擎兜底；
                 而 MQTT/TLS → FastAPI → PostGIS → WebSocket 的管道与 JWT / RBAC 鉴权是真实实现的。
               </span>
             </article>

@@ -120,11 +120,13 @@ function TypedText({
 
 function AssistantBubble({
   message,
+  model,
   onAction,
   onAsk,
   onScroll,
 }: {
   message: ChatMessage;
+  model: string | null;
   onAction: (action: CopilotReply['actions'][number]) => void;
   onAsk: (query: string) => void;
   onScroll: () => void;
@@ -141,7 +143,7 @@ function AssistantBubble({
       <span className="chat-avatar chat-avatar--ai"><Bot size={15} /></span>
       <div className="chat-bubble-wrap">
         <div className="chat-meta">
-          <strong>IoT-Seer</strong>
+          <strong>{model ?? 'IoT-Seer'}</strong>
           <span>物联大模型</span>
           {reply && <em className={`intent-tag`}>{reply.intent}</em>}
         </div>
@@ -555,6 +557,7 @@ export function CopilotPage() {
                 <AssistantBubble
                   key={message.id}
                   message={message}
+                  model={llmModel}
                   onAction={handleAction}
                   onAsk={send}
                   onScroll={scrollToBottom}
@@ -566,7 +569,7 @@ export function CopilotPage() {
               <div className="chat-message chat-message--assistant">
                 <span className="chat-avatar chat-avatar--ai"><Bot size={15} /></span>
                 <div className="chat-bubble-wrap">
-                  <div className="chat-meta"><strong>IoT-Seer</strong><span>推理中</span></div>
+                  <div className="chat-meta"><strong>{llmModel ?? 'IoT-Seer'}</strong><span>推理中</span></div>
                   <div className="chat-bubble chat-bubble--assistant chat-thinking">
                     <div className="thinking-dots"><i /><i /><i /></div>
                     <span>正在装配时空上下文 · 检索遥测与告警 · 召回图谱子图</span>
@@ -712,7 +715,11 @@ export function CopilotPage() {
             </div>
             <div className="guard-note">
               <ShieldCheck size={13} />
-              <p>演示引擎基于本地规则与课程知识库生成回答，可替换为任意 OpenAI 兼容模型接口。</p>
+              <p>
+                {llmModel
+                  ? `回答由 ${llmModel} 云端生成，证据链绑定本地检索与课程知识库；断网或未配置密钥时自动回落本地规则引擎。`
+                  : '演示引擎基于本地规则与课程知识库生成回答；配置云端模型后自动切换。'}
+              </p>
             </div>
           </Panel>
         </aside>
