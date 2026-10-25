@@ -897,7 +897,7 @@
   left: 50%;
   bottom: 92px;
   transform: translateX(-50%);
-  z-index: 12;
+  z-index: var(--z-toast);
   display: flex;
   align-items: center;
   gap: 6px;

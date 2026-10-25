@@ -41,6 +41,8 @@ backend/scripts/publish_device.py    # 以外部设备身份向 MQTT 灌数（�
 
 ## 视觉与动效层（纯 CSS/rAF，无动效库）
 
+完整契约（令牌 / 排版 / 组件 / 层级 / 检查清单）见 `DESIGN.md`；改 UI 前先读它。
+
 - **登录页**：原子核 3D 视觉（`auth.css` 的 `.auth-atom`）——三层电子壳层、拖尾电子、核子团。反向壳层的 `animation-direction: reverse` **必须同时作用于壳层与电子**，否则自旋抵消失效、电子被压扁；指针视差写 `--atom-tilt-x/y`。文案走「山河 / 信 / 巡」意象：主视觉诗意、表单侧克制，改文案时保持这条分界。
 - **文档中心**：开卷书壳 + 翻页转场（`Platform.tsx` 的 flip 状态 + `pages.css` 的 `.docs-page-turn`，rotateY ±104°）；≤1100px 与 reduced-motion 下退化为直接切换。
 - **控制台状态动效**：KPI 数字滚动（`useAnimatedNumber`）、toast/模态两段式退场、列表 24ms stagger（`--i`）、状态徽章脉冲、主题切换走 View Transitions API（`src/theme.ts`）。
@@ -55,6 +57,7 @@ backend/scripts/publish_device.py    # 以外部设备身份向 MQTT 灌数（�
 ```
 run.sh                       一键启动：前端按需构建 → backend/run.sh
 backend/run.sh               后端启动：Python/Mosquitto/TLS 探测与前置检查
+DESIGN.md                    视觉与交互契约（改 UI 前先读）
 src/App.tsx                  7 条一级路由：/ /drone /platform /simulation /map /graph /copilot
 src/engine/simulation.tsx    双模式引擎（local 引擎 + remote WS 消费，同一 context 接口）
 src/services/llm.ts          "物联大模型"= 规则引擎（纯函数 askCopilot，无外部模型调用）

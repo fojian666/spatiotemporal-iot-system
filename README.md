@@ -29,6 +29,7 @@ Spatiotemporal IoT demo platform（spatiotemporal-iot-system）——以青海�
 - **文档中心**：开卷书壳与翻页转场；窄屏（≤1100px）与 `prefers-reduced-motion` 下自动退化为直接切换。
 - **控制台**：入场编排、KPI 数字滚动、列表 stagger、toast/模态两段式退场、状态徽章脉冲、主题切换 View Transition。
 - 全部为纯 CSS / rAF 实现，未引入动效库；统一受 `prefers-reduced-motion` 降级（降级后保留静止姿态而非空白）。
+- 令牌、组件与层级的完整契约见 [DESIGN.md](DESIGN.md)。
 
 ## 快速开始
 

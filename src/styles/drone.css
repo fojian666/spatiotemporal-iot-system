@@ -948,7 +948,7 @@
 .ops-modal {
   position: fixed;
   inset: 0;
-  z-index: 260;
+  z-index: var(--z-modal);
   display: grid;
   place-items: center;
   padding: 22px;
@@ -2413,7 +2413,7 @@
   left: 50%;
   bottom: 22px;
   transform: translateX(-50%);
-  z-index: 280;
+  z-index: var(--z-toast);
   display: flex;
   align-items: center;
   gap: 6px;
