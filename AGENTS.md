@@ -46,6 +46,7 @@ backend/scripts/publish_device.py    # 以外部设备身份向 MQTT 灌数（�
 - **登录页**：原子核 3D 视觉（`auth.css` 的 `.auth-atom`）——三层电子壳层、拖尾电子、核子团。反向壳层的 `animation-direction: reverse` **必须同时作用于壳层与电子**，否则自旋抵消失效、电子被压扁；指针视差写 `--atom-tilt-x/y`。文案走「山河 / 信 / 巡」意象：主视觉诗意、表单侧克制，改文案时保持这条分界。
 - **文档中心**：开卷书壳 + 翻页转场（`Platform.tsx` 的 flip 状态 + `pages.css` 的 `.docs-page-turn`，rotateY ±104°）；≤1100px 与 reduced-motion 下退化为直接切换。
 - **控制台状态动效**：KPI 数字滚动（`useAnimatedNumber`）、toast/模态两段式退场、列表 24ms stagger（`--i`）、状态徽章脉冲、主题切换走 View Transitions API（`src/theme.ts`）。
+- **地图立体层**：`MapView.tsx` 的「立体地形」开关（图层面板首项）挂 Mapzen terrarium DEM（`maxzoom: 12`，再高会在软件渲染下出现无影像空区），做地形起伏 + 山体晕渲。参数锁 `TERRAIN_EXAGGERATION = 1.65`、`TERRAIN_PITCH = 36°` / `FLAT_PITCH = 18°`——压到 1.2/28° 时全图平均像素差只有 33/765，肉眼判为"没做"，1.65 才看得出黄土沟壑。**已知限制：DOM Marker（设备点、围栏标签、航点）不参与地形高程，而围栏 fill/line 会贴地形**，抬高俯角时两者有轻微错位；这是 1.65 的上限理由，不要再加码。晕渲用独立 source `terrain-shade`（与 terrain 共用 raster-dem 会被 MapLibre 告警）。DEM 不可用时（主动探测中心瓦片失败或 error 命中）面板项变「立体地形 · 不可用」并置灰，**点击即重试**、不锁死会话；2D 不受影响。窄屏 ≤900 默认关。注意 `.geo-page .map-layers` 在 ≤1280 断点**不得 `display: none`**——它是该宽度下地形的唯一入口。
 - **响应式层**：`src/styles/responsive.css` 最后加载，宽度 ≤640（底部导航）/≤900/≤1100 + 高度 ≤760/≤560；顶栏高度只写 `var(--topbar)`，页面高度跟随内容区，改布局先读这份覆盖层。
 - 入场编排集中在 `auth.css` / `base.css` 的 motion layer；全局降级开关是 `base.css` 的 `@media (prefers-reduced-motion: reduce)`，勿在组件里另造降级分支。
 

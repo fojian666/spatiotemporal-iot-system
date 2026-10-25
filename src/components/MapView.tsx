@@ -17,6 +17,18 @@ import {
 } from '../data/devices';
 import { useSimulation } from '../engine/simulation';
 
+/* 公共领域高程瓦片（Mapzen terrarium，托管于 AWS Open Data），离线环境与卫星底图一样不可用，
+ * 故地形只作为可选增强：加载失败时回落到纯平面，不影响地图本身。 */
+const DEM_TILES = 'https://s3.amazonaws.com/elevation-tiles-prod/terrarium/{z}/{x}/{y}.png';
+const TERRAIN_SOURCE = 'terrain-dem';
+const TERRAIN_SHADE_SOURCE = 'terrain-shade';
+/* 夸张度与俯角是一组参数：设备/航线坐标经过 expandPoint 扩散（经度 ×1.65），
+ * 与真实地形本是两套坐标，抬过头会把既有偏差放大成"设备挂在陡坡上"；
+ * 但压太狠又只剩明暗变化、看不出河谷——1.65 / 36° 是"能看出沟壑、设备仍落在合理地表"的折中。 */
+const TERRAIN_EXAGGERATION = 1.65;
+const TERRAIN_PITCH = 36;
+const FLAT_PITCH = 18;
+
 const SATELLITE_STYLE: StyleSpecification = {
   version: 8,
   sources: {
@@ -28,6 +40,23 @@ const SATELLITE_STYLE: StyleSpecification = {
       tileSize: 256,
       maxzoom: 18,
       attribution: 'Esri World Imagery',
+    },
+    [TERRAIN_SOURCE]: {
+      type: 'raster-dem',
+      tiles: [DEM_TILES],
+      encoding: 'terrarium',
+      tileSize: 256,
+      maxzoom: 12,
+      attribution: 'Elevation: Mapzen / AWS Terrain Tiles',
+    },
+    /* 晕渲单独一份同源声明：MapLibre 不推荐 terrain 与 hillshade 共用一个 raster-dem，
+     * 共用会每次进页面打一条告警并影响晕渲质量。同 URL 命中 HTTP 缓存，不增加流量。 */
+    [TERRAIN_SHADE_SOURCE]: {
+      type: 'raster-dem',
+      tiles: [DEM_TILES],
+      encoding: 'terrarium',
+      tileSize: 256,
+      maxzoom: 12,
     },
   },
   layers: [
@@ -46,6 +75,18 @@ const SATELLITE_STYLE: StyleSpecification = {
         'raster-brightness-min': 0.05,
         'raster-contrast': 0.12,
         'raster-saturation': -0.26,
+      },
+    },
+    {
+      id: 'terrain-hillshade',
+      type: 'hillshade',
+      source: TERRAIN_SHADE_SOURCE,
+      layout: { visibility: 'none' },
+      paint: {
+        'hillshade-exaggeration': 0.46,
+        'hillshade-shadow-color': 'rgba(0, 6, 12, 0.78)',
+        'hillshade-highlight-color': 'rgba(118, 158, 184, 0.42)',
+        'hillshade-accent-color': 'rgba(10, 26, 38, 0.6)',
       },
     },
   ],
@@ -72,6 +113,7 @@ type MapLayers = {
   fences: boolean;
   heat: boolean;
   orbit: boolean;
+  terrain: boolean;
 };
 
 const INITIAL_LAYERS: MapLayers = {
@@ -81,9 +123,20 @@ const INITIAL_LAYERS: MapLayers = {
   fences: true,
   heat: false,
   orbit: true,
+  /* 真实默认在组件初始化时按 detailed + 视口宽度决定，这里只是占位 */
+  terrain: false,
 };
 
 const WAYPOINT_ROUTE_KEYS = new Set(['drone', 'ugv', 'usv', 'satellite']);
+
+/* 把经纬度换算成 DEM 瓦片地址，用于可用性探测（z10 足够覆盖一个县城范围） */
+function demTileUrl(lng: number, lat: number, z = 10): string {
+  const n = 2 ** z;
+  const x = Math.floor(((lng + 180) / 360) * n);
+  const rad = (lat * Math.PI) / 180;
+  const y = Math.floor(((1 - Math.log(Math.tan(rad) + 1 / Math.cos(rad)) / Math.PI) / 2) * n);
+  return DEM_TILES.replace('{z}', String(z)).replace('{x}', String(x)).replace('{y}', String(y));
+}
 
 function routeFeature(route: RouteWaypoint[]) {
   return {
@@ -183,11 +236,15 @@ export function MapView({
   selectedIdRef.current = selectedId;
   const [loaded, setLoaded] = useState(false);
   const [mapError, setMapError] = useState(false);
-  const [layers, setLayers] = useState<MapLayers>({
+  const [terrainFailed, setTerrainFailed] = useState(false);
+  /* 窄屏默认关地形：它要额外的 DEM 请求与网格构建，手机上优先保单页流畅。
+   * 只在初始化时读一次视口宽度，之后不跟随 resize——面板里有手动开关。 */
+  const [layers, setLayers] = useState<MapLayers>(() => ({
     ...INITIAL_LAYERS,
     heat: false,
     fences: detailed,
-  });
+    terrain: detailed && !window.matchMedia('(max-width: 900px)').matches,
+  }));
   const { deviceStatuses, scenarioKey } = useSimulation();
   onSelectRef.current = onSelect;
 
@@ -201,7 +258,7 @@ export function MapView({
         style: SATELLITE_STYLE,
         center: AREA_CENTER,
         zoom: initialZoom,
-        pitch: detailed ? 18 : 0,
+        pitch: layers.terrain ? (detailed ? TERRAIN_PITCH : 0) : detailed ? FLAT_PITCH : 0,
         bearing: detailed ? -8 : 0,
         attributionControl: false,
         dragRotate: false,
@@ -214,6 +271,14 @@ export function MapView({
     }
     mapRef.current = map;
     map.addControl(new maplibregl.AttributionControl({ compact: true }), 'bottom-right');
+
+    /* DEM 真正取不到时只降级关掉立体，不打断地图本身。
+     * 注意 MapLibre 会把 404 吞掉、不抛 error，所以这里只是兜底，主判断在下面的探测 effect。 */
+    map.on('error', (event) => {
+      const err = event.error as (Error & { sourceId?: string }) | undefined;
+      const sourceId = (event as unknown as { sourceId?: string }).sourceId ?? err?.sourceId;
+      if (sourceId === TERRAIN_SOURCE) setTerrainFailed(true);
+    });
 
     map.on('load', () => {
       map.addSource('fences', {
@@ -472,6 +537,11 @@ export function MapView({
     map.setLayoutProperty('route-line', 'visibility', layers.route ? 'visible' : 'none');
     map.setLayoutProperty('device-heatmap', 'visibility', layers.heat ? 'visible' : 'none');
     map.setLayoutProperty('orbit-line', 'visibility', layers.orbit ? 'visible' : 'none');
+    map.setLayoutProperty(
+      'terrain-hillshade',
+      'visibility',
+      layers.terrain && !terrainFailed ? 'visible' : 'none',
+    );
     fenceMarkersRef.current.forEach((marker) => {
       const el = marker.getElement();
       el.style.display = layers.fences ? '' : 'none';
@@ -504,7 +574,51 @@ export function MapView({
     movingElsRef.current['ugv']?.classList.toggle('is-selected', selectedId === 'UGV-01');
     movingElsRef.current['usv']?.classList.toggle('is-selected', selectedId === 'USV-01');
     movingElsRef.current['satellite']?.classList.toggle('is-selected', selectedId === 'SAT-01');
-  }, [layers, loaded, selectedId, deviceStatuses]);
+  }, [layers, loaded, selectedId, deviceStatuses, terrainFailed]);
+
+  /* 立体地形：抬升相机 + 挂 terrain，关掉时回到平面并恢复轻微俯角 */
+  useEffect(() => {
+    const map = mapRef.current;
+    /* isStyleLoaded 是硬闸门：setTerrain 在样式未就绪时会直接抛错（重建 map 的瞬间会走到） */
+    if (!map || !loaded || !map.isStyleLoaded()) return;
+    const on = layers.terrain && !terrainFailed;
+    if (on) {
+      map.setTerrain({ source: TERRAIN_SOURCE, exaggeration: TERRAIN_EXAGGERATION });
+    } else {
+      map.setTerrain(null);
+    }
+    const pitch = on ? (detailed ? TERRAIN_PITCH : 0) : detailed ? FLAT_PITCH : 0;
+    if (Math.abs(map.getPitch() - pitch) > 0.5) {
+      /* 俯角扫动是整屏运动，跟随系统「减少动态效果」：降级时直接落位 */
+      const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      map.easeTo({ pitch, duration: reduceMotion ? 0 : 460 });
+    }
+  }, [layers.terrain, terrainFailed, loaded, detailed]);
+
+  /* DEM 可用性探测：MapLibre 会吞掉 404 不抛 error，只靠 error 事件兑现不了「不可用」降级 */
+  useEffect(() => {
+    if (!layers.terrain || terrainFailed || !loaded) return undefined;
+    const map = mapRef.current;
+    if (!map) return undefined;
+    const center = map.getCenter();
+    const controller = new AbortController();
+    const timer = window.setTimeout(() => controller.abort(), 6000);
+    let cancelled = false;
+    fetch(demTileUrl(center.lng, center.lat), { signal: controller.signal })
+      .then((res) => {
+        if (!res.ok && !cancelled) setTerrainFailed(true);
+      })
+      .catch(() => {
+        /* 超时导致的 abort 算不可用；组件卸载/依赖变更导致的 abort 不算 */
+        if (!cancelled) setTerrainFailed(true);
+      })
+      .finally(() => window.clearTimeout(timer));
+    return () => {
+      cancelled = true;
+      window.clearTimeout(timer);
+      controller.abort();
+    };
+  }, [layers.terrain, terrainFailed, loaded]);
 
   useEffect(() => {
     const map = mapRef.current;
@@ -554,8 +668,15 @@ export function MapView({
   const activeRoute = scenarioKey === 'fire' ? FOREST_ROUTE : DRONE_ROUTE;
 
   const zoomBy = (delta: number) => mapRef.current?.zoomTo(mapRef.current.getZoom() + delta, { duration: 300 });
+  const terrainOn = layers.terrain && !terrainFailed;
   const reset = () =>
-    mapRef.current?.flyTo({ center: AREA_CENTER, zoom: initialZoom, pitch: detailed ? 18 : 0, bearing: detailed ? -8 : 0, duration: 600 });
+    mapRef.current?.flyTo({
+      center: AREA_CENTER,
+      zoom: initialZoom,
+      pitch: terrainOn ? (detailed ? TERRAIN_PITCH : 0) : detailed ? FLAT_PITCH : 0,
+      bearing: detailed ? -8 : 0,
+      duration: 600,
+    });
 
   return (
     <div className={`map-view ${className}`}>
@@ -572,6 +693,7 @@ export function MapView({
           <div className="map-layers__items">
             {(
               [
+                { key: 'terrain', label: terrainFailed ? '立体地形 · 不可用' : '立体地形' },
                 { key: 'satellite', label: '卫星底图' },
                 { key: 'devices', label: '感知设备' },
                 { key: 'route', label: '无人机航线' },
@@ -579,17 +701,30 @@ export function MapView({
                 { key: 'heat', label: '风险热区' },
                 { key: 'orbit', label: '卫星过境' },
               ] as { key: keyof MapLayers; label: string }[]
-            ).map((item) => (
-              <button
-                key={item.key}
-                type="button"
-                className={`map-layer-toggle ${layers[item.key] ? 'is-on' : ''}`}
-                onClick={() => setLayers((current) => ({ ...current, [item.key]: !current[item.key] }))}
-              >
-                <i />
-                {item.label}
-              </button>
-            ))}
+            ).map((item) => {
+              const unavailable = item.key === 'terrain' && terrainFailed;
+              return (
+                <button
+                  key={item.key}
+                  type="button"
+                  className={`map-layer-toggle ${layers[item.key] && !unavailable ? 'is-on' : ''}`}
+                  aria-pressed={Boolean(layers[item.key]) && !unavailable}
+                  aria-disabled={unavailable || undefined}
+                  title={unavailable ? '高程数据不可达，点击重试' : undefined}
+                  onClick={() => {
+                    /* 不可用不锁死会话：点一下即重新探测，而不是逼用户切路由重挂载 */
+                    if (unavailable) {
+                      setTerrainFailed(false);
+                      return;
+                    }
+                    setLayers((current) => ({ ...current, [item.key]: !current[item.key] }));
+                  }}
+                >
+                  <i />
+                  {item.label}
+                </button>
+              );
+            })}
           </div>
         </div>
       )}

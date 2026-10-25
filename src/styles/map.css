@@ -409,6 +409,23 @@
   box-shadow: 0 0 7px rgba(75, 225, 255, 0.55);
 }
 
+/* 能力不可用（如 DEM 取不到）：指针与 hover 一起收口，否则点了没反应但仍是手型 */
+.map-layer-toggle:disabled,
+.map-layer-toggle[aria-disabled='true'],
+.map-layer-toggle:disabled:hover,
+.map-layer-toggle[aria-disabled='true']:hover {
+  color: var(--dim);
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.map-layer-toggle:disabled i,
+.map-layer-toggle[aria-disabled='true'] i {
+  background: transparent;
+  border-color: var(--line-strong);
+  box-shadow: none;
+}
+
 .map-tools {
   position: absolute;
   top: 14px;

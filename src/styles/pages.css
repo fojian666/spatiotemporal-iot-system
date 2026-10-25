@@ -3859,10 +3859,8 @@
     font-size: 22px;
   }
 
-  .geo-page .map-layers {
-    display: none;
-  }
-
+  /* 图层面板不在此断点隐藏：它是「立体地形」的唯一入口，
+     隐藏会导致 901–1280 宽的窗口地形默认开着却关不掉。左上角只占 ~110px，不挡右侧面板。 */
   .geo-page .map-tools {
     right: 366px;
   }
