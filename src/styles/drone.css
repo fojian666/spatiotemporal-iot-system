@@ -982,7 +982,7 @@
   border-bottom: 1px solid var(--line);
 }
 
-.ops-modal__head h3 {
+.ops-modal__head h2 {
   margin: 3px 0 0;
   font-size: 14px;
   font-weight: 500;

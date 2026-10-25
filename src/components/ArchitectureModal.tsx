@@ -1,6 +1,7 @@
-import { useEffect, useState, type CSSProperties } from 'react';
+import { useEffect, useRef, useState, type CSSProperties } from 'react';
 import { Activity, Boxes, ChevronRight, CloudSun, Cpu, Layers3, Radio, ShieldCheck, Sparkles, X } from 'lucide-react';
 import { useSimulation } from '../engine/simulation';
+import { useFocusTrap } from '../hooks/useFocusTrap';
 import { StatusPill } from './ui';
 
 const ARCH_LAYERS = [
@@ -55,6 +56,8 @@ export function ArchitectureModal({ open, onClose }: { open: boolean; onClose: (
   const { stats } = useSimulation();
   const [rendered, setRendered] = useState(open);
   const [closing, setClosing] = useState(false);
+  const modalRef = useRef<HTMLDivElement | null>(null);
+  useFocusTrap(modalRef);
 
   useEffect(() => {
     if (open) {
@@ -71,10 +74,18 @@ export function ArchitectureModal({ open, onClose }: { open: boolean; onClose: (
     return () => window.clearTimeout(timer);
   }, [open, rendered]);
 
+  useEffect(() => {
+    if (!rendered) return undefined;
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [rendered, onClose]);
+
   if (!rendered) return null;
   return (
-    <div className={`modal-mask ${closing ? 'is-closing' : ''}`} onClick={onClose} role="presentation">
-      <div className="arch-modal" onClick={(event) => event.stopPropagation()} role="dialog" aria-modal="true" aria-label="系统架构">
+    <div className={`modal-mask ${closing ? 'is-closing' : ''}`} onClick={onClose} role="presentation">      <div ref={modalRef} className="arch-modal" onClick={(event) => event.stopPropagation()} role="dialog" aria-modal="true" aria-label="系统架构" tabIndex={-1}>
         <header className="arch-modal__head">
           <div>
             <span className="overline">END · EDGE · CLOUD · INTELLIGENCE</span>

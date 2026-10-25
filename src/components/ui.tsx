@@ -48,14 +48,14 @@ export function Panel({
         <header className="panel-head">
           <div className="panel-title-wrap">
             {overline && <span className="overline">{overline}</span>}
-            <h3 className="panel-title">
+            <h2 className="panel-title">
               {Icon && (
                 <span className="panel-title-icon">
                   <Icon size={14} strokeWidth={1.8} />
                 </span>
               )}
               {title}
-            </h3>
+            </h2>
           </div>
           {extra && <div className="panel-extra">{extra}</div>}
         </header>

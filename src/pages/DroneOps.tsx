@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
+import { useCallback, useEffect, useId, useRef, useState, type ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 import {
   Activity,
@@ -43,6 +43,7 @@ import { DeviceIcon, Panel, StatusPill, StatusText } from '../components/ui';
 import { useAuth } from '../auth/AuthContext';
 import { useSimulation } from '../engine/simulation';
 import { useAnimatedNumber } from '../hooks/useAnimatedNumber';
+import { useFocusTrap } from '../hooks/useFocusTrap';
 import type { DeviceKind } from '../data/devices';
 import {
   createDronePlan,
@@ -172,6 +173,9 @@ function OpsModal({
 }) {
   const [closing, setClosing] = useState(false);
   const closeTimer = useRef<number | null>(null);
+  const cardRef = useRef<HTMLDivElement | null>(null);
+  const titleId = useId();
+  useFocusTrap(cardRef);
 
   useEffect(() => () => {
     if (closeTimer.current) window.clearTimeout(closeTimer.current);
@@ -197,11 +201,19 @@ function OpsModal({
 
   return (
     <div className={`ops-modal ${closing ? 'is-closing' : ''}`} role="presentation" onClick={requestClose}>
-      <div className={`ops-modal__card ${wide ? 'is-wide' : ''}`} role="dialog" aria-modal="true" onClick={(event) => event.stopPropagation()}>
+      <div
+        ref={cardRef}
+        className={`ops-modal__card ${wide ? 'is-wide' : ''}`}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={titleId}
+        tabIndex={-1}
+        onClick={(event) => event.stopPropagation()}
+      >
         <header className="ops-modal__head">
           <div>
             <span className="overline">{subtitle ?? 'DRONE OPERATIONS'}</span>
-            <h3>{title}</h3>
+            <h2 id={titleId}>{title}</h2>
           </div>
           <button type="button" className="icon-btn" onClick={requestClose} aria-label="关闭"><X size={15} /></button>
         </header>
