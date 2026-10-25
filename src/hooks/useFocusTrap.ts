@@ -3,8 +3,9 @@ import { useEffect, type RefObject } from 'react';
 const FOCUSABLE =
   'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
 
-export function useFocusTrap(ref: RefObject<HTMLElement | null>): void {
+export function useFocusTrap(ref: RefObject<HTMLElement | null>, active = true): void {
   useEffect(() => {
+    if (!active) return undefined;
     const node = ref.current;
     if (!node) return undefined;
     const previous = document.activeElement instanceof HTMLElement ? document.activeElement : null;
@@ -36,5 +37,5 @@ export function useFocusTrap(ref: RefObject<HTMLElement | null>): void {
       node.removeEventListener('keydown', onKeyDown);
       if (previous?.isConnected) previous.focus({ preventScroll: true });
     };
-  }, [ref]);
+  }, [ref, active]);
 }

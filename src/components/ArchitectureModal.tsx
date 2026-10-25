@@ -57,7 +57,7 @@ export function ArchitectureModal({ open, onClose }: { open: boolean; onClose: (
   const [rendered, setRendered] = useState(open);
   const [closing, setClosing] = useState(false);
   const modalRef = useRef<HTMLDivElement | null>(null);
-  useFocusTrap(modalRef);
+  useFocusTrap(modalRef, rendered);
 
   useEffect(() => {
     if (open) {

@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useId, useRef, useState, type ReactNode } from 'react';
+import { createPortal } from 'react-dom';
 import { Link } from 'react-router-dom';
 import {
   Activity,
@@ -199,7 +200,8 @@ function OpsModal({
     return () => window.removeEventListener('keydown', onKeyDown);
   }, [requestClose]);
 
-  return (
+  // 传送到 body：页面容器自带堆叠上下文，留在页面内会被 rail/topbar 压住
+  return createPortal(
     <div className={`ops-modal ${closing ? 'is-closing' : ''}`} role="presentation" onClick={requestClose}>
       <div
         ref={cardRef}
@@ -219,7 +221,8 @@ function OpsModal({
         </header>
         <div className="ops-modal__body">{children}</div>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }
 
@@ -1371,7 +1374,7 @@ function FlightView({
 
         <aside className="flight-cockpit">
           <div className="cockpit-head">
-            <div><span className="overline">FLIGHT CONTROL</span><h3>{activePlan.name}</h3><span>{activePlan.routeName} · {activePlan.deviceId}</span></div>
+            <div><span className="overline">FLIGHT CONTROL</span><h2>{activePlan.name}</h2><span>{activePlan.routeName} · {activePlan.deviceId}</span></div>
             <PlanStatus status={activePlan.status} />
           </div>
 

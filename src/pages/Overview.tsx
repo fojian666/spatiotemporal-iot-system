@@ -410,7 +410,7 @@ export function OverviewPage() {
             <div className="overview-map__head">
               <div>
                 <span className="overline">LIVE SITUATION · {scenario.code}</span>
-                <h3>平安区 · 湟水河流域</h3>
+                <h2>平安区 · 湟水河流域</h2>
               </div>
               <div className="overview-map__meta">
                 <StatusPill tone="online">实时态势</StatusPill>

@@ -35,7 +35,7 @@ export function EChart({
   useEffect(() => {
     // 不用 lazyUpdate：首绘依赖 rAF，窗口被遮挡节流时图表会永远停留在空容器
     // aria 让 canvas 获得可读描述（屏幕阅读器可播报系列与数据范围）
-    chartRef.current?.setOption({ aria: { enabled: true, data: { maxCount: 6 } }, ...option }, { notMerge: false });
+    chartRef.current?.setOption({ ...option, aria: { enabled: true, data: { maxCount: 6 } } }, { notMerge: false });
   }, [option]);
 
   return <div ref={ref} className={`echart ${className}`} style={{ height }} />;

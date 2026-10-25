@@ -1,6 +1,7 @@
 import * as echarts from 'echarts/core';
 import { GraphChart, LineChart } from 'echarts/charts';
 import { AxisPointerComponent, GridComponent, LegendComponent, TooltipComponent, AriaComponent } from 'echarts/components';
+import { LabelLayout } from 'echarts/features';
 import { CanvasRenderer } from 'echarts/renderers';
 
 echarts.use([
@@ -11,6 +12,7 @@ echarts.use([
   LegendComponent,
   AxisPointerComponent,
   AriaComponent,
+  LabelLayout,
   CanvasRenderer,
 ]);
 
