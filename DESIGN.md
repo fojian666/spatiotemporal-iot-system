@@ -42,7 +42,7 @@
 - **对话框**：必须 `role="dialog"` + `aria-modal="true"` + `aria-labelledby`，配合 `useFocusTrap`（初始焦点、Tab 环绕、关闭回位）与 Esc；参考 `OpsModal` 与 `ArchitectureModal`。
 - **图表**：只用 `components/charts.tsx` 的 `EChart`（`echarts/core` 按需注册 + aria 已开启，数据点描述上限 6）。新增图表类型必须先到 `src/lib/echarts.ts` 注册对应 chart/component，配色取 `chartPalette()`。
 - **空状态**：图标 + 一句话解释 + 可选动作；加载超过 300ms 用骨架/进度，不展示空白容器。
-- **地图**：MapLibre + Esri 在线瓦片；离线环境保留容器、控件与"演示底图"提示。
+- **地图**：MapLibre + Esri 影像 + Mapzen DEM（「立体地形」开关，开启时 36° 俯角、关闭回到 18°）；DEM 不可达时自动退回平面并置灰开关，离线环境保留容器、控件与"演示底图"提示。
 
 ## 5. 动效
 

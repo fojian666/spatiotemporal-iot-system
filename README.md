@@ -2,7 +2,7 @@
 
 Spatiotemporal IoT demo platform（spatiotemporal-iot-system）——以青海海东平安区湟水河流域为虚拟场景，构建"空天地一体感知 + 无人机一网统飞 + 知识图谱 + 物联大模型"的综合演示系统。
 
-> 演示项目：设备遥测由仿真引擎合成，视频为静态影像 + AI 检测框演示，Copilot 为本地规则引擎（不调用真实大模型，不下发真实设备指令）。
+> 演示项目：设备遥测由仿真引擎合成，视频为静态影像 + AI 检测框演示，Copilot 默认走本地规则引擎，配置密钥后可切云端 DeepSeek 生成文案（证据链仍来自本地检索），两种情况都不下发真实设备指令。
 
 ## 功能
 
@@ -15,7 +15,7 @@ Spatiotemporal IoT demo platform（spatiotemporal-iot-system）——以青海�
 | 物联仿真 | 4 场景注入（常态/暴雨洪涝/森林火情/水质污染），9 组环境参数驱动 |
 | 时空一张图 | MapLibre + 卫星底图，设备/航线/电子围栏/热区/卫星过境图层 |
 | 知识图谱 | 56 实体 / 126 关系 / 7 知识域，最短路径查询 |
-| 物联大模型 | 意图识别 + 证据链引用 + 场景联动 + 伪推理流水线 |
+| 物联大模型 | 云端 DeepSeek 生成文案（可选）+ 本地规则引擎兜底 + 证据链引用 + 场景联动 |
 
 ## 技术栈
 
@@ -132,7 +132,7 @@ iot/pingan/devices/{device_id}/telemetry
 ## 目录结构
 
 ```
-src/            React 前端（pages / components / engine 双模式仿真 / services/llm 规则引擎）
+src/            React 前端（pages / components / engine 双模式仿真 / services/llm 本地规则引擎）
 backend/app/    FastAPI（main / drone_api / telemetry / mqtt_bridge / security / data）
 backend/mosquitto/  Mosquitto 配置（conf 需按本机路径调整）
 public/assets/  演示航拍影像

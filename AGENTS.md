@@ -36,7 +36,7 @@ backend/scripts/publish_device.py    # 以外部设备身份向 MQTT 灌数（�
 5. **飞控指令走转换表**：`drone_api.py` 的 `PLAN_TRANSITIONS` 是指令→合法现状态/新状态的声明式映射，非法转换返回 409 且**不写审计行**。增改指令先改表，勿在 handler 里直改 status。
 6. **遥测契约拒绝项**：`schemas.py` 除字段校验外还拒绝**非数值指标（NaN/Inf）与未注册/伪造 device_id**，拒收计数进 `mqtt.messagesRejected`；放宽校验前先想清楚。
 7. **run.sh 行为**：根 `run.sh` 按需装依赖/构建前端后 `exec backend/run.sh`；后者从 `backend/.env` 读取 `IOT_MQTT_PORT / IOT_MQTT_ENABLED / IOT_TLS_ENABLED / IOT_API_PORT`（不 source 整个文件），并按 `IOT_PYTHON` → 激活中的 conda → `.venv` → Anaconda/Miniconda base → `python3` 的顺序挑第一个**依赖齐全**的解释器（conda 在脚本里常不可见为命令，故同时探测 `/opt/anaconda3` 等常见根目录）；`IOT_MQTT_ENABLED=false` 时跳过 Mosquitto；`IOT_TLS_ENABLED=true` 但缺证书时**拒绝启动**（不回退明文）。
-8. **前端网络层**：`api.ts` 所有请求带 15s 超时；瞬时网络错误**不登出会话**；飞控指令的乐观更新在失败时回滚——改 DroneOps 时保持这套模式。
+8. **前端网络层**：`api.ts` 请求默认 15s 超时，**`/api/copilot/chat` 单独放宽到 30s**——必须大于后端 connect 3s + read 8s 的最坏组合，否则前端先 abort，用户拿到的是顶着云端署名的本地答案；瞬时网络错误**不登出会话**；飞控指令的乐观更新在失败时回滚——改 DroneOps 时保持这套模式。
 9. **动效降级基线**：`base.css` 的全局 `prefers-reduced-motion` 规则把动画时长归零且 fill 为 none，**仅靠 keyframes 定位的元素会回落到基础样式**。新增用 keyframe 定位的元素（参照 `.auth-atom__electron`、`.auth-atom__nucleon`）必须把静止姿态写进基础 transform，否则降级下会塌回原点。
 10. **LLM 上下文的两条硬约束**：`backend/app/llm.py` 的 `SYSTEM_PROMPT` 必须逐字固定——改一个字前缀缓存全失效，输入价从 0.05 元/M 涨回 1.5 元/M（30 倍）；单次上下文 ≤`copilot.MAX_CONTEXT_CHARS`（1200 字符），设备指标按超阈值程度排序取前 3，**直接切 `metrics[:3]` 会把越线指标切掉**，模型据此回答"当前数据未覆盖"，是排查时最容易误判成"模型不聪明"的坑。
 11. **`deepseek-flash` 默认开启思考**：`thinking: {"type": "disabled"}` 必须显式传。实测同一问题默认 3569ms / 436 token，关闭后 1402ms / 151 token。`max_tokens` 给小（<150）会被 reasoning token 吃光并返回空正文。`deepseek-chat` / `deepseek-reasoner` 两个旧模型名已于 2026-07-24 下线。
@@ -64,15 +64,15 @@ backend/run.sh               后端启动：Python/Mosquitto/TLS 探测与前置
 DESIGN.md                    视觉与交互契约（改 UI 前先读）
 src/App.tsx                  7 条一级路由：/ /drone /platform /simulation /map /graph /copilot
 src/engine/simulation.tsx    双模式引擎（local 引擎 + remote WS 消费，同一 context 接口）
-src/services/llm.ts          "物联大模型"= 规则引擎（纯函数 askCopilot，无外部模型调用）
+src/services/llm.ts          Copilot 的本地规则引擎（纯函数 askCopilot），云端通道不可用时兜底
 src/services/api.ts          全部 API 客户端 + REMOTE_ENABLED/API_BASE
 src/pages/Welcome.tsx        欢迎页（登录成功后由 AuthGate 触发一次，#/welcome 可复访）
 src/pages/DroneOps.tsx       一网统飞（唯一强依赖后端的页面，local 模式显示指引）
 src/pages/Platform.tsx       文档中心（侧栏目录树+正文阅读区+开卷书壳/翻页转场；文档内容在该文件 DOC_GROUPS 内维护）
 src/theme.ts                 主题存储与切换（支持时经 View Transitions API 转场）
 src/hooks/useAnimatedNumber.ts  KPI 数字滚动（rAF 补间，reduced-motion 直接落位）
-src/components/MapView.tsx   MapLibre + Esri 在线瓦片（离线环境无底图）
-backend/app/main.py          ~24 端点 + lifespan + 安全中间件三件套 + dist 静态挂载
+src/components/MapView.tsx   MapLibre + Esri 影像 + Mapzen DEM（离线无底图，地形自动降级）
+backend/app/main.py          25 个路由 + lifespan + 安全中间件三件套 + dist 静态挂载
 backend/app/llm.py           云端对话通道（固定系统提示、关闭思考、超时重试，失败抛 LLMUnavailable）
 backend/app/copilot.py       Copilot 上下文组装与知识检索（关键词命中 + 图谱一跳，刻意不上向量库）
 backend/app/drone_api.py     无人机域 REST（航线/计划/8 种飞控指令状态机/线索）
@@ -85,11 +85,14 @@ backend/app/schemas.py       遥测消息契约 v1（pydantic，拒收计数进 
 
 仿真线程(1s) → 发布 `iot/pingan/devices/{id}/telemetry`（QoS1）→ Mosquitto(TLS:8883) → 订阅回灌 `ingest()` → 内存快照 → WS `/ws/telemetry` 每秒广播 → persistence_loop 每 10s 批量写 PostGIS（幂等 upsert）。真实设备走同一入口，见 README"接入真实设备"。
 
+**Copilot 链路**：前端只提交 query → `POST /api/copilot/chat` → 服务端读内存快照 + 知识图谱组装上下文（≤1200 字符）→ DeepSeek `deepseek-flash`（关闭思考）→ 返回文案；证据链、动作与追问仍由前端 `askCopilot` 本地检索产出，二者无因果关系。通道不可用时整条链路退回规则引擎，行为与改造前一致。
+
 ## 安全红线
 
 - `.env`、`backend/certs/`、`backend/mosquitto/passwd` 永不入库（.gitignore 已配，提交前 `git status` 复核）；
 - 书籍/课程资料（`*.docx`、`*.pptx`，如 20261008 目录稿）只留本地工作区：.gitignore 已忽略，**勿用 `git add -f` 入库**（938f9a4 起取消跟踪）；
 - JWT 密钥、角色密码只经环境变量注入；勿在前端硬编码任何凭据；
+- 大模型与 embedding 的 key 只写 `backend/.env`（根与 backend 两处 .gitignore 均已拦住），**勿写进源码、勿推送到远端**；对话模型与向量模型分属两家供应商，key 不通用；
 - 一键演示登录（`IOT_DEMO_LOGIN_ENABLED`）只用于本地演示：密码永不下发前端，角色会话由 `/api/auth/demo-login` 在服务端签发；对外部署前关闭；
 - WS 用一次性票据（60s）而非长期 token；CORS/TrustedHost 仅限 localhost。
 
