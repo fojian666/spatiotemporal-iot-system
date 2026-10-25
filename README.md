@@ -32,6 +32,16 @@ Spatiotemporal IoT demo platform（spatiotemporal-iot-system）——以青海�
 
 ## 快速开始
 
+### 一键启动（推荐）
+
+首次使用先完成下方「完整模式」的 1–2 步（数据库 + `backend/.env`），之后在仓库根目录：
+
+```bash
+./run.sh
+```
+
+脚本会按需补装前端依赖、在产物过期时重新构建，然后拉起 Mosquitto 与 API：入口 `http://127.0.0.1:8000/`（端口/协议跟随 `backend/.env`，Ctrl-C 结束）。后端解释器按 `IOT_PYTHON` → 激活中的 conda 环境 → `backend/.venv` → Anaconda/Miniconda base → `python3` 的顺序自动挑选，第一个依赖齐全的胜出。
+
 ### 纯浏览器演示（无需后端）
 
 ```bash
@@ -53,16 +63,18 @@ cp .env.example .env        # 填 IOT_JWT_SECRET、三角色密码、IOT_MQTT_PA
 # MQTT 账号：账号密码就是 .env 里的 IOT_MQTT_USERNAME / IOT_MQTT_PASSWORD，
 #   用 mosquitto_passwd mosquitto/passwd iot_backend 注册进 broker
 
-# 3. 后端（run.sh 自动启动 Mosquitto；开关从 backend/.env 读取）
-python3 -m venv .venv && .venv/bin/pip install -r requirements.txt
-./run.sh                    # .env 保留 IOT_TLS_ENABLED=true（example 默认）→ https://127.0.0.1:8443
-                            # 改为 false 则走 http://127.0.0.1:8000；文档均在 /docs
-                            # 注意：TLS=true 但缺证书时会拒绝启动（不回退明文）
+# 3. 后端依赖（conda 环境已装依赖时可跳过）
+cd backend && python3 -m venv .venv && .venv/bin/pip install -r requirements.txt
 
-# 4. 前端
-cd .. && cp .env.example .env.local   # VITE_DATA_SOURCE=api
-npm install && npm run dev
+# 4. 启动（回到仓库根目录）
+cd .. && ./run.sh           # 一键：按需构建前端 → Mosquitto → API
+                            # 或在 backend/ 下 ./run.sh 仅启动后端
+                            # .env 保持 IOT_TLS_ENABLED=true 时走 https://127.0.0.1:8443；
+                            # 改为 false 则 http://127.0.0.1:8000；API 文档在 /docs
+                            # TLS=true 但缺证书会拒绝启动（不回退明文）
 ```
+
+> 一键脚本运行的是构建产物（由后端静态挂载）。改前端代码想热更新时，另开 `npm run dev`（:5173，`.env.local` 用 `VITE_DATA_SOURCE=api`），后端保持运行即可。
 
 角色：`admin`（管理员）/ `operator`（值班长）/ `viewer`（观察员只读），账号密码由 `IOT_*_PASSWORD` 环境变量注入。登录页提供三个角色的一键演示入口（`IOT_DEMO_LOGIN_ENABLED`，默认开启）：密码始终留在服务端，点击后由 `/api/auth/demo-login` 直接签发对应角色会话；对外部署时请关闭。
 

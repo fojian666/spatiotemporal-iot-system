@@ -17,16 +17,17 @@
 ## 常用命令
 
 ```bash
+./run.sh                             # 一键：按需构建前端 → 后端 + Mosquitto（入口 :8000）
 npm run dev                          # 前端开发 127.0.0.1:5173
 npm run build                        # tsc + vite，产物 dist/ 由后端静态挂载
-backend/run.sh                       # 一键后端（自动拉起 Mosquitto；TLS=true 走 8443）
+backend/run.sh                       # 只起后端：自动探测 Python、按需拉起 Mosquitto
 backend/scripts/setup_db.sh          # 建 iot_platform 库 + PostGIS 扩展
 backend/scripts/publish_device.py    # 以外部设备身份向 MQTT 灌数（联调/验收用）
 ```
 
-无测试套列。改动后的验证方式：`npm run build` + 临时端口起 uvicorn 冒烟（**勿占用 8000，本机常驻着一个旧实例；也不要随手重启它**）。
+无测试套列。改动后的验证方式：`npm run build` + 临时端口起 uvicorn 冒烟（如 `IOT_API_PORT=8020 backend/run.sh`），**不要打断正在演示的 :8000 实例**。
 
-## 修改前必读的四个同步点（最容易踩的坑）
+## 修改前必读的同步点（最容易踩的坑）
 
 1. **仿真逻辑双实现**：`src/engine/simulation.tsx`（TS）与 `backend/app/data.py`（Python）是逐行等价移植（computeReading/deriveStatus/buildAlerts/stats）。改公式必须两边同步，已知唯一合法分歧：速度倍数（local 生效、api 固定 1×）。
 2. **设备台账双源**：前端 `src/data/devices.ts` 存原始坐标、运行时扩散（lng×1.65 / lat×1.05 偏离中心）；`backend/app/data/devices.json` 存扩散后的最终坐标。增改设备时两边必须对齐（backend = frontend × expandPoint 公式）。
@@ -34,7 +35,7 @@ backend/scripts/publish_device.py    # 以外部设备身份向 MQTT 灌数（�
 4. **单进程约束**：WS 票据、登录限流、遥测内存态全在进程内，不支持多 worker/多实例水平部署。
 5. **飞控指令走转换表**：`drone_api.py` 的 `PLAN_TRANSITIONS` 是指令→合法现状态/新状态的声明式映射，非法转换返回 409 且**不写审计行**。增改指令先改表，勿在 handler 里直改 status。
 6. **遥测契约拒绝项**：`schemas.py` 除字段校验外还拒绝**非数值指标（NaN/Inf）与未注册/伪造 device_id**，拒收计数进 `mqtt.messagesRejected`；放宽校验前先想清楚。
-7. **run.sh 行为**：会从 `backend/.env` 读取 `IOT_MQTT_PORT / IOT_TLS_ENABLED / IOT_API_PORT`（不 source 整个文件）；`IOT_TLS_ENABLED=true` 但缺证书时**拒绝启动**（不回退明文）。
+7. **run.sh 行为**：根 `run.sh` 按需装依赖/构建前端后 `exec backend/run.sh`；后者从 `backend/.env` 读取 `IOT_MQTT_PORT / IOT_MQTT_ENABLED / IOT_TLS_ENABLED / IOT_API_PORT`（不 source 整个文件），并按 `IOT_PYTHON` → 激活中的 conda → `.venv` → Anaconda/Miniconda base → `python3` 的顺序挑第一个**依赖齐全**的解释器（conda 在脚本里常不可见为命令，故同时探测 `/opt/anaconda3` 等常见根目录）；`IOT_MQTT_ENABLED=false` 时跳过 Mosquitto；`IOT_TLS_ENABLED=true` 但缺证书时**拒绝启动**（不回退明文）。
 8. **前端网络层**：`api.ts` 所有请求带 15s 超时；瞬时网络错误**不登出会话**；飞控指令的乐观更新在失败时回滚——改 DroneOps 时保持这套模式。
 9. **动效降级基线**：`base.css` 的全局 `prefers-reduced-motion` 规则把动画时长归零且 fill 为 none，**仅靠 keyframes 定位的元素会回落到基础样式**。新增用 keyframe 定位的元素（参照 `.auth-atom__electron`、`.auth-atom__nucleon`）必须把静止姿态写进基础 transform，否则降级下会塌回原点。
 
@@ -52,6 +53,8 @@ backend/scripts/publish_device.py    # 以外部设备身份向 MQTT 灌数（�
 ## 关键文件地图
 
 ```
+run.sh                       一键启动：前端按需构建 → backend/run.sh
+backend/run.sh               后端启动：Python/Mosquitto/TLS 探测与前置检查
 src/App.tsx                  7 条一级路由：/ /drone /platform /simulation /map /graph /copilot
 src/engine/simulation.tsx    双模式引擎（local 引擎 + remote WS 消费，同一 context 接口）
 src/services/llm.ts          "物联大模型"= 规则引擎（纯函数 askCopilot，无外部模型调用）
