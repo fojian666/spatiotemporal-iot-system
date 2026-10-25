@@ -7,7 +7,9 @@
   isolation: isolate;
 }
 
-.map-view__canvas {
+/* 双类选择器：maplibre 的 .maplibregl-map（relative）随组件 chunk 后加载，
+   单类规则会被它覆盖，导致容器塌成 0 高 */
+.map-view > .map-view__canvas {
   position: absolute;
   inset: 0;
   animation: fadeIn 900ms var(--ease-out) backwards;

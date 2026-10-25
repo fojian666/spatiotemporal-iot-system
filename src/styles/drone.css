@@ -1199,7 +1199,8 @@
   background: var(--bg-soft);
 }
 
-.route-editor-map__canvas {
+/* 双类选择器：maplibre 的 .maplibregl-map 随组件 chunk 后加载，单类规则会被压成 relative */
+.route-editor-map > .route-editor-map__canvas {
   position: absolute;
   inset: 0;
 }
