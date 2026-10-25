@@ -135,7 +135,10 @@ export function SimulationPage() {
         itemGap: 14,
         textStyle: { color: palette.label, fontSize: 10 },
       },
-      grid: { top: 32, left: 44, right: 18, bottom: 24 },
+      /* left 加宽到 52：单位名改成竖排在轴左侧，需要让出它的位置。
+         之前 name 用默认的 nameLocation:'end'，会被画在轴顶端上方，
+         正好压在 legend 第一项上（"平安桥水质" × "NTU" 叠字）。 */
+      grid: { top: 32, left: 52, right: 18, bottom: 24 },
       xAxis: {
         type: 'category',
         boundaryGap: false,
@@ -147,6 +150,10 @@ export function SimulationPage() {
       yAxis: {
         type: 'value',
         name: meta.unit,
+        /* 竖排在轴左侧中部，与右上角的 legend 彻底分开 */
+        nameLocation: 'middle',
+        nameRotate: 90,
+        nameGap: 34,
         nameTextStyle: { color: palette.dim, fontSize: 9 },
         axisLabel: { color: palette.dim, fontSize: 9 },
         splitLine: { lineStyle: { color: palette.grid } },

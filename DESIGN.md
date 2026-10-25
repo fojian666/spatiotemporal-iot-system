@@ -41,6 +41,7 @@
 - **状态**：`StatusPill` / `StatusText` / `LevelPill`；颜色不得作为唯一信号，需配文字。
 - **对话框**：必须 `role="dialog"` + `aria-modal="true"` + `aria-labelledby`，配合 `useFocusTrap`（初始焦点、Tab 环绕、关闭回位）与 Esc；参考 `OpsModal` 与 `ArchitectureModal`。
 - **图表**：只用 `components/charts.tsx` 的 `EChart`（`echarts/core` 按需注册 + aria 已开启，数据点描述上限 6）。新增图表类型必须先到 `src/lib/echarts.ts` 注册对应 chart/component，配色取 `chartPalette()`。
+- **图表轴名**：y 轴单位名**必须竖排**（`nameLocation: 'middle'` + `nameRotate: 90` 用于左轴、`-90` 用于右轴）。默认的 `nameLocation: 'end'` 会把名字画在轴顶端上方，正好和图例第一项叠字——`NTU` 压「平安桥水质」、`%` 压「湿度」都是这么来的（2026-10-25 实际发生）。`grid.left / right` 要留出名字宽度；右轴的 `nameGap` 不要超过 `grid.right` 的一半，否则竖排字会被容器裁掉。
 - **空状态**：图标 + 一句话解释 + 可选动作；加载超过 300ms 用骨架/进度，不展示空白容器。
 - **地图**：MapLibre + Esri 影像 + Mapzen DEM（「立体地形」开关，开启时 36° 俯角、关闭回到 18°）；DEM 不可达时自动退回平面并置灰开关，离线环境保留容器、控件与"演示底图"提示。
 

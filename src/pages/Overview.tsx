@@ -161,7 +161,7 @@ export function OverviewPage() {
         ...common,
         yAxis: [
           { type: 'value', name: '°C', nameTextStyle: { color: palette.dim, fontSize: 9 }, axisLabel: { color: palette.dim, fontSize: 9 }, splitLine: { lineStyle: { color: palette.grid } } },
-          { type: 'value', name: '%', nameTextStyle: { color: palette.dim, fontSize: 9 }, axisLabel: { color: palette.dim, fontSize: 9 }, splitLine: { show: false } },
+          { type: 'value', name: '%', nameLocation: 'middle', nameRotate: -90, nameGap: 14, nameTextStyle: { color: palette.dim, fontSize: 9 }, axisLabel: { color: palette.dim, fontSize: 9 }, splitLine: { show: false } },
         ],
         series: [
           {
@@ -190,7 +190,7 @@ export function OverviewPage() {
         ...common,
         yAxis: [
           { type: 'value', name: 'm', nameTextStyle: { color: palette.dim, fontSize: 9 }, axisLabel: { color: palette.dim, fontSize: 9 }, splitLine: { lineStyle: { color: palette.grid } } },
-          { type: 'value', name: 'NTU', nameTextStyle: { color: palette.dim, fontSize: 9 }, axisLabel: { color: palette.dim, fontSize: 9 }, splitLine: { show: false } },
+          { type: 'value', name: 'NTU', nameLocation: 'middle', nameRotate: -90, nameGap: 14, nameTextStyle: { color: palette.dim, fontSize: 9 }, axisLabel: { color: palette.dim, fontSize: 9 }, splitLine: { show: false } },
         ],
         series: [
           {
