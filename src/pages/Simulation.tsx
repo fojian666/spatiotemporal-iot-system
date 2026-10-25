@@ -420,6 +420,7 @@ export function SimulationPage() {
               </div>
             }
           >
+            <div className="device-table-scroll">
             <div className="device-table">
               <div className="device-table__head">
                 <span>设备 / 编号</span>
@@ -468,6 +469,7 @@ export function SimulationPage() {
                 })}
                 {!filteredDevices.length && <div className="table-empty">没有符合条件的设备</div>}
               </div>
+            </div>
             </div>
           </Panel>
         </div>

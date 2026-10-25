@@ -15,6 +15,28 @@
   display: none;
 }
 
+/* ---------- ≤1240 · 紧凑桌面/平板：Copilot 单列后改为整页滚动 ---------- */
+@media (max-width: 1240px) {
+  .copilot-page {
+    height: 100%;
+    overflow-y: auto;
+  }
+
+  .copilot-grid {
+    display: flex;
+    flex-direction: column;
+    flex: 0 0 auto;
+  }
+
+  .chat-panel {
+    height: min(68dvh, 640px);
+  }
+
+  .copilot-side {
+    flex: 0 0 auto;
+  }
+}
+
 /* ---------- ≤1100 · 紧凑桌面 ---------- */
 @media (max-width: 1100px) {
   .topbar__system {
@@ -67,6 +89,26 @@
 
   .kg-graph-panel {
     min-height: 340px;
+  }
+
+  /* 手机上图谱是主角，先于筛选/详情出现 */
+  .kg-grid > .kg-graph-panel {
+    order: -1;
+  }
+
+  /* 图谱页交给 .app-content 滚动，避免固定高度裁掉下半部分 */
+  .kg-page {
+    height: auto;
+    min-height: 100%;
+    overflow: visible;
+  }
+
+  .device-table-scroll {
+    overflow-x: auto;
+  }
+
+  .device-table-scroll .device-table {
+    min-width: 660px;
   }
 
   .ops-tabs,
@@ -127,6 +169,10 @@
 
 /* ---------- ≤640 · 手机 ---------- */
 @media (max-width: 640px) {
+  :root {
+    --topbar: 52px;
+  }
+
   .app-shell {
     flex-direction: column;
   }
@@ -146,8 +192,8 @@
   }
 
   .topbar {
-    height: 52px;
-    flex: 0 0 52px;
+    height: var(--topbar);
+    flex: 0 0 var(--topbar);
     padding: 0 12px;
     gap: 8px;
   }
@@ -156,8 +202,16 @@
   .topbar__clock,
   .scenario-pill,
   .run-pill,
-  .topbar__status,
   .arch-trigger--arch {
+    display: none;
+  }
+
+  /* 保留头像与退出入口，只收起在线率 */
+  .topbar__status {
+    display: flex;
+  }
+
+  .topbar__status .status-pill {
     display: none;
   }
 
@@ -265,8 +319,9 @@
     min-width: 0;
   }
 
-  /* 1320 断点把链接钉在第 5 列，2 列网格下必须复位，否则会生成隐式列 */
+  /* 1320 断点把链接钉在第 5 列并隐藏，2 列网格下必须复位 */
   .ops-summary__link {
+    display: flex;
     grid-column: 1 / -1;
   }
 
@@ -341,9 +396,8 @@
     height: 48dvh;
   }
 
-  .geo-left,
-  .geo-right {
-    grid-template-columns: minmax(0, 1fr);
+  .geo-page {
+    height: 100%;
   }
 
   .geo-page .map-coords {
@@ -351,6 +405,10 @@
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+  }
+
+  .ops-toast {
+    bottom: calc(var(--mobile-nav) + var(--safe-bottom) + 12px);
   }
 
   /* —— 文档中心 —— */
@@ -422,8 +480,9 @@
     justify-content: center;
     gap: 3px;
     color: var(--muted);
-    font-size: 8.5px;
-    letter-spacing: 0.02em;
+    font-size: 9px;
+    letter-spacing: 0;
+    white-space: nowrap;
     text-decoration: none;
     position: relative;
   }
@@ -550,12 +609,19 @@
   .map-tools button,
   .chat-send,
   .welcome-suggestions button,
-  .answer-followups button {
+  .answer-followups button,
+  .docs-nav__item,
+  .docs-pager__btn,
+  .kg-domain,
+  .auth-demo__btn,
+  .ops-table__row,
+  .chat-quickfollow {
     min-height: 44px;
   }
 
   .icon-btn,
-  .map-tools button {
+  .map-tools button,
+  .arch-trigger {
     min-width: 44px;
   }
 }
