@@ -189,19 +189,38 @@ ul {
   flex-direction: column;
   align-items: center;
   gap: 3px;
-  padding-bottom: 16px;
+  padding: 4px 4px 16px;
+  border: 0;
+  border-radius: 10px;
+  background: none;
+  cursor: pointer;
+}
+
+.brand:hover .brand__text {
+  color: var(--text);
+}
+
+.brand:hover .brand__mark {
+  filter: drop-shadow(0 0 14px rgba(75, 225, 255, 0.45));
+}
+
+.brand:focus-visible {
+  outline: 2px solid var(--cyan);
+  outline-offset: 2px;
 }
 
 .brand__mark {
   width: 38px;
   height: 38px;
   filter: drop-shadow(0 0 12px rgba(75, 225, 255, 0.28));
+  transition: filter 180ms var(--ease-out);
 }
 
 .brand__text {
   font-size: 9px;
   letter-spacing: 0.14em;
   color: var(--muted);
+  transition: color 180ms var(--ease-out);
 }
 
 .rail__nav {

@@ -46,7 +46,15 @@ const TITLES: Record<string, string> = {
 
 function Logo() {
   return (
-    <div className="brand">
+    <button
+      type="button"
+      className="brand"
+      title="平台导览"
+      aria-label="时空智能 · 进入平台导览"
+      onClick={() => {
+        window.location.hash = '#/welcome';
+      }}
+    >
       <svg viewBox="0 0 44 44" className="brand__mark" aria-hidden="true">
         <defs>
           <linearGradient id="brandGrad" x1="0" y1="0" x2="1" y2="1">
@@ -63,7 +71,7 @@ function Logo() {
         <circle cx="6.5" cy="14" r="1.1" fill="#7aa2ff" />
       </svg>
       <span className="brand__text">时空智能</span>
-    </div>
+    </button>
   );
 }
 
