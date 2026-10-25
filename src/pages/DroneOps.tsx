@@ -1332,7 +1332,7 @@ function FlightView({
             </div>
           </div>
           <div className={`flight-video ${view === 'ai' ? 'is-ai' : ''}`}>
-            <img key={videoImage} src={videoImage} alt="无人机回传画面" />
+            <img key={videoImage} src={videoImage} alt="无人机回传画面" width={1280} height={852} decoding="async" />
             <div className="flight-video__scan" />
             {view === 'ai' && (
               <>
@@ -1447,7 +1447,7 @@ function MediaView({ data }: { data: DroneOverview }) {
               {asset.mediaType === 'archive' ? (
                 <FolderArchive size={32} />
               ) : (
-                <img src={asset.url} alt={asset.name} />
+                <img src={asset.url} alt={asset.name} width={1280} height={852} loading="lazy" decoding="async" />
               )}
               <span className="media-card__type">{asset.mediaType === 'image' ? <Camera size={11} /> : asset.mediaType === 'video' ? <Video size={11} /> : <FolderArchive size={11} />} {asset.mediaType === 'image' ? 'JPG' : asset.mediaType === 'video' ? 'MP4' : 'ZIP'}</span>
               {asset.mediaType !== 'archive' && <span className="media-card__play"><Play size={13} /></span>}
@@ -1469,7 +1469,7 @@ function MediaView({ data }: { data: DroneOverview }) {
               {selected.mediaType === 'archive' ? (
                 <div className="media-preview__archive"><FolderArchive size={42} /><strong>{selected.name}</strong><span>正射成果压缩包，暂不支持在线预览</span></div>
               ) : (
-                <img src={selected.url} alt={selected.name} />
+                <img src={selected.url} alt={selected.name} width={1280} height={852} loading="lazy" decoding="async" />
               )}
               <div className="media-preview__pose mono">方位 {selected.heading.toFixed(0)}° · 俯仰 {selected.pitch.toFixed(0)}°</div>
             </div>
@@ -1581,7 +1581,7 @@ function CluesView({
           return (
             <div className="clue-row" key={clue.id} style={{ '--i': index } as CSSProperties} onClick={() => setSelected(clue)}>
               <button type="button" className="clue-row__thumb" onClick={() => setSelected(clue)}>
-                {asset?.url ? <img src={asset.url} alt={clue.title} /> : <ScanEye size={20} />}
+                {asset?.url ? <img src={asset.url} alt={clue.title} width={1280} height={852} loading="lazy" decoding="async" /> : <ScanEye size={20} />}
                 <span>{clue.objectCount}</span>
               </button>
               <div className="clue-row__main">
@@ -1608,7 +1608,7 @@ function CluesView({
             <div className="clue-detail__visual">
               {(() => {
                 const asset = selected.mediaId ? mediaById.get(selected.mediaId) : undefined;
-                return asset?.url ? <img src={asset.url} alt={selected.title} /> : <div className="media-preview__archive"><ScanEye size={40} /><span>无关联影像</span></div>;
+                return asset?.url ? <img src={asset.url} alt={selected.title} width={1280} height={852} loading="lazy" decoding="async" /> : <div className="media-preview__archive"><ScanEye size={40} /><span>无关联影像</span></div>;
               })()}
               <span className="detect-box detect-box--a"><em>{selected.objectCount} 个目标</em></span>
             </div>

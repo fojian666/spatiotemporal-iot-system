@@ -10,10 +10,11 @@ import {
   Sparkles,
   X,
 } from 'lucide-react';
-import type { EChartsOption } from 'echarts';
+import type { EChartsOption } from '../lib/echarts';
 import { chartPalette, darkenHex, useTheme } from '../theme';
 import { PageHeader } from '../components/Shell';
-import { EChart, Panel, StatusPill } from '../components/ui';
+import { EChart } from '../components/charts';
+import { Panel, StatusPill } from '../components/ui';
 import {
   CATEGORY_META,
   GRAPH_STATS,

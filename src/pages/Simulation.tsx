@@ -18,11 +18,11 @@ import {
   Database,
   type LucideIcon,
 } from 'lucide-react';
-import { graphic, type EChartsOption } from 'echarts';
+import { graphic, type EChartsOption } from '../lib/echarts';
 import { PageHeader } from '../components/Shell';
+import { EChart } from '../components/charts';
 import {
   DeviceIcon,
-  EChart,
   EventIcon,
   Panel,
   Segmented,

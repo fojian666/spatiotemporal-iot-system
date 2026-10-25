@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import 'maplibre-gl/dist/maplibre-gl.css';
 import maplibregl, { type Map as MapLibreMap, type StyleSpecification } from 'maplibre-gl';
 import { AREA_CENTER } from '../data/devices';
 import type { DroneWaypoint } from '../services/api';

@@ -37,7 +37,7 @@ export function VideoFeed({
 
   return (
     <div className={`video-feed video-feed--${scenario.key} ${compact ? 'video-feed--compact' : ''} ${className}`}>
-      <img key={scenario.key} src={images[scenario.key]} alt="无人机实时回传画面" />
+      <img key={scenario.key} src={images[scenario.key]} alt="无人机实时回传画面" width={1280} height={852} decoding="async" />
       <div className="video-feed__tint" />
       <div className="video-feed__scan" />
       <div className="video-feed__noise" />

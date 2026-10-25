@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import 'maplibre-gl/dist/maplibre-gl.css';
 import maplibregl, { type Map as MapLibreMap, type StyleSpecification } from 'maplibre-gl';
 import { Layers3, LocateFixed, Minus, Plus } from 'lucide-react';
 import {

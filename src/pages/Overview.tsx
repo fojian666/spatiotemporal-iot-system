@@ -19,14 +19,14 @@ import {
   X,
   type LucideIcon,
 } from 'lucide-react';
-import { graphic, type EChartsOption } from 'echarts';
+import { graphic, type EChartsOption } from '../lib/echarts';
 import { PageHeader } from '../components/Shell';
 import { useAnimatedNumber } from '../hooks/useAnimatedNumber';
 import { MapView } from '../components/MapView';
+import { EChart } from '../components/charts';
 import {
   DeviceIcon,
   Donut,
-  EChart,
   EventIcon,
   LevelPill,
   Panel,

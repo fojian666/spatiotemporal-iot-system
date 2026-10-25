@@ -1786,6 +1786,30 @@ select {
   box-shadow: 0 0 34px -8px rgba(75, 225, 255, 0.45);
 }
 
+.route-fallback {
+  min-height: 60vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  color: var(--muted);
+}
+
+.route-fallback i {
+  width: 140px;
+  height: 2px;
+  border-radius: 2px;
+  background: linear-gradient(90deg, transparent, rgba(75, 225, 255, 0.65), transparent);
+  background-size: 200% 100%;
+  animation: routeFallback 1.1s linear infinite;
+}
+
+@keyframes routeFallback {
+  from { background-position: 100% 0; }
+  to { background-position: -100% 0; }
+}
+
 .boot-splash__mark span {
   position: absolute;
   border-radius: 50%;

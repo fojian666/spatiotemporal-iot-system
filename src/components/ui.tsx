@@ -1,6 +1,4 @@
-import { useEffect, useId, useRef, type ReactNode } from 'react';
-import * as echarts from 'echarts';
-import type { EChartsOption } from 'echarts';
+import { memo, useId, type ReactNode } from 'react';
 import {
   Activity,
   AlertTriangle,
@@ -67,7 +65,7 @@ export function Panel({
   );
 }
 
-export function StatusPill({
+export const StatusPill = memo(function StatusPill({
   tone = 'online',
   children,
   dot = true,
@@ -82,25 +80,25 @@ export function StatusPill({
       {children}
     </span>
   );
-}
+});
 
-export function StatusText({ status }: { status: DeviceStatus }) {
+export const StatusText = memo(function StatusText({ status }: { status: DeviceStatus }) {
   const map = {
     online: { label: '在线', tone: 'online' as const },
     warning: { label: '预警', tone: 'warning' as const },
     offline: { label: '离线', tone: 'muted' as const },
   };
   return <StatusPill tone={map[status].tone}>{map[status].label}</StatusPill>;
-}
+});
 
-export function LevelPill({ level }: { level: AlertLevel }) {
+export const LevelPill = memo(function LevelPill({ level }: { level: AlertLevel }) {
   const map = {
     critical: { label: '严重', className: 'level-pill--critical' },
     warning: { label: '警告', className: 'level-pill--warning' },
     info: { label: '提示', className: 'level-pill--info' },
   };
   return <span className={`level-pill ${map[level].className}`}>{map[level].label}</span>;
-}
+});
 
 export function Segmented<T extends string | number>({
   options,
@@ -155,7 +153,7 @@ export function ProgressBar({
   );
 }
 
-export function Sparkline({
+export const Sparkline = memo(function Sparkline({
   data,
   color = '#4be1ff',
   height = 32,
@@ -195,9 +193,9 @@ export function Sparkline({
       />
     </svg>
   );
-}
+});
 
-export function Donut({
+export const Donut = memo(function Donut({
   value,
   size = 92,
   stroke = 7,
@@ -237,45 +235,7 @@ export function Donut({
       </div>
     </div>
   );
-}
-
-export function EChart({
-  option,
-  height = 260,
-  className = '',
-  onClick,
-}: {
-  option: EChartsOption;
-  height?: number | string;
-  className?: string;
-  onClick?: (params: echarts.ECElementEvent) => void;
-}) {
-  const ref = useRef<HTMLDivElement>(null);
-  const chartRef = useRef<echarts.ECharts | null>(null);
-  const clickRef = useRef(onClick);
-  clickRef.current = onClick;
-
-  useEffect(() => {
-    if (!ref.current) return undefined;
-    const chart = echarts.init(ref.current, undefined, { renderer: 'canvas' });
-    chartRef.current = chart;
-    chart.on('click', (params) => clickRef.current?.(params));
-    const observer = new ResizeObserver(() => chart.resize());
-    observer.observe(ref.current);
-    return () => {
-      observer.disconnect();
-      chart.dispose();
-      chartRef.current = null;
-    };
-  }, []);
-
-  useEffect(() => {
-    // 不用 lazyUpdate：首绘依赖 rAF，窗口被遮挡节流时图表会永远停留在空容器
-    chartRef.current?.setOption(option, { notMerge: false });
-  }, [option]);
-
-  return <div ref={ref} className={`echart ${className}`} style={{ height }} />;
-}
+});
 
 const KIND_ICONS: Record<DeviceKind, LucideIcon> = {
   weather: CloudSun,
@@ -296,7 +256,7 @@ export function DeviceIcon({ kind, size = 16 }: { kind: DeviceKind; size?: numbe
   return <Icon size={size} strokeWidth={1.7} />;
 }
 
-export function Trend({ value, suffix = '' }: { value: number; suffix?: string }) {
+export const Trend = memo(function Trend({ value, suffix = '' }: { value: number; suffix?: string }) {
   const up = value >= 0;
   return (
     <span className={`trend ${up ? 'trend--up' : 'trend--down'}`}>
@@ -306,7 +266,7 @@ export function Trend({ value, suffix = '' }: { value: number; suffix?: string }
       {suffix}
     </span>
   );
-}
+});
 
 export function EventIcon({ type }: { type: SimEvent['type'] }) {
   const map = {
