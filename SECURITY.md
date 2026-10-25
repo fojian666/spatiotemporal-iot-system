@@ -33,7 +33,7 @@
 ### 传输与边界
 
 - API 走 HTTPS（:8443，mkcert 本地证书），MQTT 走 TLS（:8883）+ 用户名/ACL；`backend/run.sh` 在 `IOT_TLS_ENABLED=true` 但缺证书时**拒绝启动**，不回退明文。
-- CORS 与 TrustedHost 仅限 localhost；附加安全响应头中间件（`backend/app/main.py`）。
+- CORS 与 TrustedHost 默认仅允许 localhost（TrustedHost 另含 pytest 使用的 `testserver` 主机名）；附加安全响应头中间件（`backend/app/main.py`）。
 - `/api/health` 探测不向外泄露数据库错误细节（bb4e57e）；WS 广播并发执行且单客户端 2s 超时，慢连接不拖住 others（4a6f4ee）。
 
 ### 输入与遥测契约

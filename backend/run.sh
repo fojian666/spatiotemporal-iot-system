@@ -29,7 +29,7 @@ dotenv IOT_API_PORT
 # Each candidate must import the backend deps; the first capable one wins.
 # ---------------------------------------------------------------------------
 has_backend_deps() {
-  "$1" -c 'import fastapi, uvicorn, sqlalchemy, asyncpg, paho.mqtt.client, geoalchemy2, pydantic_settings, jwt, pwdlib' >/dev/null 2>&1
+  "$1" -c 'import fastapi, uvicorn, sqlalchemy, asyncpg, paho.mqtt.client, geoalchemy2, pydantic_settings, jwt, pwdlib, websockets, argon2' >/dev/null 2>&1
 }
 
 CANDIDATES=()

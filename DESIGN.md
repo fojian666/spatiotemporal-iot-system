@@ -55,6 +55,7 @@
 ## 6. 层级
 
 - 跨页面浮层只用上表 token，禁止字面量：模态 `--z-modal`、全局提示 `--z-toast`、启动屏 `--z-splash`。
+- 顶层浮层必须挂到 `document.body`（`createPortal`）：`.page` 自带堆叠上下文，留在页面内会被 rail/topbar 压住（`OpsModal` 已按此实现）。
 - 页面内部（地图控件、卡片内浮层）使用局部 z-index，**不占用全局层级**。
 
 ## 7. 禁止项
