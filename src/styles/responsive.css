@@ -17,6 +17,18 @@
 
 /* ---------- ≤1240 · 紧凑桌面/平板：Copilot 单列后改为整页滚动 ---------- */
 @media (max-width: 1240px) {
+  /* 既有 1240 规则会把图谱面板塞进 300px 的第二列；让图谱独占整行 */
+  .kg-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .kg-grid > .kg-graph-panel {
+    grid-column: 1 / -1;
+    order: -1;
+    /* 独占整行后失去三栏的拉伸高度，需要给定高度，图表才能吃到 100% */
+    height: clamp(320px, 62dvh, 560px);
+  }
+
   .copilot-page {
     height: 100%;
     overflow-y: auto;
@@ -85,6 +97,10 @@
   .kg-stats {
     flex-wrap: wrap;
     row-gap: 2px;
+  }
+
+  .kg-grid {
+    grid-template-columns: minmax(0, 1fr);
   }
 
   .kg-graph-panel {
@@ -536,6 +552,17 @@
   .rail__foot {
     display: none;
   }
+
+  .rail__nav {
+    gap: 3px;
+    padding: 5px 9px;
+  }
+
+  .rail__item {
+    flex: 0 0 44px;
+    height: 44px;
+    min-height: 44px;
+  }
 }
 
 /* ---------- 高度断点 · 手机横屏 / 极矮窗口 ---------- */
@@ -555,13 +582,45 @@
     gap: 8px;
   }
 
-  .rail__item {
-    min-height: 38px;
-    height: 38px;
+  .rail {
+    padding: 8px 0;
+    overflow-y: auto;
+    scrollbar-width: none;
   }
 
-  .rail {
-    overflow-y: auto;
+  .rail::-webkit-scrollbar {
+    display: none;
+  }
+
+  .brand {
+    gap: 2px;
+    padding-bottom: 6px;
+  }
+
+  .brand__mark {
+    width: 28px;
+    height: 28px;
+  }
+
+  .brand__text {
+    display: none;
+  }
+
+  .rail__nav {
+    flex: 0 0 auto;
+    gap: 2px;
+    padding: 4px 9px;
+  }
+
+  .rail__item {
+    flex: 0 0 32px;
+    height: 32px;
+    min-height: 32px;
+    gap: 2px;
+  }
+
+  .rail__item span {
+    white-space: nowrap;
   }
 
   .rail__version {
