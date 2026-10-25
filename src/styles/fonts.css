@@ -1,8 +1,23 @@
 /* 本地打包字体（SIL OFL 协议，离线可用）
  * Rajdhani —— 科技感展示/数字字体（英文与数字）
  * JetBrains Mono —— 数据与代码等宽字体
- * 中文继续使用系统字体栈（打包中文整包体积过大且系统黑体可读性最佳）
+ * 中文：控件、数据与长文正文走系统黑体栈（小字号清晰度最佳）；
+ *       只有主视觉诗句用本地霞鹜文楷子集（见下）。
  */
+
+/* LXGW WenKai / 霞鹜文楷 · SIL OFL 1.1 · © LXGW 及贡献者
+ * 子集：项目全部现有文案用字 + ASCII + 常用中文标点，cmap 约 1180 字 / 238KB。
+ * 仅用于主视觉诗句这类文学化短句；控件、数据与长文正文仍走无衬线/等宽栈
+ * （楷体在 12–13px 长文上清晰度不如黑体）。新增文案若用到子集外字符，
+ * 会回落到 --font-serif 的系统衬线兜底，需要完整覆盖时重跑 scripts/subset-wenkai.sh。
+ */
+@font-face {
+  font-family: 'LXGW WenKai';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/fonts/lxgw-wenkai-sc-regular.woff2') format('woff2');
+}
 
 @font-face {
   font-family: 'Rajdhani';

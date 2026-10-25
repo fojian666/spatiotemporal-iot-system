@@ -17,7 +17,7 @@
 | 语义色 | `--cyan` `--teal` `--blue` `--violet` `--amber` `--danger` `--pink` | 仅表意，不作装饰 |
 | 文本 | `--text` `--muted` `--dim` | 主/次/弱三级 |
 | 透明合成 | `--panel-rgb` `--edge-rgb` `--text-rgb` | 需要 alpha 时用 `rgba(var(--edge-rgb), .14)`，不要新造色 |
-| 字体 | `--font-display`（Rajdhani）`--font-num` `--font-mono`（JetBrains）`--font-sans`（中文系统栈） | 本地 woff2，`font-display: swap` |
+| 字体 | `--font-display`（Rajdhani）`--font-num` `--font-mono`（JetBrains）`--font-sans`（中文系统栈）`--font-serif`（霞鹜文楷，仅主视觉诗句） | 本地 woff2，`font-display: swap` |
 | 结构 | `--rail: 76px` `--topbar: 62px` `--radius: 14px` | 全局骨架尺寸 |
 | 动效 | `--ease-out` `--ease-in-out` `--dur-fast/base/slow/enter` = 160/260/460/520ms | 唯一动效节奏来源 |
 | 层级 | `--z-topbar: 25` `--z-rail: 30` `--z-modal: 100` `--z-toast: 120` `--z-splash: 200` | 跨页面浮层专用 |

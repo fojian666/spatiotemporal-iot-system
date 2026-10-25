@@ -31,6 +31,7 @@ Spatiotemporal IoT demo platform（spatiotemporal-iot-system）——以青海�
 - **控制台**：入场编排、KPI 数字滚动、列表 stagger、toast/模态两段式退场、状态徽章脉冲、主题切换 View Transition。
 - **响应式**：手机切换为底部导航 + 紧凑顶栏，平板/矮屏收紧页头与栅格；宽度 ≤640/900/1100、高度 ≤760/560 两套断点，触控目标 ≥44px。
 - 全部为纯 CSS / rAF 实现，未引入动效库；统一受 `prefers-reduced-motion` 降级（降级后保留静止姿态而非空白）。
+- **字体**：Rajdhani（展示/数字）、JetBrains Mono（数据）、霞鹜文楷（主视觉诗句，SIL OFL 1.1，按项目用字子集化至约 238KB，见 `scripts/subset-wenkai.sh`）；控件与正文中文仍走系统黑体栈。
 - 令牌、组件与层级的完整契约见 [DESIGN.md](DESIGN.md)。
 
 ## 快速开始
