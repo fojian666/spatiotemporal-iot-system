@@ -1,6 +1,7 @@
 import { lazy, Suspense, useEffect } from 'react';
 import { HashRouter, Navigate, Route, Routes } from 'react-router-dom';
 import { Shell } from './components/Shell';
+import { markWelcomeSeen, navigateReplacingHash } from './auth/welcome';
 import { SimulationProvider } from './engine/simulation';
 
 const OverviewPage = lazy(() => import('./pages/Overview').then((m) => ({ default: m.OverviewPage })));
@@ -59,7 +60,14 @@ export default function App() {
               <Route path="/platform" element={<PlatformPage />} />
               <Route
                 path="/welcome"
-                element={<WelcomePage onEnter={(path) => { window.location.hash = `#${path}`; }} />}
+                element={
+                  <WelcomePage
+                    onEnter={(path) => {
+                      markWelcomeSeen();
+                      navigateReplacingHash(path);
+                    }}
+                  />
+                }
               />
               <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>

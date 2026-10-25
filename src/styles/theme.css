@@ -132,6 +132,19 @@ html[data-theme='light'] .map-hud-label em {
 }
 
 /* 登录页原子视觉：浅色主题下整体加深配色 */
+/* 浅色下标题渐变改用深色强调，避免第二行几乎看不见 */
+html[data-theme='light'] .welcome-hero h1 em,
+html[data-theme='light'] .auth-visual h1 em {
+  background: linear-gradient(90deg, #0e7490, #2563eb);
+  -webkit-background-clip: text;
+  background-clip: text;
+}
+html[data-theme='light'] .welcome-card:hover {
+  background:
+    linear-gradient(160deg, rgba(8, 145, 178, 0.08), transparent 55%),
+    rgba(var(--panel-rgb), 0.98);
+}
+
 html[data-theme='light'] .auth-atom__orbit { --tint: 8, 145, 178; }
 html[data-theme='light'] .auth-atom__orbit--b { --tint: 67, 56, 202; }
 html[data-theme='light'] .auth-atom__orbit--c { --tint: 14, 116, 144; }

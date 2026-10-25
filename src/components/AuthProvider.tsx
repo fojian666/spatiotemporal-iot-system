@@ -15,16 +15,7 @@ import { AuthContext, useAuth, type AuthContextValue, type AuthStatus } from '..
 import { BootSplash } from './BootSplash';
 import { LoginPage } from '../pages/Login';
 import { WelcomePage } from '../pages/Welcome';
-
-const WELCOME_SEEN_KEY = 'stiot-welcome-seen';
-
-function hasSeenWelcome(): boolean {
-  try {
-    return window.sessionStorage.getItem(WELCOME_SEEN_KEY) === '1';
-  } catch {
-    return false;
-  }
-}
+import { hasSeenWelcome, markWelcomeSeen, navigateReplacingHash } from '../auth/welcome';
 
 function useHashRoute(): string {
   const [hash, setHash] = useState(() => window.location.hash);
@@ -132,16 +123,19 @@ export function AuthGate({ children }: { children: ReactNode }) {
   const [welcomeSeen, setWelcomeSeen] = useState(hasSeenWelcome);
 
   const enter = useCallback((path: string) => {
-    try {
-      window.sessionStorage.setItem(WELCOME_SEEN_KEY, '1');
-    } catch {
-      // storage blocked
-    }
+    markWelcomeSeen();
     setWelcomeSeen(true);
-    if (window.location.hash !== `#${path}`) window.location.hash = `#${path}`;
+    navigateReplacingHash(path);
   }, []);
 
-  if (hash.startsWith('#/welcome')) return <WelcomePage onEnter={enter} />;
+  // 未登录深链（如 #/drone）：欢迎页主按钮仍回到原目标，而不是丢掉
+  const pendingPath = hash.startsWith('#/') && hash !== '#/welcome' ? hash.slice(1) : '/';
+  const enterFromWelcome = useCallback(
+    (path: string) => enter(path === '/' ? pendingPath : path),
+    [enter, pendingPath],
+  );
+
+  if (hash.startsWith('#/welcome')) return <WelcomePage onEnter={enterFromWelcome} />;
   if (!REMOTE_ENABLED) return <>{children}</>;
   if (status === 'checking') {
     return <BootSplash title="正在验证安全会话" detail="JWT · SESSION CHECK" />;
@@ -164,7 +158,7 @@ export function AuthGate({ children }: { children: ReactNode }) {
     );
   }
   if (status === 'anonymous') {
-    return welcomeSeen ? <LoginPage /> : <WelcomePage onEnter={enter} />;
+    return welcomeSeen ? <LoginPage /> : <WelcomePage onEnter={enterFromWelcome} />;
   }
   return <>{children}</>;
 }

@@ -15,6 +15,7 @@ import {
   type LucideIcon,
 } from 'lucide-react';
 import { AtomVisual } from '../components/AtomVisual';
+import { REMOTE_ENABLED } from '../services/api';
 
 const MODULES: { path: string; title: string; en: string; desc: string; icon: LucideIcon }[] = [
   { path: '/', title: '态势总览', en: 'OVERVIEW', desc: '区域 KPI、多源趋势、告警流转与智能体建议', icon: LayoutDashboard },
@@ -100,7 +101,10 @@ export function WelcomePage({ onEnter }: { onEnter: (path: string) => void }) {
           <header className="welcome-section-head">
             <span className="overline">SEVEN MODULES · ONE CONSOLE</span>
             <h2>七个模块，一处瞭望</h2>
-            <p>从感知接入到无人系统调度，从一张图到可推理的知识网络。选择任一模块进入，未登录时会先验证身份。</p>
+            <p>
+              从感知接入到无人系统调度，从一张图到可推理的知识网络。选择任一模块进入
+              {REMOTE_ENABLED ? '，未登录时会先验证身份。' : '，本地演示模式将直接进入。'}
+            </p>
           </header>
           <div className="welcome-module-grid">
             {MODULES.map((item, index) => {
@@ -110,22 +114,23 @@ export function WelcomePage({ onEnter }: { onEnter: (path: string) => void }) {
                   key={item.path}
                   type="button"
                   className="welcome-card"
+                  aria-label={`${item.title}：${item.desc}`}
                   style={{ '--i': index } as CSSProperties}
                   onClick={() => onEnter(item.path)}
                 >
-                  <span className="welcome-card__index mono">{String(index + 1).padStart(2, '0')}</span>
-                  <span className="welcome-card__icon"><Icon size={17} strokeWidth={1.7} /></span>
-                  <span className="welcome-card__title">
+                  <span className="welcome-card__index mono" aria-hidden="true">{String(index + 1).padStart(2, '0')}</span>
+                  <span className="welcome-card__icon" aria-hidden="true"><Icon size={17} strokeWidth={1.7} /></span>
+                  <span className="welcome-card__title" aria-hidden="true">
                     {item.title}
                     <em className="mono">{item.en}</em>
                   </span>
-                  <span className="welcome-card__desc">{item.desc}</span>
+                  <span className="welcome-card__desc" aria-hidden="true">{item.desc}</span>
                   <span className="welcome-card__arrow" aria-hidden="true"><ArrowRight size={14} /></span>
                 </button>
               );
             })}
             <article className="welcome-card welcome-card--note">
-              <span className="welcome-card__index mono">NOTE</span>
+              <span className="welcome-card__index mono" aria-hidden="true">NOTE</span>
               <span className="welcome-card__title">演示与真实</span>
               <span className="welcome-card__desc">
                 遥测数值由仿真合成，视频为静态影像叠加检测框，物联大模型为本地规则引擎；

@@ -124,7 +124,7 @@
 .welcome-stats dt {
   order: 2;
   font-size: 9px;
-  color: var(--dim);
+  color: var(--muted);
 }
 
 .welcome-stats dd {
@@ -206,7 +206,9 @@
 .welcome-card:hover {
   transform: translateY(-2px);
   border-color: rgba(75, 225, 255, 0.28);
-  background: linear-gradient(160deg, rgba(12, 40, 64, 0.9), rgba(var(--panel-rgb), 0.6));
+  background:
+    linear-gradient(160deg, rgba(75, 225, 255, 0.06), transparent 55%),
+    rgba(var(--panel-rgb), 0.9);
 }
 
 .welcome-card__index {
@@ -309,7 +311,7 @@
   margin-top: 42px;
   padding-top: 18px;
   border-top: 1px solid var(--line);
-  color: var(--dim);
+  color: var(--muted);
   font-size: 7.5px;
   letter-spacing: 0.1em;
 }
