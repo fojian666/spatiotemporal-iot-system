@@ -46,6 +46,7 @@ backend/scripts/publish_device.py    # 以外部设备身份向 MQTT 灌数（�
 - **登录页**：原子核 3D 视觉（`auth.css` 的 `.auth-atom`）——三层电子壳层、拖尾电子、核子团。反向壳层的 `animation-direction: reverse` **必须同时作用于壳层与电子**，否则自旋抵消失效、电子被压扁；指针视差写 `--atom-tilt-x/y`。文案走「山河 / 信 / 巡」意象：主视觉诗意、表单侧克制，改文案时保持这条分界。
 - **文档中心**：开卷书壳 + 翻页转场（`Platform.tsx` 的 flip 状态 + `pages.css` 的 `.docs-page-turn`，rotateY ±104°）；≤1100px 与 reduced-motion 下退化为直接切换。
 - **控制台状态动效**：KPI 数字滚动（`useAnimatedNumber`）、toast/模态两段式退场、列表 24ms stagger（`--i`）、状态徽章脉冲、主题切换走 View Transitions API（`src/theme.ts`）。
+- **响应式层**：`src/styles/responsive.css` 最后加载，宽度 ≤640（底部导航）/≤900/≤1100 + 高度 ≤760/≤560；顶栏高度只写 `var(--topbar)`，页面高度跟随内容区，改布局先读这份覆盖层。
 - 入场编排集中在 `auth.css` / `base.css` 的 motion layer；全局降级开关是 `base.css` 的 `@media (prefers-reduced-motion: reduce)`，勿在组件里另造降级分支。
 
 ## 多 harness 协作

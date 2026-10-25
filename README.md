@@ -28,6 +28,7 @@ Spatiotemporal IoT demo platform（spatiotemporal-iot-system）——以青海�
 - **登录页**：原子核 3D 视觉——三层电子壳层、拖尾电子与核子团（preserve-3d 真实遮挡），随指针视差倾斜；文案取「山河入网 / 时空为证」意象。
 - **文档中心**：开卷书壳与翻页转场；窄屏（≤1100px）与 `prefers-reduced-motion` 下自动退化为直接切换。
 - **控制台**：入场编排、KPI 数字滚动、列表 stagger、toast/模态两段式退场、状态徽章脉冲、主题切换 View Transition。
+- **响应式**：手机切换为底部导航 + 紧凑顶栏，平板/矮屏收紧页头与栅格；宽度 ≤640/900/1100、高度 ≤760/560 两套断点，触控目标 ≥44px。
 - 全部为纯 CSS / rAF 实现，未引入动效库；统一受 `prefers-reduced-motion` 降级（降级后保留静止姿态而非空白）。
 - 令牌、组件与层级的完整契约见 [DESIGN.md](DESIGN.md)。
 
