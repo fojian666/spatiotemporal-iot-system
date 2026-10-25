@@ -18,6 +18,7 @@ from sqlalchemy import func, select, text
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from . import copilot, llm
 from .config import settings
 from .data import DEVICES, FENCES, KNOWLEDGE, SCENARIOS, now_local
 from .drone_api import router as drone_router
@@ -458,6 +459,45 @@ async def latest_telemetry(_user: User = Depends(get_current_user)) -> dict[str,
         "statuses": snapshot["statuses"],
         "stats": snapshot["stats"],
     }
+
+
+class CopilotChatRequest(BaseModel):
+    """Copilot 问答入参。
+
+    上下文由服务端从实时快照与知识图谱组装，前端只提交问题——
+    既避免把整份遥测塞进请求体，也避免前端拼出不可控的 token 量。
+    """
+
+    query: str = Field(min_length=1, max_length=300)
+    focus_device: str | None = Field(default=None, max_length=32)
+    reason: bool = False
+
+
+@app.get("/api/copilot/status")
+async def copilot_status(_user: User = Depends(get_current_user)) -> dict[str, Any]:
+    """通道状态。未配置时前端直接走规则引擎，不发请求。"""
+    return llm.describe()
+
+
+@app.post("/api/copilot/chat")
+async def copilot_chat(
+    payload: CopilotChatRequest,
+    _user: User = Depends(get_current_user),
+) -> dict[str, Any]:
+    """自然语言问答。未启用或上游失败返回 503，前端据此回落本地规则引擎。"""
+    service: TelemetryService = app.state.service
+    snapshot = await asyncio.to_thread(service.snapshot)
+    context = copilot.build_context(
+        payload.query,
+        snapshot,
+        scenario=service.store.scenario_key,
+        focus_device=payload.focus_device,
+    )
+    try:
+        return await llm.chat(payload.query, context, reason=payload.reason)
+    except llm.LLMUnavailable as exc:
+        logger.warning("copilot fallback to rule engine: %s", exc)
+        raise HTTPException(status_code=503, detail="llm unavailable") from exc
 
 
 @app.get("/api/telemetry/history")

@@ -51,6 +51,25 @@ class Settings(BaseSettings):
 
     tls_enabled: bool = False
 
+    # ── 大模型与向量通道（密钥只经 .env 注入，永不入库）──
+    # llm_enabled=False 时 Copilot 仍走前端规则引擎，行为与改造前一致。
+    llm_enabled: bool = False
+    llm_base_url: str = "https://api.deepseek.com/v1"
+    llm_api_key: str = ""
+    llm_model_chat: str = "deepseek-flash"
+    llm_model_reason: str = "deepseek-v4-pro"
+    # 单次读超时。这个值必须让「最坏耗时」小于前端 copilotChat 的 30s 预算：
+    # 读超时只等一次、不再重试，最坏 ≈ connect 3s + read 8s，前端才有机会拿到结果。
+    llm_timeout_seconds: float = 8.0
+    # 关掉思考后一次问答约 150 token；上限给 220 是留出正文余量，
+    # 给小了（如 120）会被 reasoning token 吃光并返回空正文。
+    llm_max_tokens: int = 220
+    # 推理分支保持思考，必须给足额度，否则同样会被 reasoning token 吃光
+    llm_max_tokens_reason: int = 1200
+    embedding_base_url: str = "https://api.siliconflow.cn/v1"
+    embedding_api_key: str = ""
+    embedding_model: str = "BAAI/bge-m3"
+
     simulation_enabled: bool = True
     simulation_interval_seconds: float = 1.0
     history_interval_seconds: int = 5
