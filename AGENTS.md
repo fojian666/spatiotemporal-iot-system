@@ -38,6 +38,8 @@ backend/scripts/publish_device.py    # 以外部设备身份向 MQTT 灌数（�
 7. **run.sh 行为**：根 `run.sh` 按需装依赖/构建前端后 `exec backend/run.sh`；后者从 `backend/.env` 读取 `IOT_MQTT_PORT / IOT_MQTT_ENABLED / IOT_TLS_ENABLED / IOT_API_PORT`（不 source 整个文件），并按 `IOT_PYTHON` → 激活中的 conda → `.venv` → Anaconda/Miniconda base → `python3` 的顺序挑第一个**依赖齐全**的解释器（conda 在脚本里常不可见为命令，故同时探测 `/opt/anaconda3` 等常见根目录）；`IOT_MQTT_ENABLED=false` 时跳过 Mosquitto；`IOT_TLS_ENABLED=true` 但缺证书时**拒绝启动**（不回退明文）。
 8. **前端网络层**：`api.ts` 所有请求带 15s 超时；瞬时网络错误**不登出会话**；飞控指令的乐观更新在失败时回滚——改 DroneOps 时保持这套模式。
 9. **动效降级基线**：`base.css` 的全局 `prefers-reduced-motion` 规则把动画时长归零且 fill 为 none，**仅靠 keyframes 定位的元素会回落到基础样式**。新增用 keyframe 定位的元素（参照 `.auth-atom__electron`、`.auth-atom__nucleon`）必须把静止姿态写进基础 transform，否则降级下会塌回原点。
+10. **LLM 上下文的两条硬约束**：`backend/app/llm.py` 的 `SYSTEM_PROMPT` 必须逐字固定——改一个字前缀缓存全失效，输入价从 0.05 元/M 涨回 1.5 元/M（30 倍）；单次上下文 ≤`copilot.MAX_CONTEXT_CHARS`（1200 字符），设备指标按超阈值程度排序取前 3，**直接切 `metrics[:3]` 会把越线指标切掉**，模型据此回答"当前数据未覆盖"，是排查时最容易误判成"模型不聪明"的坑。
+11. **`deepseek-flash` 默认开启思考**：`thinking: {"type": "disabled"}` 必须显式传。实测同一问题默认 3569ms / 436 token，关闭后 1402ms / 151 token。`max_tokens` 给小（<150）会被 reasoning token 吃光并返回空正文。`deepseek-chat` / `deepseek-reasoner` 两个旧模型名已于 2026-07-24 下线。
 
 ## 视觉与动效层（纯 CSS/rAF，无动效库）
 
@@ -70,7 +72,9 @@ src/pages/Platform.tsx       文档中心（侧栏目录树+正文阅读区+开�
 src/theme.ts                 主题存储与切换（支持时经 View Transitions API 转场）
 src/hooks/useAnimatedNumber.ts  KPI 数字滚动（rAF 补间，reduced-motion 直接落位）
 src/components/MapView.tsx   MapLibre + Esri 在线瓦片（离线环境无底图）
-backend/app/main.py          ~22 端点 + lifespan + 安全中间件三件套 + dist 静态挂载
+backend/app/main.py          ~24 端点 + lifespan + 安全中间件三件套 + dist 静态挂载
+backend/app/llm.py           云端对话通道（固定系统提示、关闭思考、超时重试，失败抛 LLMUnavailable）
+backend/app/copilot.py       Copilot 上下文组装与知识检索（关键词命中 + 图谱一跳，刻意不上向量库）
 backend/app/drone_api.py     无人机域 REST（航线/计划/8 种飞控指令状态机/线索）
 backend/app/telemetry.py     仿真线程（simulated）/ live 采样线程，双模式入口
 backend/app/data.py          仿真公式内核（与前端 TS 版镜像）
@@ -92,7 +96,7 @@ backend/app/schemas.py       遥测消息契约 v1（pydantic，拒收计数进 
 ## 演示性内容清单（刻意保留，勿"修复"）
 
 - 视频 = 静态 JPG（public/assets/）+ CSS 扫描线 + 写死的 AI 检测框；
-- `llm.ts` 意图级联 + 伪流水线毫秒数；Copilot 620ms 假延迟 + 打字机动画；
+- **Copilot 是双通道**：`IOT_LLM_ENABLED=false` 或 `VITE_DATA_SOURCE=local` 时走 `src/services/llm.ts` 规则引擎（意图级联 + 伪流水线毫秒数 + 620ms 假延迟，属刻意保留的演示节奏）；开启后 api 模式改走云端 `deepseek-flash`，流水线显示真实耗时，**规则引擎退为兜底，两条路都必须保持可用**；
 - 飞控进度 = 前端 1.4%/s 模拟，到 100% 自动回写 complete；HUD 坐标/风速为常量；
 - 消息速率、数据质量、媒体库容量、协议占比等统计为常量；
 - 告警内容为四场景硬编码文案；知识图谱为静态课程知识（56 实体/126 关系）。

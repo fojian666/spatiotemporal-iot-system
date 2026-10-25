@@ -29,6 +29,7 @@ import { Panel, StatusPill } from '../components/ui';
 import { SCENARIO_LIST, type ScenarioKey } from '../data/scenarios';
 import { formatSimTime, useSimulation } from '../engine/simulation';
 import { useAuth } from '../auth/AuthContext';
+import { REMOTE_ENABLED, copilotChat, fetchCopilotStatus } from '../services/api';
 import {
   COPILOT_MODEL,
   COPILOT_SUGGESTIONS,
@@ -251,6 +252,14 @@ export function CopilotPage() {
   const toastTimerRef = useRef<number | null>(null);
   const toastLeaveTimerRef = useRef<number | null>(null);
   const lastInitialQueryRef = useRef<string | null>(null);
+  /* 云端通道是否可用。探测失败或未启用时保持 false，整条链路退回本地规则引擎。 */
+  const llmReadyRef = useRef(false);
+  /* 仅用于界面署名：接上云端后顶栏要显示真实模型名，而不是"本地演示推理" */
+  const [llmModel, setLlmModel] = useState<string | null>(null);
+  const aliveRef = useRef(true);
+  /* 每次发送/清空都递增；异步回来发现代际变了就丢弃，避免清空后插进孤立的回答 */
+  const generationRef = useRef(0);
+  const llmFailuresRef = useRef(0);
 
   const time = formatSimTime(simTime);
   const lastReply = useMemo(() => [...messages].reverse().find((message) => message.reply)?.reply ?? null, [messages]);
@@ -275,9 +284,29 @@ export function CopilotPage() {
 
   useEffect(() => {
     return () => {
+      aliveRef.current = false;
       if (timerRef.current) window.clearTimeout(timerRef.current);
       if (toastTimerRef.current) window.clearTimeout(toastTimerRef.current);
       if (toastLeaveTimerRef.current) window.clearTimeout(toastLeaveTimerRef.current);
+    };
+  }, []);
+
+  /* 启动时探一次大模型通道。没启用或探不通都不是错误——整页照旧走规则引擎。 */
+  useEffect(() => {
+    if (!REMOTE_ENABLED) return undefined;
+    let cancelled = false;
+    fetchCopilotStatus()
+      .then((status) => {
+        if (cancelled) return;
+        llmReadyRef.current = status.available;
+        setLlmModel(status.available ? status.model : null);
+      })
+      .catch(() => {
+        llmReadyRef.current = false;
+        if (!cancelled) setLlmModel(null);
+      });
+    return () => {
+      cancelled = true;
     };
   }, []);
 
@@ -298,22 +327,64 @@ export function CopilotPage() {
     setPending(true);
     forceScrollRef.current = true;
     if (timerRef.current) window.clearTimeout(timerRef.current);
+    /* 云端可用时 120ms 就发出（延迟由网络决定）；否则保留 620ms 的本地演示节奏 */
+    const generation = ++generationRef.current;
     timerRef.current = window.setTimeout(() => {
-      const reply = askCopilot(query, sim);
-      const assistantMessage: ChatMessage = {
-        id: `assistant-${Date.now()}`,
-        role: 'assistant',
-        text: reply.text,
-        reply,
-        time: stamp,
-        animate: true,
-      };
-      setMessages((current) => [...current, assistantMessage]);
-      setLastPipeline(reply.pipeline);
-      setLastEvidence(reply.evidence);
-      setLastIntent(reply.intent);
-      setPending(false);
-    }, 620);
+      void (async () => {
+        const local = askCopilot(query, sim);
+        let reply = local;
+        if (llmReadyRef.current) {
+          try {
+            const remote = await copilotChat(query, null);
+            /* 200 但缺 text 时不能直接用：上层没有 ErrorBoundary，undefined.length 会白屏 */
+            const text = typeof remote?.text === 'string' ? remote.text.trim() : '';
+            if (text) {
+              /* 证据链、动作与追问仍取本地检索结果（它们是真实数据），
+                 但云端文案与它们没有因果关系，所以不虚抬置信度。 */
+              reply = {
+                ...local,
+                text,
+                pipeline: [
+                  {
+                    label: '云端推理',
+                    detail: `${remote.model} · ${remote.usage?.total_tokens ?? 0} tokens`,
+                    ms: remote.latencyMs,
+                  },
+                ],
+              };
+              llmFailuresRef.current = 0;
+            }
+          } catch {
+            /* 503 / 超时：静默回落本地规则引擎。连续两次失败就摘掉云端，
+               否则每条消息都要白等一整轮超时。 */
+            llmFailuresRef.current += 1;
+            if (llmFailuresRef.current >= 2) {
+              llmReadyRef.current = false;
+              setLlmModel(null);
+            }
+          }
+        }
+        if (!aliveRef.current || generation !== generationRef.current) return;
+        const assistantMessage: ChatMessage = {
+          id: `assistant-${Date.now()}`,
+          role: 'assistant',
+          text: reply.text,
+          reply,
+          time: stamp,
+          animate: true,
+        };
+        setMessages((current) => [...current, assistantMessage]);
+        setLastPipeline(reply.pipeline);
+        setLastEvidence(reply.evidence);
+        setLastIntent(reply.intent);
+      })()
+        .catch(() => {
+          /* 规则引擎自身抛错时也要落到本地兜底，不能让 pending 永久挂着 */
+        })
+        .finally(() => {
+          if (aliveRef.current && generation === generationRef.current) setPending(false);
+        });
+    }, llmReadyRef.current ? 120 : 620);
   };
 
   useEffect(() => {
@@ -376,6 +447,7 @@ export function CopilotPage() {
   };
 
   const clearChat = () => {
+    generationRef.current += 1;
     if (timerRef.current) {
       window.clearTimeout(timerRef.current);
       timerRef.current = null;
@@ -402,7 +474,7 @@ export function CopilotPage() {
         actions={
           <>
             <div className="model-status">
-              <StatusPill tone="ai" dot>{COPILOT_MODEL.mode}</StatusPill>
+              <StatusPill tone="ai" dot>{llmModel ? '云端推理' : COPILOT_MODEL.mode}</StatusPill>
               <span className="mono">context 32k · tools 6</span>
             </div>
             <button type="button" className="btn btn--ghost btn--sm" onClick={clearChat}>
@@ -421,7 +493,7 @@ export function CopilotPage() {
             <div className="chat-head__brand">
               <span className="model-orb"><Bot size={17} /></span>
               <div>
-                <strong>{COPILOT_MODEL.name}</strong>
+                <strong>{llmModel ?? COPILOT_MODEL.name}</strong>
                 <span>面向平安区的时空智能物联助手</span>
               </div>
             </div>
@@ -469,7 +541,9 @@ export function CopilotPage() {
                 </div>
                 <div className="welcome-note">
                   <ShieldCheck size={13} />
-                  本地演示推理，不连接外部模型；涉及设备控制的建议均需人工确认。
+                  {llmModel
+                    ? `推理由 ${llmModel} 云端生成，上下文取自本平台实时快照；涉及设备控制的建议均需人工确认。`
+                    : '本地演示推理，不连接外部模型；涉及设备控制的建议均需人工确认。'}
                 </div>
               </div>
             )}
@@ -542,7 +616,7 @@ export function CopilotPage() {
               </button>
             </div>
             <div className="chat-input__meta">
-              <span><Sparkles size={11} /> {COPILOT_MODEL.name} · 本地演示推理</span>
+              <span><Sparkles size={11} /> {llmModel ? `${llmModel} · 云端推理` : `${COPILOT_MODEL.name} · 本地演示推理`}</span>
               <span>Enter 发送 · Shift + Enter 换行</span>
               <span>只读推理 · 指令需人工确认</span>
             </div>

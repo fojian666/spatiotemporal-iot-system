@@ -79,6 +79,8 @@ export interface LoginResponse {
 }
 
 const REQUEST_TIMEOUT_MS = 15_000;
+/* 云端推理单独给更长预算，见 copilotChat 注释 */
+const COPILOT_TIMEOUT_MS = 30_000;
 
 function withTimeout(timeoutMs: number, external?: AbortSignal) {
   const controller = new AbortController();
@@ -102,9 +104,14 @@ function withTimeout(timeoutMs: number, external?: AbortSignal) {
   };
 }
 
-async function request<T>(path: string, options?: RequestInit): Promise<T> {
+async function request<T>(
+  path: string,
+  options?: RequestInit,
+  /* 少数端点（如云端推理）耗时长于默认预算，允许单独放宽 */
+  timeoutMs: number = REQUEST_TIMEOUT_MS,
+): Promise<T> {
   const token = getAuthToken();
-  const timeout = withTimeout(REQUEST_TIMEOUT_MS, options?.signal ?? undefined);
+  const timeout = withTimeout(timeoutMs, options?.signal ?? undefined);
   let response: Response;
   try {
     response = await fetch(`${API_BASE}${path}`, {
@@ -185,6 +192,46 @@ export async function fetchBootstrap(signal?: AbortSignal): Promise<BootstrapPay
 
 export async function fetchHealth(signal?: AbortSignal): Promise<Record<string, unknown>> {
   return request('/api/health', { signal });
+}
+
+export interface CopilotStatus {
+  enabled: boolean;
+  configured: boolean;
+  model: string;
+  reasonModel: string;
+  available: boolean;
+}
+
+export interface CopilotRemoteReply {
+  text: string;
+  model: string;
+  latencyMs: number;
+  usage: Record<string, number>;
+}
+
+/** 大模型通道状态。available=false 时前端直接走本地规则引擎，不发问答请求。 */
+export async function fetchCopilotStatus(signal?: AbortSignal): Promise<CopilotStatus> {
+  return request<CopilotStatus>('/api/copilot/status', { signal });
+}
+
+/**
+ * 云端问答。上下文由服务端从实时快照与知识图谱组装，前端只提交问题；
+ * 通道未启用或上游失败时返回 503，调用方据此回落到 askCopilot。
+ */
+export async function copilotChat(
+  query: string,
+  focusDevice?: string | null,
+): Promise<CopilotRemoteReply> {
+  /* 30s 必须大于后端最坏耗时（connect 3s + read 8s，读超时不重试），
+     否则前端会先 abort，用户拿到的是静默回落的规则引擎答案。 */
+  return request<CopilotRemoteReply>(
+    '/api/copilot/chat',
+    {
+      method: 'POST',
+      body: JSON.stringify({ query, focus_device: focusDevice ?? null }),
+    },
+    COPILOT_TIMEOUT_MS,
+  );
 }
 
 export async function postScenario(key: ScenarioKey): Promise<ServerSnapshot> {
