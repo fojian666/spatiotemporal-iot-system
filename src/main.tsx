@@ -5,6 +5,7 @@ import './styles/map.css';
 import './styles/pages.css';
 import './styles/copilot.css';
 import './styles/auth.css';
+import './styles/welcome.css';
 import './styles/drone.css';
 import './styles/theme.css';
 import './styles/responsive.css';

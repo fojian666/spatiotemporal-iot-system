@@ -1,0 +1,330 @@
+.welcome-screen {
+  position: relative;
+  height: 100dvh;
+  overflow-x: hidden;
+  overflow-y: auto;
+  background:
+    radial-gradient(1000px 620px at 18% 12%, rgba(23, 108, 136, 0.2), transparent 68%),
+    radial-gradient(880px 620px at 86% 86%, rgba(44, 79, 160, 0.16), transparent 70%),
+    var(--bg-soft);
+}
+
+.welcome-top {
+  position: relative;
+  z-index: 2;
+  width: min(1180px, 100%);
+  margin: 0 auto;
+  padding: 24px 28px 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  animation: authBrandIn 520ms var(--ease-out) 60ms backwards;
+}
+
+.welcome-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.welcome-brand > div:last-child {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.welcome-brand strong {
+  font-size: 15px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  color: var(--text);
+}
+
+.welcome-brand span {
+  font-family: var(--font-mono);
+  font-size: 7px;
+  letter-spacing: 0.17em;
+  color: var(--amber);
+}
+
+.welcome-main {
+  position: relative;
+  z-index: 2;
+  width: min(1180px, 100%);
+  margin: 0 auto;
+  padding: 0 28px 40px;
+}
+
+.welcome-hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1.05fr) minmax(300px, 0.95fr);
+  gap: 26px;
+  align-items: center;
+  padding: 52px 0 20px;
+}
+
+.welcome-hero__text > * {
+  animation: authRise 520ms var(--ease-out) backwards;
+}
+
+.welcome-hero__text > .overline { animation-delay: 140ms; }
+
+.welcome-hero h1 {
+  animation-delay: 190ms;
+  margin: 10px 0 0;
+  font-size: clamp(34px, 4.2vw, 46px);
+  line-height: 1.14;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  color: var(--text);
+}
+
+.welcome-hero h1 em {
+  font-style: normal;
+  background: linear-gradient(90deg, #7ef2ff, #7fa8ff);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.welcome-hero__text > p {
+  animation-delay: 245ms;
+  max-width: 520px;
+  margin: 16px 0 0;
+  font-size: 12.5px;
+  line-height: 1.95;
+  color: var(--muted);
+}
+
+.welcome-hero__actions {
+  animation-delay: 300ms;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 22px;
+}
+
+.welcome-stats {
+  animation-delay: 360ms;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+  margin: 28px 0 0;
+  padding-top: 18px;
+  border-top: 1px solid var(--line);
+}
+
+.welcome-stats > div {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.welcome-stats dt {
+  order: 2;
+  font-size: 9px;
+  color: var(--dim);
+}
+
+.welcome-stats dd {
+  order: 1;
+  margin: 0;
+  font-size: 22px;
+  line-height: 1.1;
+  color: var(--cyan);
+  font-weight: 600;
+}
+
+.welcome-stats dd em {
+  font-style: normal;
+  margin-left: 2px;
+  font-size: 10px;
+  color: var(--muted);
+}
+
+.welcome-hero__visual {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: authFade 700ms var(--ease-out) 260ms backwards;
+}
+
+.welcome-hero__visual .auth-atom {
+  margin: 0;
+  transform: scale(1.16);
+}
+
+.welcome-modules {
+  margin-top: 30px;
+  scroll-margin-top: 18px;
+}
+
+.welcome-section-head h2 {
+  margin: 6px 0 0;
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.welcome-section-head p {
+  max-width: 640px;
+  margin: 8px 0 0;
+  font-size: 11.5px;
+  line-height: 1.8;
+  color: var(--muted);
+}
+
+.welcome-module-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 18px;
+}
+
+.welcome-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 16px 16px 30px;
+  text-align: left;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: linear-gradient(160deg, rgba(var(--panel-rgb), 0.82), rgba(var(--panel-rgb), 0.55));
+  color: var(--text);
+  cursor: pointer;
+  animation: authRise 460ms var(--ease-out) backwards;
+  animation-delay: calc(120ms + var(--i, 0) * 45ms);
+  transition:
+    transform 240ms var(--ease-out),
+    border-color 240ms var(--ease-out),
+    background 240ms var(--ease-out);
+}
+
+.welcome-card:hover {
+  transform: translateY(-2px);
+  border-color: rgba(75, 225, 255, 0.28);
+  background: linear-gradient(160deg, rgba(12, 40, 64, 0.9), rgba(var(--panel-rgb), 0.6));
+}
+
+.welcome-card__index {
+  position: absolute;
+  top: 15px;
+  right: 15px;
+  font-size: 8px;
+  letter-spacing: 0.12em;
+  color: var(--dim);
+}
+
+.welcome-card__icon {
+  width: 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  border-radius: 9px;
+  color: var(--cyan);
+  background: rgba(75, 225, 255, 0.08);
+  border: 1px solid rgba(75, 225, 255, 0.16);
+}
+
+.welcome-card__title {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 7px;
+  font-size: 13.5px;
+  font-weight: 600;
+}
+
+.welcome-card__title em {
+  font-style: normal;
+  font-family: var(--font-mono);
+  font-size: 7px;
+  letter-spacing: 0.12em;
+  color: var(--amber);
+}
+
+.welcome-card__desc {
+  font-size: 11px;
+  line-height: 1.7;
+  color: var(--muted);
+}
+
+.welcome-card__arrow {
+  position: absolute;
+  right: 14px;
+  bottom: 14px;
+  color: var(--dim);
+  transition: transform 240ms var(--ease-out), color 240ms var(--ease-out);
+}
+
+.welcome-card:hover .welcome-card__arrow {
+  transform: translateX(2px);
+  color: var(--cyan);
+}
+
+.welcome-card--note {
+  cursor: default;
+  border-style: dashed;
+  animation-delay: 460ms;
+}
+
+.welcome-card--note:hover {
+  transform: none;
+  border-color: var(--line);
+}
+
+.welcome-stack {
+  margin-top: 38px;
+}
+
+.welcome-stack__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.welcome-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 28px;
+  padding: 0 10px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: rgba(var(--panel-rgb), 0.5);
+  font-size: 9.5px;
+  color: var(--muted);
+}
+
+.welcome-foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  margin-top: 42px;
+  padding-top: 18px;
+  border-top: 1px solid var(--line);
+  color: var(--dim);
+  font-size: 7.5px;
+  letter-spacing: 0.1em;
+}
+
+/* 登录页上的导览入口 */
+.auth-tour {
+  margin-left: auto;
+  padding: 2px 0;
+  border: 0;
+  background: none;
+  font-size: 9px;
+  color: var(--cyan);
+  cursor: pointer;
+}
+
+.auth-tour:hover {
+  text-decoration: underline;
+}

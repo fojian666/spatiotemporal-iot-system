@@ -10,6 +10,7 @@ const GeoMapPage = lazy(() => import('./pages/GeoMap').then((m) => ({ default: m
 const KnowledgeGraphPage = lazy(() => import('./pages/KnowledgeGraph').then((m) => ({ default: m.KnowledgeGraphPage })));
 const CopilotPage = lazy(() => import('./pages/Copilot').then((m) => ({ default: m.CopilotPage })));
 const PlatformPage = lazy(() => import('./pages/Platform').then((m) => ({ default: m.PlatformPage })));
+const WelcomePage = lazy(() => import('./pages/Welcome').then((m) => ({ default: m.WelcomePage })));
 
 function RouteFallback() {
   return (
@@ -56,6 +57,10 @@ export default function App() {
               <Route path="/graph" element={<KnowledgeGraphPage />} />
               <Route path="/copilot" element={<CopilotPage />} />
               <Route path="/platform" element={<PlatformPage />} />
+              <Route
+                path="/welcome"
+                element={<WelcomePage onEnter={(path) => { window.location.hash = `#${path}`; }} />}
+              />
               <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
           </Suspense>

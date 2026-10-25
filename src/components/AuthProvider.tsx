@@ -14,6 +14,27 @@ import { clearAuthToken, getAuthToken, setAuthToken } from '../services/authToke
 import { AuthContext, useAuth, type AuthContextValue, type AuthStatus } from '../auth/AuthContext';
 import { BootSplash } from './BootSplash';
 import { LoginPage } from '../pages/Login';
+import { WelcomePage } from '../pages/Welcome';
+
+const WELCOME_SEEN_KEY = 'stiot-welcome-seen';
+
+function hasSeenWelcome(): boolean {
+  try {
+    return window.sessionStorage.getItem(WELCOME_SEEN_KEY) === '1';
+  } catch {
+    return false;
+  }
+}
+
+function useHashRoute(): string {
+  const [hash, setHash] = useState(() => window.location.hash);
+  useEffect(() => {
+    const onChange = () => setHash(window.location.hash);
+    window.addEventListener('hashchange', onChange);
+    return () => window.removeEventListener('hashchange', onChange);
+  }, []);
+  return hash;
+}
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null);
@@ -107,6 +128,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
 export function AuthGate({ children }: { children: ReactNode }) {
   const { status, retrySession } = useAuth();
+  const hash = useHashRoute();
+  const [welcomeSeen, setWelcomeSeen] = useState(hasSeenWelcome);
+
+  const enter = useCallback((path: string) => {
+    try {
+      window.sessionStorage.setItem(WELCOME_SEEN_KEY, '1');
+    } catch {
+      // storage blocked
+    }
+    setWelcomeSeen(true);
+    if (window.location.hash !== `#${path}`) window.location.hash = `#${path}`;
+  }, []);
+
+  if (hash.startsWith('#/welcome')) return <WelcomePage onEnter={enter} />;
   if (!REMOTE_ENABLED) return <>{children}</>;
   if (status === 'checking') {
     return <BootSplash title="正在验证安全会话" detail="JWT · SESSION CHECK" />;
@@ -128,6 +163,8 @@ export function AuthGate({ children }: { children: ReactNode }) {
       </div>
     );
   }
-  if (status === 'anonymous') return <LoginPage />;
+  if (status === 'anonymous') {
+    return welcomeSeen ? <LoginPage /> : <WelcomePage onEnter={enter} />;
+  }
   return <>{children}</>;
 }

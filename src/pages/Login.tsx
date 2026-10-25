@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type FormEvent, type PointerEvent as ReactPointerEvent } from 'react';
+import { useEffect, useState, type FormEvent } from 'react';
 import {
   AlertTriangle,
   ArrowRight,
@@ -13,6 +13,7 @@ import {
   ShieldCheck,
   UserRound,
 } from 'lucide-react';
+import { AtomVisual } from '../components/AtomVisual';
 import { useAuth } from '../auth/AuthContext';
 import { API_BASE, fetchDemoRoles, type DemoRoleInfo, type UserRole } from '../services/api';
 
@@ -31,35 +32,9 @@ export function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [demoRoles, setDemoRoles] = useState<DemoRoleInfo[]>([]);
   const [pendingRole, setPendingRole] = useState<UserRole | null>(null);
-  const atomRef = useRef<HTMLDivElement | null>(null);
   const secure = API_BASE.startsWith('https://') || window.location.protocol === 'https:';
   const apiHost = API_BASE.replace(/^https?:\/\//, '');
   const busy = loading || pendingRole !== null;
-
-  const handleAtomMove = (event: ReactPointerEvent<HTMLDivElement>) => {
-    if (event.pointerType !== 'mouse') return;
-    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-    const node = atomRef.current;
-    if (!node) return;
-    const rect = node.getBoundingClientRect();
-    const x = (event.clientX - rect.left) / rect.width - 0.5;
-    const y = (event.clientY - rect.top) / rect.height - 0.5;
-    node.style.setProperty('--atom-tilt-x', `${(-y * 7).toFixed(2)}deg`);
-    node.style.setProperty('--atom-tilt-y', `${(x * 9).toFixed(2)}deg`);
-  };
-
-  const resetAtom = () => {
-    const node = atomRef.current;
-    if (!node) return;
-    node.style.setProperty('--atom-tilt-x', '0deg');
-    node.style.setProperty('--atom-tilt-y', '0deg');
-  };
-
-  const handleAtomOut = (event: ReactPointerEvent<HTMLDivElement>) => {
-    const next = event.relatedTarget as Node | null;
-    if (next && event.currentTarget.contains(next)) return;
-    resetAtom();
-  };
 
   useEffect(() => {
     const controller = new AbortController();
@@ -129,54 +104,7 @@ export function LoginPage() {
             <span><Database size={13} /> PostGIS</span>
           </div>
 
-          <div
-            className="auth-atom"
-            ref={atomRef}
-            onPointerMove={handleAtomMove}
-            onPointerOut={handleAtomOut}
-            onPointerLeave={resetAtom}
-            onPointerCancel={resetAtom}
-            aria-hidden="true"
-          >
-            <div className="auth-atom__stage">
-              <div className="auth-atom__cage">
-                <span className="auth-atom__orbit auth-atom__orbit--a">
-                  <i className="auth-atom__ring" />
-                  <span className="auth-atom__shell">
-                    <i className="auth-atom__trail" />
-                    <i className="auth-atom__electron" />
-                  </span>
-                </span>
-                <span className="auth-atom__orbit auth-atom__orbit--b">
-                  <i className="auth-atom__ring" />
-                  <span className="auth-atom__shell">
-                    <i className="auth-atom__trail" />
-                    <i className="auth-atom__electron" />
-                  </span>
-                  <span className="auth-atom__shell auth-atom__shell--lag">
-                    <i className="auth-atom__trail" />
-                    <i className="auth-atom__electron" />
-                  </span>
-                </span>
-                <span className="auth-atom__orbit auth-atom__orbit--c">
-                  <i className="auth-atom__ring" />
-                  <span className="auth-atom__shell">
-                    <i className="auth-atom__trail" />
-                    <i className="auth-atom__electron" />
-                  </span>
-                </span>
-                <span className="auth-atom__core">
-                  <i className="auth-atom__nucleon" />
-                  <i className="auth-atom__nucleon" />
-                  <i className="auth-atom__nucleon" />
-                  <i className="auth-atom__nucleon" />
-                  <i className="auth-atom__nucleon" />
-                  <i className="auth-atom__nucleon" />
-                </span>
-              </div>
-            </div>
-            <em>核守于中 · 电子巡于外</em>
-          </div>
+          <AtomVisual caption="核守于中 · 电子巡于外" />
 
           <div className="auth-endpoint mono">
             <span className={secure ? 'is-secure' : 'is-warning'} />
@@ -282,6 +210,15 @@ export function LoginPage() {
           <div className="auth-footnote">
             <LockKeyhole size={12} />
             <span>本地演示环境 · 会话只留于此标签页，关窗即散</span>
+            <button
+              type="button"
+              className="auth-tour"
+              onClick={() => {
+                window.location.hash = '#/welcome';
+              }}
+            >
+              平台导览
+            </button>
           </div>
         </section>
       </main>
