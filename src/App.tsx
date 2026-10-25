@@ -1,7 +1,6 @@
 import { lazy, Suspense, useEffect } from 'react';
 import { HashRouter, Navigate, Route, Routes } from 'react-router-dom';
 import { Shell } from './components/Shell';
-import { markWelcomeSeen, navigateReplacingHash } from './auth/welcome';
 import { SimulationProvider } from './engine/simulation';
 
 const OverviewPage = lazy(() => import('./pages/Overview').then((m) => ({ default: m.OverviewPage })));
@@ -11,7 +10,6 @@ const GeoMapPage = lazy(() => import('./pages/GeoMap').then((m) => ({ default: m
 const KnowledgeGraphPage = lazy(() => import('./pages/KnowledgeGraph').then((m) => ({ default: m.KnowledgeGraphPage })));
 const CopilotPage = lazy(() => import('./pages/Copilot').then((m) => ({ default: m.CopilotPage })));
 const PlatformPage = lazy(() => import('./pages/Platform').then((m) => ({ default: m.PlatformPage })));
-const WelcomePage = lazy(() => import('./pages/Welcome').then((m) => ({ default: m.WelcomePage })));
 
 function RouteFallback() {
   return (
@@ -58,17 +56,8 @@ export default function App() {
               <Route path="/graph" element={<KnowledgeGraphPage />} />
               <Route path="/copilot" element={<CopilotPage />} />
               <Route path="/platform" element={<PlatformPage />} />
-              <Route
-                path="/welcome"
-                element={
-                  <WelcomePage
-                    onEnter={(path) => {
-                      markWelcomeSeen();
-                      navigateReplacingHash(path);
-                    }}
-                  />
-                }
-              />
+              {/* #/welcome 由 AuthGate 渲染整屏欢迎页，这里只兜住 HashRouter 的 * 重定向 */}
+              <Route path="/welcome" element={null} />
               <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
           </Suspense>

@@ -209,16 +209,7 @@ export function LoginPage() {
 
           <div className="auth-footnote">
             <LockKeyhole size={12} />
-            <span>本地演示环境 · 会话只留于此标签页，关窗即散</span>
-            <button
-              type="button"
-              className="auth-tour"
-              onClick={() => {
-                window.location.hash = '#/welcome';
-              }}
-            >
-              平台导览
-            </button>
+            <span>本地演示环境 · 会话只留于此标签页 · 登录后进入平台导览</span>
           </div>
         </section>
       </main>

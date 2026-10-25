@@ -15,7 +15,8 @@ import {
   type LucideIcon,
 } from 'lucide-react';
 import { AtomVisual } from '../components/AtomVisual';
-import { REMOTE_ENABLED } from '../services/api';
+import { useAuth } from '../auth/AuthContext';
+import type { UserRole } from '../services/api';
 
 const MODULES: { path: string; title: string; en: string; desc: string; icon: LucideIcon }[] = [
   { path: '/', title: '态势总览', en: 'OVERVIEW', desc: '区域 KPI、多源趋势、告警流转与智能体建议', icon: LayoutDashboard },
@@ -41,7 +42,16 @@ const STACK = [
   { icon: Database, label: 'PostgreSQL · PostGIS' },
 ];
 
+const ROLE_LABEL: Record<UserRole, string> = {
+  admin: '管理员',
+  operator: '值班长',
+  viewer: '观察员',
+};
+
 export function WelcomePage({ onEnter }: { onEnter: (path: string) => void }) {
+  const { user, isRemote } = useAuth();
+  const session = isRemote && user ? `${user.displayName} · ${ROLE_LABEL[user.role]}` : '本地演示 · 免登录';
+
   const scrollToModules = () => {
     const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     document.getElementById('welcome-modules')?.scrollIntoView({ behavior: reduced ? 'auto' : 'smooth', block: 'start' });
@@ -61,9 +71,18 @@ export function WelcomePage({ onEnter }: { onEnter: (path: string) => void }) {
             <span>PING'AN · SPATIOTEMPORAL IOT</span>
           </div>
         </div>
-        <button type="button" className="btn btn--sm btn--ghost welcome-top__enter" onClick={() => onEnter('/')}>
-          进入操作台 <ArrowRight size={13} />
-        </button>
+        <div className="welcome-top__aside">
+          <span className="welcome-session mono">
+            <i aria-hidden="true" />
+            <span className="welcome-session__label">
+              {isRemote && user ? 'SESSION VERIFIED · ' : 'LOCAL DEMO · '}
+            </span>
+            {session}
+          </span>
+          <button type="button" className="btn btn--sm btn--ghost welcome-top__enter" onClick={() => onEnter('/')}>
+            进入操作台 <ArrowRight size={13} />
+          </button>
+        </div>
       </header>
 
       <main className="welcome-main">
@@ -102,8 +121,7 @@ export function WelcomePage({ onEnter }: { onEnter: (path: string) => void }) {
             <span className="overline">SEVEN MODULES · ONE CONSOLE</span>
             <h2>七个模块，一处瞭望</h2>
             <p>
-              从感知接入到无人系统调度，从一张图到可推理的知识网络。选择任一模块进入
-              {REMOTE_ENABLED ? '，未登录时会先验证身份。' : '，本地演示模式将直接进入。'}
+              从感知接入到无人系统调度，从一张图到可推理的知识网络。身份已核验，选择任一模块即可直接进入。
             </p>
           </header>
           <div className="welcome-module-grid">

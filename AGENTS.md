@@ -63,7 +63,7 @@ src/App.tsx                  7 条一级路由：/ /drone /platform /simulation 
 src/engine/simulation.tsx    双模式引擎（local 引擎 + remote WS 消费，同一 context 接口）
 src/services/llm.ts          "物联大模型"= 规则引擎（纯函数 askCopilot，无外部模型调用）
 src/services/api.ts          全部 API 客户端 + REMOTE_ENABLED/API_BASE
-src/pages/Welcome.tsx        欢迎/落地页（公开；未登录首访由 AuthGate 渲染，/welcome 路由用于兜住 HashRouter）
+src/pages/Welcome.tsx        欢迎页（登录成功后由 AuthGate 触发一次，#/welcome 可复访）
 src/pages/DroneOps.tsx       一网统飞（唯一强依赖后端的页面，local 模式显示指引）
 src/pages/Platform.tsx       文档中心（侧栏目录树+正文阅读区+开卷书壳/翻页转场；文档内容在该文件 DOC_GROUPS 内维护）
 src/theme.ts                 主题存储与切换（支持时经 View Transitions API 转场）

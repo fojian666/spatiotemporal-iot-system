@@ -120,6 +120,12 @@
     padding: 18px 18px 0;
   }
 
+  .welcome-session {
+    height: 24px;
+    padding: 0 9px;
+    font-size: 7.5px;
+  }
+
   .welcome-main {
     padding: 0 18px 32px;
   }
@@ -315,6 +321,11 @@
 
   /* 手机上 hero 已有主按钮，顶部重复入口让位 */
   .welcome-top__enter {
+    display: none;
+  }
+
+  /* 窄屏只留姓名与角色，英文前缀让位 */
+  .welcome-session__label {
     display: none;
   }
 
@@ -762,7 +773,6 @@
   .answer-followups button,
   .docs-nav__item,
   .docs-pager__btn,
-  .auth-tour,
   .kg-domain,
   .auth-demo__btn,
   .ops-table__row,
@@ -772,8 +782,7 @@
 
   .icon-btn,
   .map-tools button,
-  .arch-trigger,
-  .auth-tour {
+  .arch-trigger {
     min-width: 44px;
   }
 }

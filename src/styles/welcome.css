@@ -48,6 +48,36 @@
   color: var(--amber);
 }
 
+/* 登录后的会话身份条：与主视觉分界，只用克制的事实文案 */
+.welcome-top__aside {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.welcome-session {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  height: 26px;
+  padding: 0 11px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: rgba(var(--panel-rgb), 0.5);
+  font-size: 8px;
+  letter-spacing: 0.12em;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+.welcome-session i {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--teal);
+  box-shadow: 0 0 8px rgba(35, 230, 176, 0.75);
+}
+
 .welcome-main {
   position: relative;
   z-index: 2;
@@ -314,19 +344,4 @@
   color: var(--muted);
   font-size: 7.5px;
   letter-spacing: 0.1em;
-}
-
-/* 登录页上的导览入口 */
-.auth-tour {
-  margin-left: auto;
-  padding: 2px 0;
-  border: 0;
-  background: none;
-  font-size: 9px;
-  color: var(--cyan);
-  cursor: pointer;
-}
-
-.auth-tour:hover {
-  text-decoration: underline;
 }

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react';
+import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import {
   AUTH_EXPIRED_EVENT,
   ApiError,
@@ -14,8 +14,9 @@ import { clearAuthToken, getAuthToken, setAuthToken } from '../services/authToke
 import { AuthContext, useAuth, type AuthContextValue, type AuthStatus } from '../auth/AuthContext';
 import { BootSplash } from './BootSplash';
 import { LoginPage } from '../pages/Login';
-import { WelcomePage } from '../pages/Welcome';
 import { hasSeenWelcome, markWelcomeSeen, navigateReplacingHash } from '../auth/welcome';
+
+const WelcomePage = lazy(() => import('../pages/Welcome').then((m) => ({ default: m.WelcomePage })));
 
 function useHashRoute(): string {
   const [hash, setHash] = useState(() => window.location.hash);
@@ -128,15 +129,30 @@ export function AuthGate({ children }: { children: ReactNode }) {
     navigateReplacingHash(path);
   }, []);
 
-  // 未登录深链（如 #/drone）：欢迎页主按钮仍回到原目标，而不是丢掉
-  const pendingPath = hash.startsWith('#/') && hash !== '#/welcome' ? hash.slice(1) : '/';
+  // 深链（如 #/drone）：欢迎页主按钮回到原目标，复访 #/welcome 后也能回到离开前的页面
+  const lastPath = useRef('/');
+  useEffect(() => {
+    if (hash.startsWith('#/') && hash !== '#/welcome') lastPath.current = hash.slice(1);
+  }, [hash]);
   const enterFromWelcome = useCallback(
-    (path: string) => enter(path === '/' ? pendingPath : path),
-    [enter, pendingPath],
+    (path: string) => enter(path === '/' ? lastPath.current : path),
+    [enter],
   );
 
-  if (hash.startsWith('#/welcome')) return <WelcomePage onEnter={enterFromWelcome} />;
-  if (!REMOTE_ENABLED) return <>{children}</>;
+  // 登录页停留时空闲预取欢迎页分包，避免登录成功后出现加载闪屏
+  useEffect(() => {
+    if (REMOTE_ENABLED && status !== 'anonymous') return undefined;
+    const prefetch = () => {
+      void import('../pages/Welcome');
+    };
+    if (typeof window.requestIdleCallback === 'function') {
+      const id = window.requestIdleCallback(prefetch, { timeout: 2500 });
+      return () => window.cancelIdleCallback(id);
+    }
+    const id = window.setTimeout(prefetch, 1200);
+    return () => window.clearTimeout(id);
+  }, [status]);
+
   if (status === 'checking') {
     return <BootSplash title="正在验证安全会话" detail="JWT · SESSION CHECK" />;
   }
@@ -157,8 +173,15 @@ export function AuthGate({ children }: { children: ReactNode }) {
       </div>
     );
   }
-  if (status === 'anonymous') {
-    return welcomeSeen ? <LoginPage /> : <WelcomePage onEnter={enterFromWelcome} />;
+  if (status === 'anonymous') return <LoginPage />;
+
+  // 已登录（本地演示模式恒为已登录）：本标签页首次进入先看导览，#/welcome 可随时复访
+  if (!welcomeSeen || hash.startsWith('#/welcome')) {
+    return (
+      <Suspense fallback={<BootSplash title="正在展开平台导览" detail="WELCOME · ONBOARDING" />}>
+        <WelcomePage onEnter={enterFromWelcome} />
+      </Suspense>
+    );
   }
   return <>{children}</>;
 }
