@@ -185,7 +185,7 @@ export function Shell({ children }: { children: ReactNode }) {
 
             <button
               type="button"
-              className="arch-trigger"
+              className="arch-trigger arch-trigger--theme"
               onClick={toggleTheme}
               title={theme === 'dark' ? '切换为白色主题' : '切换为暗色主题'}
               aria-label="切换主题"
@@ -194,7 +194,7 @@ export function Shell({ children }: { children: ReactNode }) {
               {theme === 'dark' ? '白色主题' : '暗色主题'}
             </button>
 
-            <button type="button" className="arch-trigger" onClick={openModal}>
+            <button type="button" className="arch-trigger arch-trigger--arch" onClick={openModal}>
               <Boxes size={15} />
               系统架构
             </button>
@@ -225,6 +225,23 @@ export function Shell({ children }: { children: ReactNode }) {
           {children}
         </main>
       </div>
+
+      <nav className="mobile-nav" aria-label="移动端主导航">
+        {NAV.map((item) => {
+          const Icon = item.icon;
+          return (
+            <NavLink
+              key={item.path}
+              to={item.path}
+              end={item.path === '/'}
+              className={({ isActive }) => (isActive ? 'is-active' : '')}
+            >
+              <Icon size={18} strokeWidth={1.7} />
+              <span>{item.label}</span>
+            </NavLink>
+          );
+        })}
+      </nav>
 
       <ArchitectureModal open={open} onClose={closeModal} />
     </div>
