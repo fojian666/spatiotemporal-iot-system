@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState, type CSSProperties } from 'react';
-import { Link, useSearchParams } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import {
   ArrowUpRight,
   Camera,
@@ -18,6 +18,7 @@ import { DeviceIcon, LevelPill, Panel, ProgressBar, StatusPill, StatusText } fro
 import { DEVICES, KIND_META, type DeviceDefinition } from '../data/devices';
 import { metricState, useSimulation } from '../engine/simulation';
 import { useAuth } from '../auth/AuthContext';
+import { usePageQuery } from '../hooks/usePageQuery';
 
 type AssetTab = 'unmanned' | 'video' | 'sensing';
 
@@ -102,15 +103,15 @@ function assetMeta(device: DeviceDefinition, reading: Record<string, number>) {
 export function GeoMapPage() {
   const { scenario, readings, deviceStatuses, alerts, stats, events, cycleAlert } = useSimulation();
   const { canOperate } = useAuth();
-  const [searchParams] = useSearchParams();
+  const [searchParams, updateQuery] = usePageQuery();
   const focusParam = searchParams.get('focus');
-  const [selectedId, setSelectedId] = useState<string | null>(focusParam ?? 'UAV-01');
-  const [assetTab, setAssetTab] = useState<AssetTab>('unmanned');
+  const selectedId = focusParam ?? 'UAV-01';
+  const selectedKind = DEVICES.find((device) => device.id === selectedId)?.kind;
+  const defaultTab: AssetTab = selectedKind === 'video' ? 'video' : selectedKind && !UNMANNED_KINDS.includes(selectedKind) ? 'sensing' : 'unmanned';
+  const tabParam = searchParams.get('asset');
+  const assetTab: AssetTab = tabParam === 'video' || tabParam === 'sensing' || tabParam === 'unmanned' ? tabParam : defaultTab;
+  const setSelectedId = (id: string | null) => updateQuery({ focus: id ?? 'none', asset: null });
   const [cameraId, setCameraId] = useState('CAM-01');
-
-  useEffect(() => {
-    if (focusParam) setSelectedId(focusParam);
-  }, [focusParam]);
 
   const selectedDevice = DEVICES.find((device) => device.id === selectedId) ?? null;
   const selectedReading = selectedId ? readings[selectedId] ?? {} : {};
@@ -239,7 +240,7 @@ export function GeoMapPage() {
                 <Link className="btn btn--sm btn--ai" to={`/copilot?q=${encodeURIComponent(`${selectedDevice.shortName}当前状态如何？`)}`}>
                   <Sparkles size={12} /> 询问大模型
                 </Link>
-                <Link className="btn btn--sm" to={`/simulation`}>
+                <Link className="btn btn--sm" to={`/simulation?focus=${selectedDevice.id}`}>
                   <ArrowUpRight size={12} /> 查看遥测
                 </Link>
               </div>
@@ -276,7 +277,7 @@ export function GeoMapPage() {
                 type="button"
                 className={assetTab === tab.key ? 'is-active' : ''}
                 aria-pressed={assetTab === tab.key}
-                onClick={() => setAssetTab(tab.key)}
+                onClick={() => updateQuery({ asset: tab.key })}
               >
                 {tab.label}<em>{tab.count}</em>
               </button>

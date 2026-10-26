@@ -827,3 +827,25 @@
   .arch-trigger--motion, .arch-trigger--theme, .docs-nav__toggle, .typed-skip { min-width: 44px; min-height: 44px; }
   .scenario-switch__item, .map-layer-toggle { min-height: 44px; }
 }
+
+/* 窄屏仍需从告警开始调查，不能沿用旧布局把整栏隐藏。 */
+@media (max-width: 1280px) {
+  .overview-col--right {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-column: 1 / -1;
+    order: -1;
+    align-items: start;
+  }
+  .overview-col--right .alert-panel { min-height: 320px; }
+}
+@media (max-width: 640px) {
+  .overview-col--right { grid-template-columns: minmax(0, 1fr); }
+}
+
+@media (max-width: 640px) {
+  .ops-plans .ops-subbar { flex-wrap: wrap; }
+  .ops-plans .ops-subbar__right { width: 100%; margin-left: 0; }
+  .ops-plans .ops-mini-search { flex: 1; min-width: 0; }
+  .ops-plans .ops-mini-search input { width: 100%; }
+}

@@ -9,6 +9,7 @@ import {
   Cpu,
   HeartPulse,
   Maximize2,
+  MapPin,
   MessageSquareText,
   RadioTower,
   Radar,
@@ -41,6 +42,8 @@ import { SCENARIO_LIST } from '../data/scenarios';
 import { formatSimTime, useSimulation } from '../engine/simulation';
 import { chartPalette, useTheme } from '../theme';
 import { useAuth } from '../auth/AuthContext';
+import { usePageQuery } from '../hooks/usePageQuery';
+import { usePageScroll } from '../hooks/usePageScroll';
 
 type ChartTab = 'weather' | 'water' | 'air';
 
@@ -104,7 +107,9 @@ export function OverviewPage() {
   const { canOperate } = useAuth();
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [feedTab, setFeedTab] = useState<'alerts' | 'events'>('alerts');
-  const [expandedAlert, setExpandedAlert] = useState<string | null>(null);
+  const [params, updateQuery] = usePageQuery();
+  const pageRef = usePageScroll();
+  const expandedAlert = params.get('alert');
   const [chartTab, setChartTab] = useState<ChartTab>('weather');
   const navigate = useNavigate();
   const theme = useTheme();
@@ -252,7 +257,7 @@ export function OverviewPage() {
   }, [selectedDevice, selectedReading]);
 
   return (
-    <div className="page overview-page">
+    <div ref={pageRef} className="page overview-page">
       <PageHeader
         icon={Radar}
         overline={`SPATIOTEMPORAL INTELLIGENT IOT · ${time.date.replaceAll('-', '.')}`}
@@ -530,7 +535,8 @@ export function OverviewPage() {
                     <button
                       type="button"
                       className="alert-row__main"
-                      onClick={() => setExpandedAlert(expandedAlert === alert.id ? null : alert.id)}
+                      aria-expanded={expandedAlert === alert.id}
+                      onClick={() => updateQuery({ alert: expandedAlert === alert.id ? null : alert.id })}
                     >
                       <LevelPill level={alert.level} />
                       <div className="alert-row__body">
@@ -547,9 +553,13 @@ export function OverviewPage() {
                     >
                       <div className="alert-row__detail">
                         <p>{alert.detail}</p>
-                        <button type="button" onClick={() => cycleAlert(alert.id)} disabled={!canOperate}>
-                          <Sparkles size={12} /> {alert.status === '待处置' ? '联动处置' : alert.status === '处置中' ? '标记完成' : '重新打开'}
-                        </button>
+                        <div className="alert-row__actions">
+                          <Link to={`/map?focus=${alert.source}`} tabIndex={expandedAlert === alert.id ? 0 : -1}><MapPin size={12} /> 地图定位</Link>
+                          <Link to={`/simulation?focus=${alert.source}`} tabIndex={expandedAlert === alert.id ? 0 : -1}><Activity size={12} /> 查看遥测</Link>
+                          <button type="button" onClick={() => cycleAlert(alert.id)} disabled={!canOperate} tabIndex={expandedAlert === alert.id ? 0 : -1} title={canOperate ? undefined : '观察员为只读角色，可查看地图与遥测'}>
+                            <Sparkles size={12} /> {alert.status === '待处置' ? '联动处置' : alert.status === '处置中' ? '标记完成' : '重新打开'}
+                          </button>
+                        </div>
                       </div>
                     </div>
                   </div>

@@ -408,7 +408,7 @@ ${status === 'warning' ? `当前场景「${ctx.scenario.name}」下，该设备�
     ]),
     actions: [
       { label: '在地图中定位', kind: 'navigate', value: `/map?focus=${device.id}` },
-      { label: '打开仿真沙盘', kind: 'navigate', value: '/simulation' },
+      { label: '查看设备遥测', kind: 'navigate', value: `/simulation?focus=${device.id}` },
     ],
     followups: ['该设备最近 3 分钟的变化趋势？', '还有哪些设备处于预警状态？', '生成一次针对该设备的巡检任务'],
     confidence: 0.94,
@@ -715,8 +715,8 @@ function dispatchAnswer(ctx: SimContextValue): Draft {
       graphEvidence(getNode('inspection')!),
     ]),
     actions: [
-      { label: '在航线图中查看', kind: 'navigate', value: '/map' },
-      { label: '进入仿真沙盘', kind: 'navigate', value: '/simulation' },
+      { label: '在航线图中查看', kind: 'navigate', value: `/map?focus=${droneId}` },
+      { label: '查看相关飞行计划', kind: 'navigate', value: `/drone?tab=plans&search=${droneId}` },
       { label: '检查飞行约束', kind: 'prompt', value: '当前气象条件对无人机飞行有什么影响？' },
     ],
     followups: ['这条航线的风险点在哪？', '巡检成果如何形成线索闭环？', '如果风速继续上升应该如何处理？'],
@@ -1088,6 +1088,8 @@ ${topic ? `如果你的问题与「${topic.name}」有关，可以直接问：�
 export function askCopilot(query: string, ctx: SimContextValue): CopilotReply {
   const normalized = query.trim();
   const lower = normalized.toLowerCase();
+  const device = findDevice(normalized);
+  const explicitlyNamedDevice = device && [device.id, device.shortName, device.name].some((name) => lower.includes(name.toLowerCase()));
   const nodes = retrieveKnowledge(normalized);
   const conceptCue = KNOWLEDGE_CUE.test(normalized);
   const telemetryCue = TELEMETRY_CUE.test(normalized);
@@ -1105,6 +1107,9 @@ export function askCopilot(query: string, ctx: SimContextValue): CopilotReply {
     draft = trendAnswer(ctx, normalized) ?? riskAnswer(ctx);
   } else if (conceptCue && !telemetryCue && nodes.length) {
     draft = knowledgeAnswer(ctx, normalized, nodes);
+  } else if (explicitlyNamedDevice && !conceptCue) {
+    // 点名设备的状态问题优先于水质/气象专题，否则 WQ-04 的入口会跳到 WQ-01。
+    draft = deviceAnswer(ctx, device);
   } else if (/(设备|节点).*(在线|离线|状态|预警)|在线率|离线设备|哪些设备/.test(normalized)) {
     draft = deviceStatusAnswer(ctx);
   } else if (/(水质|水位|浊度|氨氮|ph|pH|水体|排口)/.test(normalized)) {
@@ -1116,7 +1121,6 @@ export function askCopilot(query: string, ctx: SimContextValue): CopilotReply {
   } else if (conceptCue && nodes.length) {
     draft = knowledgeAnswer(ctx, normalized, nodes);
   } else {
-    const device = findDevice(normalized);
     draft = device ? deviceAnswer(ctx, device) : fallbackAnswer(ctx, normalized);
   }
 

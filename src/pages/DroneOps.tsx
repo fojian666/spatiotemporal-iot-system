@@ -2,6 +2,8 @@ import { prefersReducedMotion } from '../motion';
 import { useCallback, useEffect, useId, useRef, useState, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 import { Link } from 'react-router-dom';
+import { usePageQuery } from '../hooks/usePageQuery';
+import { usePageScroll } from '../hooks/usePageScroll';
 import {
   Activity,
   ArrowDown,
@@ -234,8 +236,13 @@ export function DroneOpsPage() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState('');
-  const [tab, setTab] = useState<TabKey>('assets');
-  const [activePlanId, setActivePlanId] = useState<string | null>(null);
+  const [params, updateQuery] = usePageQuery();
+  const pageRef = usePageScroll(!loading);
+  const tabParam = params.get('tab');
+  const tab = TABS.find((item) => item.key === tabParam)?.key ?? 'assets';
+  const setTab = useCallback((next: TabKey) => updateQuery({ tab: next === 'assets' ? null : next }), [updateQuery]);
+  const [activePlanId, setActivePlanId] = useState<string | null>(params.get('plan'));
+  const requestedPlan = params.get('plan');
   const [toast, setToast] = useState('');
   const [toastLeaving, setToastLeaving] = useState(false);
   const toastTimer = useRef<number | null>(null);
@@ -292,10 +299,16 @@ export function DroneOpsPage() {
   }, [load]);
 
   useEffect(() => {
-    if (!data || activePlanId) return;
+    if (!data) return;
+    const requested = data.plans.find((plan) => plan.id === requestedPlan);
+    if (requested) {
+      setActivePlanId(requested.id);
+      return;
+    }
+    if (data.plans.some((plan) => plan.id === activePlanId)) return;
     const candidate = data.plans.find((plan) => plan.status === '执行中') ?? data.plans[0];
     setActivePlanId(candidate?.id ?? null);
-  }, [data, activePlanId]);
+  }, [data, activePlanId, requestedPlan]);
 
   const activePlan = data?.plans.find((plan) => plan.id === activePlanId) ?? null;
 
@@ -364,20 +377,24 @@ export function DroneOpsPage() {
 
   const handleExecute = useCallback((plan: FlightPlan) => {
     setActivePlanId(plan.id);
-    setTab('flight');
-  }, []);
+    updateQuery({ tab: 'flight', plan: plan.id });
+  }, [updateQuery]);
 
   const handleOpenFlightForDevice = useCallback(
     (deviceId: string) => {
       if (!data) return;
       const plan =
         data.plans.find((item) => item.deviceId === deviceId && item.status !== '已完成' && item.status !== '执行失败') ??
-        data.plans.find((item) => item.deviceId === deviceId) ??
-        data.plans[0];
-      if (plan) setActivePlanId(plan.id);
-      setTab('flight');
+        data.plans.find((item) => item.deviceId === deviceId);
+      if (!plan) {
+        updateQuery({ tab: 'plans', search: deviceId, status: null, plan: null });
+        notify(`${deviceId} 暂无飞行计划，${canOperate ? '可在任务计划中创建' : '请联系值班长创建'}。`);
+        return;
+      }
+      setActivePlanId(plan.id);
+      updateQuery({ tab: 'flight', plan: plan.id });
     },
-    [data],
+    [data, updateQuery, notify, canOperate],
   );
 
   const handleClueUpdate = useCallback(
@@ -406,7 +423,7 @@ export function DroneOpsPage() {
   ];
 
   return (
-    <div className="page drone-page">
+    <div ref={pageRef} className="page drone-page">
       <PageHeader
         icon={Plane}
         overline="DRONE OPS · ONE-NETWORK FLIGHT PLATFORM"
@@ -538,7 +555,7 @@ export function DroneOpsPage() {
               data={data}
               activePlan={activePlan}
               canOperate={canOperate}
-              onSelectPlan={setActivePlanId}
+              onSelectPlan={(id) => { setActivePlanId(id); updateQuery({ plan: id }); }}
               onPlanUpdated={replacePlan}
               notify={notify}
             />
@@ -763,8 +780,11 @@ function PlansView({
   onExecute: (plan: FlightPlan) => void;
   onCreated: (plan: FlightPlan) => void;
 }) {
-  const [filter, setFilter] = useState<'active' | 'ended' | 'all'>('all');
-  const [query, setQuery] = useState('');
+  const [params, updateQuery] = usePageQuery();
+  const filterParam = params.get('status');
+  const filter = filterParam === 'active' || filterParam === 'ended' ? filterParam : 'all';
+  const setFilter = (value: typeof filter) => updateQuery({ status: value === 'all' ? null : value });
+  const query = params.get('search') ?? '';
   const [modalOpen, setModalOpen] = useState(false);
   const [detailId, setDetailId] = useState<string | null>(null);
   const detail = detailId ? data.plans.find((item) => item.id === detailId) ?? null : null;
@@ -777,15 +797,15 @@ function PlansView({
     <div className="ops-plans">
       <div className="ops-subbar">
         <div className="ops-subtabs">
-          <button type="button" className={filter === 'active' ? 'is-active' : ''} onClick={() => setFilter('active')}>未完成 <b>{unfinished.length}</b></button>
-          <button type="button" className={filter === 'ended' ? 'is-active' : ''} onClick={() => setFilter('ended')}>已结束 <b>{finished.length}</b></button>
-          <button type="button" className={filter === 'all' ? 'is-active' : ''} onClick={() => setFilter('all')}>全部 <b>{data.plans.length}</b></button>
+          <button type="button" className={filter === 'active' ? 'is-active' : ''} aria-pressed={filter === 'active'} onClick={() => setFilter('active')}>未完成 <b>{unfinished.length}</b></button>
+          <button type="button" className={filter === 'ended' ? 'is-active' : ''} aria-pressed={filter === 'ended'} onClick={() => setFilter('ended')}>已结束 <b>{finished.length}</b></button>
+          <button type="button" className={filter === 'all' ? 'is-active' : ''} aria-pressed={filter === 'all'} onClick={() => setFilter('all')}>全部 <b>{data.plans.length}</b></button>
         </div>
         <div className="ops-subbar__right">
           <label className="ops-mini-search">
-            <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="搜索计划 / 航线 / 设备" />
+            <input value={query} onChange={(event) => updateQuery({ search: event.target.value })} aria-label="搜索飞行计划" placeholder="搜索计划 / 航线 / 设备" />
           </label>
-          <button type="button" className="btn btn--primary btn--sm" disabled={!canOperate || !data.routes.length} title={!data.routes.length ? '请先在航线规划中创建航线' : undefined} onClick={() => setModalOpen(true)}>
+          <button type="button" className="btn btn--primary btn--sm" disabled={!canOperate || !data.routes.length} title={!canOperate ? '观察员为只读角色，可查看计划与飞控' : !data.routes.length ? '请先在航线规划中创建航线' : undefined} onClick={() => setModalOpen(true)}>
             <Plus size={13} /> 新建计划
           </button>
         </div>
@@ -817,13 +837,13 @@ function PlansView({
                   <span className="progress"><i style={{ width: `${percent}%` }} /></span>
                 </span>
                 <span className="plan-actions">
-                  <button type="button" className="btn btn--sm" onClick={() => onExecute(plan)}>{plan.status === '已完成' ? '查看' : '执行'}</button>
+                  <button type="button" className="btn btn--sm" onClick={() => onExecute(plan)}>{!canOperate || plan.status === '已完成' ? '查看' : '执行'}</button>
                   <button type="button" className="icon-btn" title="计划详情" onClick={() => setDetailId(plan.id)}><ChevronRight size={13} /></button>
                 </span>
               </div>
             );
           })}
-          {!plans.length && <div className="ops-empty"><CalendarClock size={22} /><strong>没有符合条件的飞行计划</strong></div>}
+          {!plans.length && <div className="ops-empty" role="status"><CalendarClock size={22} /><strong>没有符合条件的飞行计划</strong>{(query || filter !== 'all') && <button type="button" className="btn btn--sm" onClick={() => updateQuery({ search: null, status: null })}>清除筛选</button>}</div>}
         </div>
       </div>
 
@@ -1453,7 +1473,7 @@ function MediaView({ data }: { data: DroneOverview }) {
     <div className="ops-media">
       <div className="ops-subbar">
         <div className="ops-subtabs">
-          <button type="button" className={filter === 'all' ? 'is-active' : ''} onClick={() => setFilter('all')}>全部文件 <b>{all.length}</b></button>
+          <button type="button" className={filter === 'all' ? 'is-active' : ''} aria-pressed={filter === 'all'} onClick={() => setFilter('all')}>全部文件 <b>{all.length}</b></button>
           <button type="button" className={filter === 'image' ? 'is-active' : ''} onClick={() => setFilter('image')}>图片 <b>{counts.image}</b></button>
           <button type="button" className={filter === 'video' ? 'is-active' : ''} onClick={() => setFilter('video')}>视频 <b>{counts.video}</b></button>
           <button type="button" className={filter === 'archive' ? 'is-active' : ''} onClick={() => setFilter('archive')}>压缩文件 <b>{counts.archive}</b></button>

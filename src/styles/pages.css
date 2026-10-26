@@ -4609,3 +4609,13 @@
 .docs-nav__entries { display: flex; flex-direction: column; gap: 18px; }
 .docs-content__head h2, .docs-section h3 { text-wrap: balance; }
 .docs-content p, .docs-content li { overflow-wrap: anywhere; }
+
+/* 告警详情的只读调查路径与处置动作并列，窄屏允许换行。 */
+.alert-row__actions { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px; }
+.alert-row__actions a, .alert-row__actions button { display: inline-flex; align-items: center; gap: 4px; min-height: 32px; font-size: 11px; }
+.alert-row__actions a { color: var(--cyan); }
+.alert-row__detail p { font-size: 11px; }
+.table-empty .btn { display: block; margin: 12px auto 0; }
+@media (pointer: coarse) and (max-width: 900px) {
+  .alert-row__actions a, .alert-row__actions button { min-height: 44px; }
+}

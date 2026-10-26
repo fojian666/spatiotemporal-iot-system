@@ -1,4 +1,4 @@
-import { useMemo, useState, type CSSProperties } from 'react';
+import { useMemo, type CSSProperties } from 'react';
 import { Link } from 'react-router-dom';
 import {
   Activity,
@@ -35,6 +35,8 @@ import { SCENARIO_LIST, type ScenarioKey } from '../data/scenarios';
 import { formatSimTime, metricState, useSimulation } from '../engine/simulation';
 import { chartPalette, useTheme } from '../theme';
 import { useAuth } from '../auth/AuthContext';
+import { usePageQuery } from '../hooks/usePageQuery';
+import { usePageScroll } from '../hooks/usePageScroll';
 
 const SCENARIO_ICONS: Record<ScenarioKey, LucideIcon> = {
   normal: Activity,
@@ -79,10 +81,16 @@ export function SimulationPage() {
     linkStatus,
   } = useSimulation();
   const { canOperate } = useAuth();
-  const [selectedId, setSelectedId] = useState('WQ-04');
-  const [chartGroup, setChartGroup] = useState<ChartGroup>('water');
-  const [filter, setFilter] = useState<'all' | 'online' | 'warning' | 'offline'>('all');
-  const [search, setSearch] = useState('');
+  const [params, updateQuery] = usePageQuery();
+  const pageRef = usePageScroll();
+  const focus = DEVICES.find((device) => device.id === params.get('focus'));
+  const selectedId = focus?.id ?? 'WQ-04';
+  const defaultGroup: ChartGroup = focus?.kind === 'weather' ? 'weather' : focus?.kind === 'air' ? 'air' : focus?.kind === 'geology' ? 'geology' : 'water';
+  const groupParam = params.get('chart');
+  const chartGroup: ChartGroup = groupParam && Object.prototype.hasOwnProperty.call(GROUP_META, groupParam) ? groupParam as ChartGroup : defaultGroup;
+  const filterParam = params.get('status');
+  const filter = filterParam === 'online' || filterParam === 'warning' || filterParam === 'offline' ? filterParam : 'all';
+  const search = params.get('search') ?? '';
   const theme = useTheme();
   const palette = useMemo(() => chartPalette(), [theme]);
   const time = formatSimTime(simTime);
@@ -202,7 +210,7 @@ export function SimulationPage() {
   const heroState = heroDef ? metricState(heroDef, heroValue) : 'normal';
 
   return (
-    <div className="page simulation-page">
+    <div ref={pageRef} className="page simulation-page">
       <PageHeader
         icon={FlaskConical}
         overline={`IOT SIMULATION SANDBOX · TICK ${String(tick).padStart(4, '0')}`}
@@ -377,7 +385,7 @@ export function SimulationPage() {
               <Segmented
                 size="sm"
                 value={chartGroup}
-                onChange={(value) => setChartGroup(value)}
+                onChange={(value) => updateQuery({ chart: value })}
                 options={[
                   { label: '水质', value: 'water' },
                   { label: '气象', value: 'weather' },
@@ -410,7 +418,8 @@ export function SimulationPage() {
                       key={item.key}
                       type="button"
                       className={filter === item.key ? 'is-active' : ''}
-                      onClick={() => setFilter(item.key)}
+                      aria-pressed={filter === item.key}
+                      onClick={() => updateQuery({ status: item.key === 'all' ? null : item.key })}
                     >
                       {item.label}
                     </button>
@@ -420,7 +429,7 @@ export function SimulationPage() {
                   <Search size={13} />
                   <input
                     value={search}
-                    onChange={(event) => setSearch(event.target.value)}
+                    onChange={(event) => updateQuery({ search: event.target.value })}
                     placeholder="搜索设备 / 区域"
                     aria-label="搜索设备"
                   />
@@ -448,7 +457,7 @@ export function SimulationPage() {
                       type="button"
                       className={`device-table__row ${selectedId === device.id ? 'is-selected' : ''}`}
                       aria-pressed={selectedId === device.id}
-                      onClick={() => setSelectedId(device.id)}
+                      onClick={() => updateQuery({ focus: device.id })}
                     >
                       <span className="device-table__name">
                         <i style={{ color: KIND_META[device.kind].color }}>
@@ -476,7 +485,7 @@ export function SimulationPage() {
                     </button>
                   );
                 })}
-                {!filteredDevices.length && <div className="table-empty">没有符合条件的设备</div>}
+                {!filteredDevices.length && <div className="table-empty" role="status">没有符合条件的设备<button type="button" className="btn btn--sm" onClick={() => updateQuery({ status: null, search: null })}>清除筛选</button></div>}
               </div>
             </div>
             </div>
