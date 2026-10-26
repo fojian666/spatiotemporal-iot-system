@@ -589,15 +589,15 @@ ul {
   flex-direction: column;
   gap: 14px;
   min-height: 100%;
-  animation: pageIn var(--dur-enter) var(--ease-out) backwards;
+  animation: pageFade var(--dur-base) var(--ease-out) backwards;
 }
 
 .panel {
-  animation: riseIn var(--dur-enter) var(--ease-out) backwards;
+  animation: riseIn var(--dur-base) var(--ease-out) backwards;
 }
 
 .page-header {
-  animation: riseIn var(--dur-enter) var(--ease-out) backwards;
+  animation: none;
 }
 
 .kpi-grid > .kpi:nth-child(1) { animation-delay: 20ms; }
@@ -606,44 +606,29 @@ ul {
 .kpi-grid > .kpi:nth-child(4) { animation-delay: 125ms; }
 .kpi-grid > .kpi:nth-child(5) { animation-delay: 160ms; }
 
-.overview-grid > .overview-col--left > .panel:nth-child(1) { animation-delay: 70ms; }
-.overview-grid > .overview-col--left > .panel:nth-child(2) { animation-delay: 110ms; }
-.overview-grid > .overview-col--center > .panel:nth-child(1) { animation-delay: 40ms; }
-.overview-grid > .overview-col--center > .panel:nth-child(2) { animation-delay: 90ms; }
-.overview-grid > .overview-col--right > .panel:nth-child(1) { animation-delay: 80ms; }
-.overview-grid > .overview-col--right > .panel:nth-child(2) { animation-delay: 130ms; }
 
 .simulation-page .scenario-card:nth-child(1) { animation-delay: 30ms; }
 .simulation-page .scenario-card:nth-child(2) { animation-delay: 65ms; }
 .simulation-page .scenario-card:nth-child(3) { animation-delay: 100ms; }
 .simulation-page .scenario-card:nth-child(4) { animation-delay: 135ms; }
 .simulation-page .env-ribbon { animation: riseIn var(--dur-enter) var(--ease-out) 150ms backwards; }
-.simulation-page .pipeline-panel { animation-delay: 180ms; }
-.simulation-page .sim-grid > .sim-main > .panel:nth-child(1) { animation-delay: 220ms; }
-.simulation-page .sim-grid > .sim-main > .panel:nth-child(2) { animation-delay: 260ms; }
-.simulation-page .sim-grid > .sim-side > .panel:nth-child(1) { animation-delay: 210ms; }
-.simulation-page .sim-grid > .sim-side > .panel:nth-child(2) { animation-delay: 260ms; }
 
 .kg-page { animation: pageIn var(--dur-enter) var(--ease-out) backwards; }
 .copilot-page { animation: pageIn var(--dur-enter) var(--ease-out) backwards; }
 .geo-page { animation: pageFade 480ms var(--ease-out) backwards; }
 
-.kg-grid > .kg-left > .panel:nth-child(1) { animation-delay: 60ms; }
-.kg-grid > .kg-left > .panel:nth-child(2) { animation-delay: 100ms; }
-.kg-grid > .kg-graph-panel { animation-delay: 40ms; }
-.kg-grid > .kg-right > .panel { animation-delay: 80ms; }
 
-.copilot-page .chat-panel { animation-delay: 40ms; }
-.copilot-side > .panel:nth-child(1) { animation-delay: 80ms; }
-.copilot-side > .panel:nth-child(2) { animation-delay: 120ms; }
-.copilot-side > .panel:nth-child(3) { animation-delay: 160ms; }
 
 .geo-page .geo-header { animation: riseIn var(--dur-enter) var(--ease-out) 30ms backwards; }
-.geo-page .geo-left > .panel:nth-child(1) { animation-delay: 70ms; }
-.geo-page .geo-left > .panel:nth-child(2) { animation-delay: 110ms; }
-.geo-page .geo-right > .panel:nth-child(1) { animation-delay: 80ms; }
-.geo-page .geo-right > .panel:nth-child(2) { animation-delay: 120ms; }
 .geo-page .geo-mission-strip { animation: riseIn var(--dur-enter) var(--ease-out) 150ms backwards; }
+
+/* 面板轻入场，避免整页与子面板的位移叠加。 */
+.kg-page, .copilot-page, .geo-page { animation-name: pageFade; animation-duration: var(--dur-base); }
+.rail__item.is-active::before { animation: navIndicator var(--dur-base) var(--ease-out); }
+@keyframes navIndicator {
+  from { opacity: 0; transform: scaleY(.35); }
+  to { opacity: 1; transform: scaleY(1); }
+}
 
 /* ---------------- page header ---------------- */
 
@@ -1749,6 +1734,7 @@ select {
     animation-duration: 0.01ms !important;
     animation-delay: 0ms !important;
     animation-iteration-count: 1 !important;
+    animation-fill-mode: none !important;
     transition-duration: 0.01ms !important;
     transition-delay: 0ms !important;
     scroll-behavior: auto !important;
@@ -1814,27 +1800,21 @@ select {
 }
 
 .route-fallback {
-  min-height: 60vh;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 12px;
+  position: relative;
+  padding: 24px 20px;
   color: var(--muted);
 }
-
-.route-fallback i {
-  width: 140px;
-  height: 2px;
-  border-radius: 2px;
-  background: linear-gradient(90deg, transparent, rgba(75, 225, 255, 0.65), transparent);
-  background-size: 200% 100%;
-  animation: routeFallback 1.1s linear infinite;
-}
-
-@keyframes routeFallback {
-  from { background-position: 100% 0; }
-  to { background-position: -100% 0; }
+.route-fallback__label { display: block; margin-bottom: 18px; font-size: 12px; }
+.route-fallback__skeleton { display: grid; gap: 16px; }
+.route-fallback__heading { width: min(240px, 65%); height: 32px; }
+.route-fallback__metrics { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+.route-fallback__metrics i { height: 84px; }
+.route-fallback__body { height: clamp(180px, 38dvh, 360px); }
+.route-fallback__heading, .route-fallback__metrics i, .route-fallback__body {
+  display: block;
+  border-radius: var(--radius);
+  background: rgba(var(--edge-rgb), .08);
+  animation: breathe 1.8s var(--ease-in-out) infinite;
 }
 
 .boot-splash__mark span {

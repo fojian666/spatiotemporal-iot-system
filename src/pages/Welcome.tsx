@@ -11,6 +11,7 @@ import {
   Network,
   Plane,
   RadioTower,
+  Satellite,
   ShieldCheck,
   type LucideIcon,
 } from 'lucide-react';
@@ -112,6 +113,18 @@ export function WelcomePage({ onEnter }: { onEnter: (path: string) => void }) {
             </dl>
           </div>
           <div className="welcome-hero__visual">
+            <div className="welcome-sensing" aria-hidden="true">
+              <svg className="welcome-sensing__links" viewBox="0 0 460 360" fill="none">
+                <path d="M370 78 230 180M370 282 230 180M68 260 230 180" />
+                {[[370, 78], [370, 282], [68, 260]].map(([x, y], index) => (
+                  <circle key={index} r="3" className="welcome-sensing__packet"
+                    style={{ '--x': `${x}px`, '--y': `${y}px`, '--i': index } as CSSProperties} />
+                ))}
+              </svg>
+              <span className="welcome-sensing__label welcome-sensing__label--space"><Satellite size={15} />天基遥感</span>
+              <span className="welcome-sensing__label welcome-sensing__label--air"><Plane size={15} />低空巡检</span>
+              <span className="welcome-sensing__label welcome-sensing__label--ground"><RadioTower size={15} />地面感知</span>
+            </div>
             <AtomVisual caption="核守于中 · 电子巡于外" />
           </div>
         </section>

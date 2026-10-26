@@ -14,8 +14,12 @@ const PlatformPage = lazy(() => import('./pages/Platform').then((m) => ({ defaul
 function RouteFallback() {
   return (
     <div className="route-fallback" role="status" aria-live="polite">
-      <span className="overline">LOADING MODULE</span>
-      <i />
+      <span className="route-fallback__label">正在加载模块…</span>
+      <div className="route-fallback__skeleton" aria-hidden="true">
+        <div className="route-fallback__heading" />
+        <div className="route-fallback__metrics"><i /><i /><i /></div>
+        <div className="route-fallback__body" />
+      </div>
     </div>
   );
 }

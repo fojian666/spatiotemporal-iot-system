@@ -48,6 +48,8 @@
 ## 5. 动效
 
 - 只动 `transform` / `opacity`；时长与缓动取令牌，退场快于入场（≈60–70%）。
+- 控制台页面以 260ms 淡入为主、面板轻移入场，面板延迟统一 40ms，避免页面与子面板位移叠加。欢迎页保留完整主视觉编排，三路感知连线仅为能力示意，不代表实时遥测。
+- 图表在共享 `EChart` 入口处理 Canvas 动效降级；屏幕外暂存最新 option，恢复可见后刷新。地图巡行标记限制约 30fps，离开视口/标签页隐藏/减少动态效果时暂停。
 - 入场编排集中在 `auth.css` / `base.css` 的 motion layer；列表 stagger 24ms（`--i`）。
 - 全局降级在 `base.css` 的 `@media (prefers-reduced-motion: reduce)`：动画归零且 `fill: none`，**用 keyframe 定位的元素必须把静止姿态写进基础 transform**（见 `.auth-atom__electron`）。
 - 登录原子：指针视差写 `--atom-tilt-x/y`；反向壳层的 `animation-direction: reverse` 必须同时作用于壳层与电子。

@@ -280,6 +280,7 @@ export function MapView({
       if (sourceId === TERRAIN_SOURCE) setTerrainFailed(true);
     });
 
+    let stopAnimation = () => {};
     map.on('load', () => {
       map.addSource('fences', {
         type: 'geojson',
@@ -464,10 +465,14 @@ export function MapView({
       movingElsRef.current['satellite'] = satEl;
 
       let last = performance.now();
+      let inViewport = true;
+      const motion = window.matchMedia('(prefers-reduced-motion: reduce)');
       const animate = (now: number) => {
+        orbitRef.current = requestAnimationFrame(animate);
+        // 巡行动效限制为 30fps，减少四组 DOM Marker 的投影与样式写入。
+        if (now - last < 1000 / 30) return;
         const delta = Math.min(80, now - last) / 1000;
         last = now;
-        orbitRef.current = requestAnimationFrame(animate);
 
         const active = activeRouteRef.current;
         droneProgressRef.current = (droneProgressRef.current + delta / 110) % 1;
@@ -492,7 +497,27 @@ export function MapView({
         );
         satelliteMarkerRef.current?.setLngLat([satPoint.lng, satPoint.lat]);
       };
-      orbitRef.current = requestAnimationFrame(animate);
+      const syncAnimation = () => {
+        cancelAnimationFrame(orbitRef.current);
+        if (!document.hidden && inViewport && !motion.matches) {
+          last = performance.now();
+          orbitRef.current = requestAnimationFrame(animate);
+        }
+      };
+      const intersection = new IntersectionObserver(([entry]) => {
+        inViewport = entry.isIntersecting;
+        syncAnimation();
+      });
+      intersection.observe(node);
+      document.addEventListener('visibilitychange', syncAnimation);
+      motion.addEventListener('change', syncAnimation);
+      syncAnimation();
+      stopAnimation = () => {
+        cancelAnimationFrame(orbitRef.current);
+        intersection.disconnect();
+        document.removeEventListener('visibilitychange', syncAnimation);
+        motion.removeEventListener('change', syncAnimation);
+      };
 
       const fittedBounds = new maplibregl.LngLatBounds();
       DEVICES.forEach((device) => fittedBounds.extend([device.lng, device.lat]));
@@ -520,6 +545,7 @@ export function MapView({
 
     return () => {
       observer.disconnect();
+      stopAnimation();
       cancelAnimationFrame(orbitRef.current);
       map.remove();
       mapRef.current = null;
@@ -659,15 +685,15 @@ export function MapView({
     map.flyTo({
       center: [device.lng, device.lat],
       zoom: Math.max(12.9, map.getZoom()),
-      duration: 900,
+      duration: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : 900,
       offset: [0, 60],
-      essential: true,
+      essential: false,
     });
   }, [flyToSelected, selectedId, loaded]);
 
   const activeRoute = scenarioKey === 'fire' ? FOREST_ROUTE : DRONE_ROUTE;
 
-  const zoomBy = (delta: number) => mapRef.current?.zoomTo(mapRef.current.getZoom() + delta, { duration: 300 });
+  const zoomBy = (delta: number) => mapRef.current?.zoomTo(mapRef.current.getZoom() + delta, { duration: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : 300 });
   const terrainOn = layers.terrain && !terrainFailed;
   const reset = () =>
     mapRef.current?.flyTo({
@@ -675,7 +701,7 @@ export function MapView({
       zoom: initialZoom,
       pitch: terrainOn ? (detailed ? TERRAIN_PITCH : 0) : detailed ? FLAT_PITCH : 0,
       bearing: detailed ? -8 : 0,
-      duration: 600,
+      duration: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : 600,
     });
 
   return (

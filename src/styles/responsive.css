@@ -74,8 +74,11 @@
   }
 
   .welcome-hero__visual {
-    display: none;
+    display: flex;
+    min-height: 300px;
   }
+
+  .welcome-hero__visual .auth-atom { display: block; transform: scale(1); }
 
   .welcome-module-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -785,4 +788,22 @@
   .arch-trigger {
     min-width: 44px;
   }
+}
+
+@media (max-width: 640px) {
+  .welcome-hero__visual { min-height: 260px; }
+  .welcome-hero__visual .auth-atom { transform: scale(.85); }
+  .welcome-sensing { max-width: 360px; }
+  .welcome-sensing__label { padding: 5px 7px; gap: 4px; }
+  .route-fallback { padding: 18px 12px; }
+  .route-fallback__metrics { gap: 8px; }
+  .route-fallback__metrics i { height: 64px; }
+  .mobile-nav a.is-active::before { animation: mobileNavIndicator var(--dur-base) var(--ease-out); }
+}
+@keyframes mobileNavIndicator {
+  from { opacity: 0; transform: scaleX(.35); }
+  to { opacity: 1; transform: scaleX(1); }
+}
+@media (max-height: 560px) and (max-width: 1100px) {
+  .welcome-hero__visual { display: none; }
 }
