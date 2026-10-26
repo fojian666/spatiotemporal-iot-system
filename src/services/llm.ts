@@ -335,6 +335,11 @@ function findDevice(query: string) {
   return bestDevice && bestScore >= 4 ? bestDevice : null;
 }
 
+/** 查询中点名的设备编号；云端上下文与本地回答用同一套解析，避免两边口径不一致。 */
+export function resolveFocusDevice(query: string): string | null {
+  return findDevice(query)?.id ?? null;
+}
+
 function readingLines(ctx: SimContextValue, device: (typeof DEVICES)[number]) {
   const reading = ctx.readings[device.id] ?? {};
   if (device.metrics.length) {

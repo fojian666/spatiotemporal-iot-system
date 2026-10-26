@@ -34,6 +34,7 @@ import {
   COPILOT_MODEL,
   COPILOT_SUGGESTIONS,
   askCopilot,
+  resolveFocusDevice,
   type CopilotReply,
   type EvidenceKind,
 } from '../services/llm';
@@ -43,6 +44,9 @@ interface ChatMessage {
   role: 'user' | 'assistant';
   text: string;
   reply?: CopilotReply;
+  /* 每条回答的真实来源：通道后来失效也不改写历史署名 */
+  source?: 'cloud' | 'local';
+  modelName?: string;
   time: string;
   animate: boolean;
 }
@@ -120,13 +124,11 @@ function TypedText({
 
 function AssistantBubble({
   message,
-  model,
   onAction,
   onAsk,
   onScroll,
 }: {
   message: ChatMessage;
-  model: string | null;
   onAction: (action: CopilotReply['actions'][number]) => void;
   onAsk: (query: string) => void;
   onScroll: () => void;
@@ -143,8 +145,8 @@ function AssistantBubble({
       <span className="chat-avatar chat-avatar--ai"><Bot size={15} /></span>
       <div className="chat-bubble-wrap">
         <div className="chat-meta">
-          <strong>{model ?? 'IoT-Seer'}</strong>
-          <span>物联大模型</span>
+          <strong>{message.source === 'cloud' ? message.modelName ?? '云端模型' : 'IoT-Seer'}</strong>
+          <span>{message.source === 'cloud' ? '物联大模型' : '本地规则引擎'}</span>
           {reply && <em className={`intent-tag`}>{reply.intent}</em>}
         </div>
         <div className="chat-bubble chat-bubble--assistant">
@@ -335,9 +337,12 @@ export function CopilotPage() {
       void (async () => {
         const local = askCopilot(query, sim);
         let reply = local;
+        let source: 'cloud' | 'local' = 'local';
+        let modelName: string | undefined;
         if (llmReadyRef.current) {
           try {
-            const remote = await copilotChat(query, null);
+            /* 点名设备与本地检索用同一解析：否则云端上下文只补预警设备，回答不了 WQ-01 的正常读数 */
+            const remote = await copilotChat(query, resolveFocusDevice(query));
             /* 200 但缺 text 时不能直接用：上层没有 ErrorBoundary，undefined.length 会白屏 */
             const text = typeof remote?.text === 'string' ? remote.text.trim() : '';
             if (text) {
@@ -354,6 +359,8 @@ export function CopilotPage() {
                   },
                 ],
               };
+              source = 'cloud';
+              modelName = remote.model;
               llmFailuresRef.current = 0;
             }
           } catch {
@@ -372,6 +379,8 @@ export function CopilotPage() {
           role: 'assistant',
           text: reply.text,
           reply,
+          source,
+          modelName,
           time: stamp,
           animate: true,
         };
@@ -557,7 +566,6 @@ export function CopilotPage() {
                 <AssistantBubble
                   key={message.id}
                   message={message}
-                  model={llmModel}
                   onAction={handleAction}
                   onAsk={send}
                   onScroll={scrollToBottom}

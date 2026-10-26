@@ -1179,6 +1179,9 @@ function FlightView({
   const [localLog, setLocalLog] = useState<FlightCommand[]>([]);
   const [busy, setBusy] = useState(false);
   const completeRef = useRef(false);
+  /* 指令返回时据此判断期间是否切换了计划：切走了就只回写全局数据，不再动当前飞控面板 */
+  const activePlanIdRef = useRef<string | null>(activePlan?.id ?? null);
+  activePlanIdRef.current = activePlan?.id ?? null;
 
   useEffect(() => {
     completeRef.current = false;
@@ -1214,19 +1217,22 @@ function FlightView({
 
   const completeMission = useCallback(async () => {
     if (!activePlan || busy) return;
+    const planId = activePlan.id;
     setBusy(true);
     try {
-      const result = await sendDroneCommand(activePlan.id, 'complete');
+      const result = await sendDroneCommand(planId, 'complete');
       onPlanUpdated(result.plan, result.command);
+      if (activePlanIdRef.current !== planId) return;
       setLocalLog((items) => [result.command, ...items]);
       setPhase('done');
       notify('任务已完成，媒体上传与 AI 线索已归档');
     } catch (reason) {
+      if (activePlanIdRef.current !== planId) return;
       completeRef.current = false;
       setPhase('paused');
       notify(reason instanceof Error ? reason.message : '任务完成状态回写失败，可重试归档');
     } finally {
-      setBusy(false);
+      if (activePlanIdRef.current === planId) setBusy(false);
     }
   }, [activePlan, busy, notify, onPlanUpdated]);
 
@@ -1246,10 +1252,12 @@ function FlightView({
 
   const command = async (name: 'takeoff' | 'pause' | 'resume' | 'hover' | 'return' | 'land') => {
     if (!activePlan || !canOperate || busy) return;
+    const planId = activePlan.id;
     setBusy(true);
     try {
-      const result = await sendDroneCommand(activePlan.id, name);
+      const result = await sendDroneCommand(planId, name);
       onPlanUpdated(result.plan, result.command);
+      if (activePlanIdRef.current !== planId) return;
       setLocalLog((items) => [result.command, ...items]);
       if (name === 'takeoff' || name === 'resume' || name === 'return') {
         completeRef.current = false;
@@ -1263,9 +1271,11 @@ function FlightView({
       }
       notify(`指令已下发：${COMMAND_LABELS[name] ?? name}`);
     } catch (reason) {
-      notify(reason instanceof Error ? reason.message : '飞控指令下发失败');
+      if (activePlanIdRef.current === planId) {
+        notify(reason instanceof Error ? reason.message : '飞控指令下发失败');
+      }
     } finally {
-      setBusy(false);
+      if (activePlanIdRef.current === planId) setBusy(false);
     }
   };
 
