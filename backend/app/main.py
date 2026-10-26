@@ -714,6 +714,16 @@ async def telemetry_socket(websocket: WebSocket) -> None:
             await websocket.close(code=4401, reason="session revoked")
             return
     await manager.connect(websocket, user_id)
+    # 上面校验与注册之间可能发生登出，close_user 会漏掉这条尚未注册的连接；注册后复核一次
+    async with SessionLocal() as session:
+        user = await session.get(User, user_id)
+    if user is None or not user.active or user.token_version != token_version:
+        manager.disconnect(websocket)
+        try:
+            await websocket.close(code=4401, reason="session revoked")
+        except Exception:  # noqa: BLE001
+            pass
+        return
     try:
         await websocket.send_json(await asyncio.to_thread(service.snapshot))
         while True:

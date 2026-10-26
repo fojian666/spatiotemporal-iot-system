@@ -377,7 +377,10 @@ async def plan_command(
     session: AsyncSession = Depends(get_session),
     operator: User = Depends(Operator),
 ) -> dict:
-    plan = await session.get(FlightPlan, plan_id)
+    # 行锁把并发指令串行化：否则两条指令会同时读到旧状态各自通过校验，后提交者覆盖先提交者
+    plan = (
+        await session.scalars(select(FlightPlan).where(FlightPlan.id == plan_id).with_for_update())
+    ).first()
     if plan is None:
         raise HTTPException(status_code=404, detail="飞行计划不存在")
     transition = plan_transition(plan.status, payload.command)

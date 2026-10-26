@@ -10,6 +10,7 @@ from typing import Any, Callable
 import paho.mqtt.client as mqtt
 
 from .config import settings
+from .data import DEVICE_BY_ID
 from .schemas import DeviceReadingPayload
 
 
@@ -106,6 +107,10 @@ class MQTTBridge:
                 message.topic,
                 payload.device_id,
             )
+            return
+        if payload.device_id not in DEVICE_BY_ID:
+            self.messages_rejected += 1
+            logger.warning("Rejected telemetry from unregistered device %s", payload.device_id)
             return
         self.messages_received += 1
         self.on_reading(payload.model_dump())
