@@ -267,6 +267,7 @@ export function OverviewPage() {
                   key={item.key}
                   type="button"
                   className={`scenario-switch__item ${scenarioKey === item.key ? 'is-active' : ''}`}
+                  aria-pressed={scenarioKey === item.key}
                   style={{ '--sc': item.color } as CSSProperties}
                   onClick={() => setScenario(item.key)}
                   disabled={!canOperate}

@@ -49,11 +49,12 @@
 
 - 只动 `transform` / `opacity`；时长与缓动取令牌，退场快于入场（≈60–70%）。
 - 控制台页面以 260ms 淡入为主、面板轻移入场，面板延迟统一 40ms，避免页面与子面板位移叠加。欢迎页保留完整主视觉编排，三路感知连线仅为能力示意，不代表实时遥测。
+- 顶栏「界面动效」可切换静态显示，偏好保存在本机；系统 reduced-motion 优先。JS 统一经 `src/motion.ts` 读取/订阅，CSS 统一响应 `data-motion`，数据订阅与仿真时钟不暂停。
 - 图表在共享 `EChart` 入口处理 Canvas 动效降级；屏幕外暂存最新 option，恢复可见后刷新。地图巡行标记限制约 30fps，离开视口/标签页隐藏/减少动态效果时暂停。
 - 入场编排集中在 `auth.css` / `base.css` 的 motion layer；列表 stagger 24ms（`--i`）。
 - 全局降级在 `base.css` 的 `@media (prefers-reduced-motion: reduce)`：动画归零且 `fill: none`，**用 keyframe 定位的元素必须把静止姿态写进基础 transform**（见 `.auth-atom__electron`）。
 - 登录原子：指针视差写 `--atom-tilt-x/y`；反向壳层的 `animation-direction: reverse` 必须同时作用于壳层与电子。
-- 文档中心：翻页 `rotateY ±104°`；≤1100px 与 reduced-motion 退化为直接切换。
+- 文档中心：≤1100px 目录折叠，展开后可滚动选章，选中自动收起，正文优先。翻页 `rotateY ±104°`；≤1100px 与 reduced-motion 退化为直接切换。
 - 主题切换走 View Transitions API（`src/theme.ts`），不要在别处另写遮罩转场。
 
 ## 6. 层级

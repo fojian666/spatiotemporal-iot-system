@@ -355,6 +355,7 @@ export function KnowledgeGraphPage() {
                     key={category}
                     type="button"
                     className={`kg-domain ${isHidden ? 'is-hidden' : ''}`}
+                    aria-pressed={!isHidden}
                     onClick={() => toggleCategory(category)}
                   >
                     <i style={{ background: meta.color }} />

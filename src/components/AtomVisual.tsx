@@ -1,3 +1,4 @@
+import { prefersReducedMotion } from '../motion';
 import { useRef, type PointerEvent as ReactPointerEvent } from 'react';
 
 export function AtomVisual({ caption, className = '' }: { caption?: string; className?: string }) {
@@ -5,7 +6,7 @@ export function AtomVisual({ caption, className = '' }: { caption?: string; clas
 
   const handleMove = (event: ReactPointerEvent<HTMLDivElement>) => {
     if (event.pointerType !== 'mouse') return;
-    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    if (prefersReducedMotion()) return;
     const node = atomRef.current;
     if (!node) return;
     const rect = node.getBoundingClientRect();

@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import maplibregl, { type Map as MapLibreMap, type StyleSpecification } from 'maplibre-gl';
+import { prefersReducedMotion } from '../motion';
 import { AREA_CENTER } from '../data/devices';
 import type { DroneWaypoint } from '../services/api';
 
@@ -173,7 +174,7 @@ export function RouteEditorMap({ waypoints, editable, onChange, className = '', 
         [Math.min(...lngs), Math.min(...lats)],
         [Math.max(...lngs), Math.max(...lats)],
       ],
-      { padding: 70, duration: 650, maxZoom: 14 },
+      { padding: 70, duration: prefersReducedMotion() ? 0 : 650, maxZoom: 14 },
     );
     // Only refit when the selected route changes, not on every point edit.
     // eslint-disable-next-line react-hooks/exhaustive-deps

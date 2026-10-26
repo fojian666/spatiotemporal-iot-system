@@ -215,7 +215,7 @@
 
 .ops-content {
   min-height: 420px;
-  animation: contentIn var(--dur-slow) var(--ease-out) backwards;
+  animation: contentIn var(--dur-base) var(--ease-out) backwards;
 }
 
 .ops-loading {
@@ -581,7 +581,7 @@
   display: flex;
   flex-direction: column;
   gap: 10px;
-  animation: contentIn var(--dur-slow) var(--ease-out) backwards;
+  animation: contentIn var(--dur-base) var(--ease-out) backwards;
 }
 
 .ops-console__head {
@@ -2595,3 +2595,9 @@
     box-shadow: 0 0 0 0 transparent;
   }
 }
+
+/* 作业页的切换反馈不与实时状态脉冲竞争。 */
+.ops-tab:is(:hover, :focus-visible) { color: var(--text); background-color: var(--cyan-soft); }
+.airport-card:focus-visible { border-color: var(--cyan); }
+.ops-loading { color: var(--muted); }
+.ops-table__row:focus-within { background-color: var(--cyan-soft); }

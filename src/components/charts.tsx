@@ -1,3 +1,4 @@
+import { prefersReducedMotion, subscribeMotion } from '../motion';
 import { useEffect, useRef } from 'react';
 import { echarts } from '../lib/echarts';
 import type { ECElementEvent, ECharts, EChartsOption } from '../lib/echarts';
@@ -27,7 +28,6 @@ export function EChart({
     chartRef.current = chart;
     chart.on('click', (params) => clickRef.current?.(params));
     const node = ref.current;
-    const motion = window.matchMedia('(prefers-reduced-motion: reduce)');
     let visible = typeof IntersectionObserver === 'undefined';
     let frame: number | null = null;
     const render = () => {
@@ -35,7 +35,7 @@ export function EChart({
       if (chart.getWidth() !== node.clientWidth || chart.getHeight() !== node.clientHeight) chart.resize();
       // Canvas 不受全局 CSS 降级规则影响，在共享图表入口统一处理。
       const current = optionRef.current;
-      chart.setOption({ ...current, animation: motion.matches ? false : current.animation ?? true,
+      chart.setOption({ ...current, animation: prefersReducedMotion() ? false : current.animation ?? true,
         aria: { enabled: true, data: { maxCount: 6 } } }, { notMerge: false });
     };
     renderRef.current = render;
@@ -49,12 +49,12 @@ export function EChart({
       if (visible) render();
     });
     intersection?.observe(node);
-    motion.addEventListener('change', render);
+    const unsubscribeMotion = subscribeMotion(render);
     document.addEventListener('visibilitychange', render);
     return () => {
       observer.disconnect();
       intersection?.disconnect();
-      motion.removeEventListener('change', render);
+      unsubscribeMotion();
       document.removeEventListener('visibilitychange', render);
       if (frame !== null) window.cancelAnimationFrame(frame);
       renderRef.current = null;

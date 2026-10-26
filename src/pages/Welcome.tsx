@@ -1,3 +1,4 @@
+import { prefersReducedMotion } from '../motion';
 import type { CSSProperties } from 'react';
 import {
   ArrowRight,
@@ -54,7 +55,7 @@ export function WelcomePage({ onEnter }: { onEnter: (path: string) => void }) {
   const session = isRemote && user ? `${user.displayName} · ${ROLE_LABEL[user.role]}` : '本地演示 · 免登录';
 
   const scrollToModules = () => {
-    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const reduced = prefersReducedMotion();
     document.getElementById('welcome-modules')?.scrollIntoView({ behavior: reduced ? 'auto' : 'smooth', block: 'start' });
   };
 

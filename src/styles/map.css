@@ -62,7 +62,7 @@
   z-index: 2;
 }
 
-.map-node:hover {
+.map-node:is(:hover, :focus-visible) {
   border-color: var(--node-color);
   box-shadow: 0 0 0 4px color-mix(in srgb, var(--node-color) 10%, transparent), 0 0 22px color-mix(in srgb, var(--node-color) 52%, transparent);
 }
@@ -92,7 +92,7 @@
   pointer-events: none;
 }
 
-.map-node:hover .map-node__core {
+.map-node:is(:hover, :focus-visible) .map-node__core {
   transform: scale(1.12);
 }
 
@@ -130,7 +130,7 @@
   color: var(--dim);
 }
 
-.map-node:hover .map-node__label,
+.map-node:is(:hover, :focus-visible) .map-node__label,
 .map-node.is-selected .map-node__label {
   opacity: 1;
   transform: translateX(-50%) translateY(0);
@@ -237,12 +237,12 @@
   box-shadow: 0 0 6px var(--teal);
 }
 
-.map-moving:hover .map-moving__label,
+.map-moving:is(:hover, :focus-visible) .map-moving__label,
 .map-moving.is-selected .map-moving__label {
   opacity: 1;
 }
 
-.map-moving:hover .map-moving__core {
+.map-moving:is(:hover, :focus-visible) .map-moving__core {
   transform: scale(1.08);
 }
 
@@ -686,3 +686,5 @@
 .place-label--water span {
   color: rgba(144, 218, 235, 0.78);
 }
+
+.map-node:focus-visible, .map-moving:focus-visible { outline: 2px solid var(--text); outline-offset: 4px; z-index: 8; }

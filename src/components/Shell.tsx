@@ -1,3 +1,4 @@
+import { systemReducesMotion, toggleMotion, useReducedMotion } from '../motion';
 import { useState, type CSSProperties, type ReactNode } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import {
@@ -10,6 +11,7 @@ import {
   LogOut,
   Map as MapIcon,
   Moon,
+  Sparkles,
   Network,
   PanelLeftClose,
   PanelLeftOpen,
@@ -103,6 +105,7 @@ export function Shell({ children }: { children: ReactNode }) {
   const { simTime, scenario, running, speed, stats, source, linkStatus } = useSimulation();
   const { user, logout, isRemote } = useAuth();
   const theme = useTheme();
+  const reducedMotion = useReducedMotion();
   const { collapsed: railCollapsed, toggle: toggleRail } = useRailCollapsed();
   const roleLabel = user?.role === 'admin' ? '管理员' : user?.role === 'operator' ? '值班长' : user?.role === 'viewer' ? '观察员（只读）' : '本地演示';
   const displayName = user?.displayName ?? '值班长';
@@ -200,6 +203,13 @@ export function Shell({ children }: { children: ReactNode }) {
             >
               {theme === 'dark' ? <Sun size={15} /> : <Moon size={15} />}
               {theme === 'dark' ? '白色主题' : '暗色主题'}
+            </button>
+
+            <button type="button" className="arch-trigger arch-trigger--motion" onClick={toggleMotion}
+              aria-label="减少动态效果" aria-pressed={reducedMotion}
+              disabled={systemReducesMotion()}
+              title={systemReducesMotion() ? '系统已启用减少动态效果' : reducedMotion ? '恢复界面动效（数据继续运行）' : '减少界面动效（数据继续运行）'}>
+              <Sparkles size={15} />{reducedMotion ? '静态显示' : '界面动效'}
             </button>
 
             <button type="button" className="arch-trigger arch-trigger--arch" onClick={openModal}>

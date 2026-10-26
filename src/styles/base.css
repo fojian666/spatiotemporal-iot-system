@@ -17,7 +17,7 @@
   --pink: #ff84a8;
   --text: #dcedff;
   --muted: #8aa6c1;
-  --dim: #5b7994;
+  --dim: #7893ad;
   --rail: 76px;
   --topbar: 62px;
   --radius: 14px;
@@ -1065,7 +1065,9 @@ ul {
   display: block;
   height: 100%;
   border-radius: inherit;
-  transition: width var(--dur-slow) var(--ease-out);
+  width: 100%;
+  transform-origin: left center;
+  transition: transform var(--dur-slow) var(--ease-out);
   box-shadow: 0 0 8px currentColor;
 }
 
@@ -1972,3 +1974,29 @@ select {
   background: none;
   cursor: pointer;
 }
+
+/* 全项目的交互状态与动效控制 */
+.arch-trigger--motion[aria-pressed='true'] { color: var(--cyan); border-color: var(--line-strong); }
+button:disabled { cursor: not-allowed; }
+button:disabled:hover { transform: none; }
+.search-box:focus-within { outline: 1px solid var(--cyan); outline-offset: 2px; }
+.search-box input::placeholder { color: var(--muted); }
+:is(.ops-tab, .seg__item, .filter-tabs button, .asset-tabs button) { position: relative; }
+:is(.ops-tab, .seg__item, .filter-tabs button, .asset-tabs button).is-active::after {
+  content: ''; position: absolute; left: 8px; right: 8px; bottom: 1px; height: 1px;
+  background: currentColor; transform-origin: center; pointer-events: none;
+  animation: activeTabIn var(--dur-base) var(--ease-out);
+}
+@keyframes activeTabIn { from { opacity: 0; transform: scaleX(.3); } to { opacity: 1; transform: scaleX(1); } }
+:is(.airport-card, .ops-asset-row, .device-table__row, .asset-row, .kg-domain, .docs-nav__item):focus-visible {
+  outline: 2px solid var(--cyan); outline-offset: -2px; background-color: var(--cyan-soft);
+}
+html[data-page-hidden] *, html[data-page-hidden] *::before, html[data-page-hidden] *::after {
+  animation-play-state: paused !important;
+}
+html[data-motion='reduced'] *, html[data-motion='reduced'] *::before, html[data-motion='reduced'] *::after {
+  animation-duration: .01ms !important; animation-delay: 0ms !important;
+  animation-iteration-count: 1 !important; animation-fill-mode: none !important;
+  transition-duration: .01ms !important; transition-delay: 0ms !important; scroll-behavior: auto !important;
+}
+html[data-motion='reduced'] .docs-page-turn { display: none; }

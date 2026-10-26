@@ -35,7 +35,7 @@
 }
 
 .chat-panel {
-  animation: riseIn var(--dur-enter) var(--ease-out) backwards;
+  animation: riseIn var(--dur-base) var(--ease-out) backwards;
   position: relative;
   min-width: 0;
   min-height: 0;
@@ -1417,3 +1417,7 @@
 .copilot-toast.is-leaving {
   animation: toastOut 180ms var(--ease-out) forwards;
 }
+
+.typed-skip { display: block; margin-top: 8px; padding: 5px 8px; color: var(--cyan); font-size: 11px; border: 1px solid var(--line-strong); border-radius: 5px; }
+.typed-skip:is(:hover, :focus-visible) { background: var(--cyan-soft); }
+.chat-input:focus-within { border-color: var(--cyan); }

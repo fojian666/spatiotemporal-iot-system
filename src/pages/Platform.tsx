@@ -1,3 +1,4 @@
+import { prefersReducedMotion } from '../motion';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { BookOpen, ChevronLeft, ChevronRight, FileText } from 'lucide-react';
@@ -934,6 +935,8 @@ export function PlatformPage() {
     () => DOC_GROUPS.flatMap((group) => group.docs.map((doc) => ({ ...doc, group: group.name }))),
     [],
   );
+  const [directoryOpen, setDirectoryOpen] = useState(false);
+  const directoryToggleRef = useRef<HTMLButtonElement>(null);
   const [activeId, setActiveId] = useState(flat[0].id);
   const [displayedId, setDisplayedId] = useState(flat[0].id);
   const [fading, setFading] = useState(false);
@@ -966,6 +969,8 @@ export function PlatformPage() {
   useEffect(() => () => clearTimers(), []);
 
   const switchDoc = (id: string) => {
+    if (directoryOpen && window.matchMedia('(max-width: 1100px)').matches) directoryToggleRef.current?.focus();
+    setDirectoryOpen(false);
     setActiveId(id);
     if (id === displayedId) return;
 
@@ -976,7 +981,7 @@ export function PlatformPage() {
 
     const direction: 'next' | 'prev' = toIndex >= fromIndex ? 'next' : 'prev';
     const scrollTop = contentRef.current?.scrollTop ?? 0;
-    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const reduceMotion = prefersReducedMotion();
     const narrow = window.matchMedia('(max-width: 1100px)').matches;
 
     clearTimers();
@@ -1024,7 +1029,12 @@ export function PlatformPage() {
       />
 
       <div className="docs-layout">
-        <aside className="docs-nav">
+        <aside className={`docs-nav ${directoryOpen ? 'is-open' : ''}`}>
+          <button ref={directoryToggleRef} type="button" className="docs-nav__toggle" aria-expanded={directoryOpen}
+            aria-controls="docs-directory" onClick={() => setDirectoryOpen((current) => !current)}>
+            <BookOpen size={15} /><span>文档目录</span><strong>{doc.title}</strong><ChevronRight size={14} />
+          </button>
+          <div id="docs-directory" className="docs-nav__entries">
           {DOC_GROUPS.map((group) => (
             <div className="docs-nav__group" key={group.name}>
               <span className="docs-nav__group-name">{group.name}</span>
@@ -1033,6 +1043,7 @@ export function PlatformPage() {
                   key={item.id}
                   type="button"
                   className={`docs-nav__item ${item.id === activeId ? 'is-active' : ''}`}
+                  aria-current={item.id === activeId ? 'page' : undefined}
                   onClick={() => switchDoc(item.id)}
                 >
                   <FileText size={12} />
@@ -1041,6 +1052,7 @@ export function PlatformPage() {
               ))}
             </div>
           ))}
+          </div>
         </aside>
 
         <div className="docs-stage">

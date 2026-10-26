@@ -1,3 +1,4 @@
+import { prefersReducedMotion } from './motion';
 import { useSyncExternalStore } from 'react';
 
 export type Theme = 'dark' | 'light';
@@ -39,7 +40,7 @@ export function setTheme(theme: Theme): void {
     listeners.forEach((listener) => listener());
   };
   const doc = document as ViewTransitionCapableDocument;
-  if (doc.startViewTransition && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+  if (doc.startViewTransition && !prefersReducedMotion()) {
     try {
       const transition = doc.startViewTransition(apply);
       transition.ready?.catch(() => undefined);

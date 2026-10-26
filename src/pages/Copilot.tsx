@@ -1,3 +1,4 @@
+import { prefersReducedMotion, useReducedMotion } from '../motion';
 import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties, type KeyboardEvent as ReactKeyboardEvent } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import {
@@ -78,46 +79,63 @@ function TypedText({
   onProgress?: () => void;
   onDone?: () => void;
 }) {
-  const [shown, setShown] = useState(animate ? 0 : text.length);
-  const [done, setDone] = useState(!animate);
+  const reduced = useReducedMotion();
+  const timerRef = useRef<number | null>(null);
+  const completedText = useRef<string | null>(null);
+  const [shown, setShown] = useState(animate && !reduced ? 0 : text.length);
+  const [done, setDone] = useState(!animate || reduced);
   const progressRef = useRef(onProgress);
   const doneRef = useRef(onDone);
   progressRef.current = onProgress;
   doneRef.current = onDone;
 
   useEffect(() => {
-    if (!animate) {
+    const finish = () => {
       setShown(text.length);
       setDone(true);
+      if (animate && completedText.current !== text) {
+        completedText.current = text;
+        doneRef.current?.();
+      }
+    };
+    if (!animate || reduced || completedText.current === text) {
+      finish();
       return undefined;
     }
     let index = 0;
     setShown(0);
     setDone(false);
-    const timer = window.setInterval(() => {
-      index = Math.min(text.length, index + 3);
+    // 保留原有阅读速度，降低状态更新与自动滚动频率。
+    timerRef.current = window.setInterval(() => {
+      index = Math.min(text.length, index + 7);
       setShown(index);
       progressRef.current?.();
       if (index >= text.length) {
-        window.clearInterval(timer);
-        setDone(true);
-        doneRef.current?.();
+        if (timerRef.current !== null) window.clearInterval(timerRef.current);
+        timerRef.current = null;
+        finish();
       }
-    }, 14);
-    return () => window.clearInterval(timer);
-  }, [text, animate]);
+    }, 32);
+    return () => {
+      if (timerRef.current !== null) window.clearInterval(timerRef.current);
+      timerRef.current = null;
+    };
+  }, [text, animate, reduced]);
 
   const skip = () => {
-    if (done) return;
+    if (completedText.current === text) return;
+    if (timerRef.current !== null) window.clearInterval(timerRef.current);
+    timerRef.current = null;
+    completedText.current = text;
     setShown(text.length);
     setDone(true);
     doneRef.current?.();
   };
 
   return (
-    <div className={`typed-text ${done ? 'is-done' : 'is-typing'}`} onClick={skip} role="presentation">
+    <div className={`typed-text ${done ? 'is-done' : 'is-typing'}`}>
       {text.slice(0, shown)}
-      {!done && <span className="typed-caret" />}
+      {!done && <><span className="typed-caret" /><button type="button" className="typed-skip" onClick={skip}>显示完整回答</button></>}
     </div>
   );
 }
@@ -413,7 +431,7 @@ export function CopilotPage() {
     if (toastLeaveTimerRef.current) window.clearTimeout(toastLeaveTimerRef.current);
     toastTimerRef.current = window.setTimeout(() => {
       toastTimerRef.current = null;
-      if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      if (prefersReducedMotion()) {
         setToast('');
         setToastLeaving(false);
         return;

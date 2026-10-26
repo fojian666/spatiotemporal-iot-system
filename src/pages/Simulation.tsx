@@ -252,6 +252,7 @@ export function SimulationPage() {
               key={item.key}
               type="button"
               className={`scenario-card ${scenarioKey === item.key ? 'is-active' : ''}`}
+              aria-pressed={scenarioKey === item.key}
               style={{ '--sc': item.color } as CSSProperties}
               onClick={() => setScenario(item.key)}
               disabled={!canOperate}
@@ -446,6 +447,7 @@ export function SimulationPage() {
                       key={device.id}
                       type="button"
                       className={`device-table__row ${selectedId === device.id ? 'is-selected' : ''}`}
+                      aria-pressed={selectedId === device.id}
                       onClick={() => setSelectedId(device.id)}
                     >
                       <span className="device-table__name">

@@ -1,3 +1,4 @@
+import { prefersReducedMotion, subscribeMotion } from '../motion';
 import { useEffect, useRef, useState } from 'react';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import maplibregl, { type Map as MapLibreMap, type StyleSpecification } from 'maplibre-gl';
@@ -165,6 +166,7 @@ function pointAlong(route: RouteWaypoint[], progress: number) {
 function createNode(device: (typeof DEVICES)[number], onClick: (id: string) => void, index: number) {
   const el = document.createElement('button');
   el.type = 'button';
+  el.setAttribute('aria-label', `${device.shortName} · ${device.id}`);
   el.className = `map-node map-node--${device.kind}`;
   el.style.setProperty('--node-color', KIND_META[device.kind].color);
   el.style.setProperty('--marker-delay', `${Math.min(12, index) * 32}ms`);
@@ -186,6 +188,7 @@ function createMovingMarker(
 ) {
   const el = document.createElement('button');
   el.type = 'button';
+  el.setAttribute('aria-label', label);
   el.className = `map-moving map-moving--${kind} ${extraClass}`;
   el.style.setProperty('--node-color', KIND_META[kind].color);
   el.innerHTML = `<span class="map-moving__ring"></span><span class="map-moving__core">${text}</span><span class="map-moving__label">${label}</span>`;
@@ -407,6 +410,8 @@ export function MapView({
         markersRef.current[device.id] = new maplibregl.Marker({ element: el, anchor: 'center' })
           .setLngLat([device.lng, device.lat])
           .addTo(map);
+        // Marker 初始化会覆盖自定义 aria-label，挂载后恢复设备名称。
+        el.setAttribute('aria-label', `${device.shortName} · ${device.id}`);
       });
 
       const createFenceLabel = (fence: (typeof FENCES)[number], color: string) => {
@@ -463,10 +468,12 @@ export function MapView({
         .setLngLat([102.078, 36.535])
         .addTo(map);
       movingElsRef.current['satellite'] = satEl;
+      Object.values(movingElsRef.current).forEach((el) => {
+        el.setAttribute('aria-label', el.querySelector('.map-moving__label')?.textContent ?? '巡行设备');
+      });
 
       let last = performance.now();
       let inViewport = true;
-      const motion = window.matchMedia('(prefers-reduced-motion: reduce)');
       const animate = (now: number) => {
         orbitRef.current = requestAnimationFrame(animate);
         // 巡行动效限制为 30fps，减少四组 DOM Marker 的投影与样式写入。
@@ -499,7 +506,7 @@ export function MapView({
       };
       const syncAnimation = () => {
         cancelAnimationFrame(orbitRef.current);
-        if (!document.hidden && inViewport && !motion.matches) {
+        if (!document.hidden && inViewport && !prefersReducedMotion()) {
           last = performance.now();
           orbitRef.current = requestAnimationFrame(animate);
         }
@@ -510,13 +517,13 @@ export function MapView({
       });
       intersection.observe(node);
       document.addEventListener('visibilitychange', syncAnimation);
-      motion.addEventListener('change', syncAnimation);
+      const unsubscribeMotion = subscribeMotion(syncAnimation);
       syncAnimation();
       stopAnimation = () => {
         cancelAnimationFrame(orbitRef.current);
         intersection.disconnect();
         document.removeEventListener('visibilitychange', syncAnimation);
-        motion.removeEventListener('change', syncAnimation);
+        unsubscribeMotion();
       };
 
       const fittedBounds = new maplibregl.LngLatBounds();
@@ -616,7 +623,7 @@ export function MapView({
     const pitch = on ? (detailed ? TERRAIN_PITCH : 0) : detailed ? FLAT_PITCH : 0;
     if (Math.abs(map.getPitch() - pitch) > 0.5) {
       /* 俯角扫动是整屏运动，跟随系统「减少动态效果」：降级时直接落位 */
-      const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      const reduceMotion = prefersReducedMotion();
       map.easeTo({ pitch, duration: reduceMotion ? 0 : 460 });
     }
   }, [layers.terrain, terrainFailed, loaded, detailed]);
@@ -657,6 +664,7 @@ export function MapView({
     if (droneEl) {
       const label = droneEl.querySelector('.map-moving__label');
       if (label) {
+        droneEl?.setAttribute('aria-label', scenarioKey === 'fire' ? 'UAV-02 · 林火侦察' : 'UAV-01 · 河道巡航');
         label.innerHTML = scenarioKey === 'fire' ? '<i></i>UAV-02 · 林火侦察' : '<i></i>UAV-01 · 河道巡航';
       }
       droneDeviceIdRef.current = scenarioKey === 'fire' ? 'UAV-02' : 'UAV-01';
@@ -685,7 +693,7 @@ export function MapView({
     map.flyTo({
       center: [device.lng, device.lat],
       zoom: Math.max(12.9, map.getZoom()),
-      duration: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : 900,
+      duration: prefersReducedMotion() ? 0 : 900,
       offset: [0, 60],
       essential: false,
     });
@@ -693,7 +701,7 @@ export function MapView({
 
   const activeRoute = scenarioKey === 'fire' ? FOREST_ROUTE : DRONE_ROUTE;
 
-  const zoomBy = (delta: number) => mapRef.current?.zoomTo(mapRef.current.getZoom() + delta, { duration: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : 300 });
+  const zoomBy = (delta: number) => mapRef.current?.zoomTo(mapRef.current.getZoom() + delta, { duration: prefersReducedMotion() ? 0 : 300 });
   const terrainOn = layers.terrain && !terrainFailed;
   const reset = () =>
     mapRef.current?.flyTo({
@@ -701,7 +709,7 @@ export function MapView({
       zoom: initialZoom,
       pitch: terrainOn ? (detailed ? TERRAIN_PITCH : 0) : detailed ? FLAT_PITCH : 0,
       bearing: detailed ? -8 : 0,
-      duration: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : 600,
+      duration: prefersReducedMotion() ? 0 : 600,
     });
 
   return (

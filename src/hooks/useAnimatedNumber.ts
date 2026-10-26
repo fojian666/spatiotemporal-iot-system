@@ -1,10 +1,8 @@
+import { useReducedMotion } from '../motion';
 import { useEffect, useRef, useState } from 'react';
 
-function prefersReducedMotion(): boolean {
-  return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-}
-
 export function useAnimatedNumber(value: number, duration = 320): number {
+  const reduced = useReducedMotion();
   const initial = Number.isFinite(value) ? value : 0;
   const [display, setDisplay] = useState(initial);
   const displayRef = useRef(initial);
@@ -14,7 +12,7 @@ export function useAnimatedNumber(value: number, duration = 320): number {
     if (!Number.isFinite(value)) return undefined;
     const from = Number.isFinite(displayRef.current) ? displayRef.current : value;
     if (from === value) return undefined;
-    if (duration <= 0 || prefersReducedMotion()) {
+    if (duration <= 0 || reduced) {
       displayRef.current = value;
       setDisplay(value);
       return undefined;
@@ -42,7 +40,7 @@ export function useAnimatedNumber(value: number, duration = 320): number {
         frameRef.current = null;
       }
     };
-  }, [value, duration]);
+  }, [value, duration, reduced]);
 
   return display;
 }

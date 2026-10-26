@@ -457,7 +457,7 @@
     transform 200ms var(--ease-out);
 }
 
-.auth-demo__btn:hover:not(:disabled) {
+.auth-demo__btn:is(:hover, :focus-visible):not(:disabled) {
   border-color: rgba(75, 225, 255, 0.32);
   background: rgba(75, 225, 255, 0.06);
   transform: translateY(-1px);
@@ -722,7 +722,7 @@
     transform 420ms var(--ease-out);
 }
 
-.auth-demo__btn:hover:not(:disabled)::before {
+.auth-demo__btn:is(:hover, :focus-visible):not(:disabled)::before {
   opacity: 1;
   transform: translateX(0);
 }
@@ -738,7 +738,7 @@
     color 240ms var(--ease-out);
 }
 
-.auth-demo__btn:hover:not(:disabled) .auth-demo__icon {
+.auth-demo__btn:is(:hover, :focus-visible):not(:disabled) .auth-demo__icon {
   background: rgba(75, 225, 255, 0.12);
   box-shadow: 0 0 18px -6px rgba(75, 225, 255, 0.55);
   color: #dffbff;
@@ -748,7 +748,7 @@
   transition: transform 240ms var(--ease-out);
 }
 
-.auth-demo__btn:hover:not(:disabled) > svg:last-child {
+.auth-demo__btn:is(:hover, :focus-visible):not(:disabled) > svg:last-child {
   transform: translateX(2px);
 }
 
@@ -984,3 +984,5 @@
     gap: 4px;
   }
 }
+
+.auth-demo__btn:focus-visible { outline: 2px solid var(--cyan); outline-offset: 3px; }

@@ -1,3 +1,4 @@
+import { prefersReducedMotion } from '../motion';
 import { useCallback, useEffect, useId, useRef, useState, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 import { Link } from 'react-router-dom';
@@ -184,7 +185,7 @@ function OpsModal({
 
   const requestClose = useCallback(() => {
     if (closing) return;
-    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    if (prefersReducedMotion()) {
       onClose();
       return;
     }
@@ -247,7 +248,7 @@ export function DroneOpsPage() {
     if (toastLeaveTimer.current) window.clearTimeout(toastLeaveTimer.current);
     toastTimer.current = window.setTimeout(() => {
       toastTimer.current = null;
-      if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      if (prefersReducedMotion()) {
         setToast('');
         setToastLeaving(false);
         return;
@@ -452,6 +453,7 @@ export function DroneOpsPage() {
               key={item.key}
               type="button"
               className={`ops-tab ${tab === item.key ? 'is-active' : ''}`}
+              aria-pressed={tab === item.key}
               onClick={() => setTab(item.key)}
             >
               <Icon size={14} />

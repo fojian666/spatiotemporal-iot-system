@@ -118,6 +118,7 @@ export function Segmented<T extends string | number>({
           key={option.value}
           type="button"
           className={`seg__item ${option.value === value ? 'is-active' : ''}`}
+          aria-pressed={option.value === value}
           onClick={() => onChange(option.value)}
         >
           {option.label}
@@ -147,7 +148,7 @@ export function ProgressBar({
         </div>
       )}
       <div className="progress" style={{ height }}>
-        <span style={{ width: `${Math.min(100, Math.max(0, value))}%`, background: color }} />
+        <span style={{ transform: `scaleX(${Number.isFinite(value) ? Math.min(100, Math.max(0, value)) / 100 : 0})`, background: color }} />
       </div>
     </div>
   );

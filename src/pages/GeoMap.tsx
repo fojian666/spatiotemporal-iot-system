@@ -275,6 +275,7 @@ export function GeoMapPage() {
                 key={tab.key}
                 type="button"
                 className={assetTab === tab.key ? 'is-active' : ''}
+                aria-pressed={assetTab === tab.key}
                 onClick={() => setAssetTab(tab.key)}
               >
                 {tab.label}<em>{tab.count}</em>
@@ -289,6 +290,7 @@ export function GeoMapPage() {
                   key={device.id}
                   type="button"
                   className={`asset-row ${selectedId === device.id ? 'is-selected' : ''}`}
+                  aria-pressed={selectedId === device.id}
                   onClick={() => setSelectedId(device.id)}
                 >
                   <span className="asset-row__icon" style={{ color: KIND_META[device.kind].color }}>
