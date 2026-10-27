@@ -888,3 +888,35 @@
 @media (max-width: 640px) {
   .scenario-feedback-region { bottom: calc(var(--mobile-nav) + var(--safe-bottom) + 12px); }
 }
+
+/* Investigation remains in normal flow; controls stay reachable on compact screens. */
+@media (max-width: 900px) {
+  .investigation-guide { padding: 8px 12px; max-height: 40dvh; overflow-y: auto; }
+  .investigation-guide__summary { gap: 4px; }
+  .investigation-guide__title { width: 100%; }
+  .investigation-guide__tools { width: 100%; }
+  .investigation-guide__tools > .icon-btn { margin-left: auto; }
+  .investigation-guide__body { gap: 4px; }
+}
+@media (pointer: coarse) and (max-width: 900px) {
+  .investigation-guide :is(select, a, button) { min-height: 44px; }
+  .investigation-guide .icon-btn { min-width: 44px; }
+}
+
+@media (max-width: 900px) {
+  .device-table-panel { flex: 0 0 auto; }
+  .device-table-panel .panel-head { flex-wrap: wrap; }
+  .device-table-panel .panel-title { white-space: nowrap; }
+  .device-table-panel .panel-extra { width: 100%; min-width: 0; }
+  .device-table-panel .table-tools { width: 100%; flex-wrap: wrap; }
+  .device-table-panel .search-box { flex: 1; min-width: 120px; }
+  .device-table-panel .search-box input { width: 100%; min-width: 0; }
+  .device-table-panel .panel-body { flex: 0 0 auto; }
+}
+
+@media (max-height: 560px) {
+  /* A visible investigation guide must not squeeze the transcript down to zero. */
+  .investigation-guide + .app-content .copilot-page { overflow-y: auto; }
+  .investigation-guide + .app-content .copilot-grid { flex: 0 0 auto; }
+  .investigation-guide + .app-content .chat-panel { flex: 0 0 auto; height: 320px; min-height: 320px; }
+}

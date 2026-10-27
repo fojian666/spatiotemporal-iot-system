@@ -1,3 +1,4 @@
+import { useInvestigationView, useInvestigation } from '../investigation/InvestigationProvider';
 import { useEffect, useMemo, useState, type CSSProperties } from 'react';
 import { Link } from 'react-router-dom';
 import {
@@ -101,11 +102,13 @@ function assetMeta(device: DeviceDefinition, reading: Record<string, number>) {
 }
 
 export function GeoMapPage() {
-  const { scenario, readings, deviceStatuses, alerts, stats, events, cycleAlert } = useSimulation();
+  const { scenario, readings, deviceStatuses, alerts, stats, events, cycleAlert, simTime } = useSimulation();
   const { canOperate } = useAuth();
   const [searchParams, updateQuery] = usePageQuery();
   const focusParam = searchParams.get('focus');
   const selectedId = focusParam ?? 'UAV-01';
+  useInvestigationView('map', selectedId);
+  const { begin } = useInvestigation();
   const selectedKind = DEVICES.find((device) => device.id === selectedId)?.kind;
   const defaultTab: AssetTab = selectedKind === 'video' ? 'video' : selectedKind && !UNMANNED_KINDS.includes(selectedKind) ? 'sensing' : 'unmanned';
   const tabParam = searchParams.get('asset');
@@ -329,6 +332,7 @@ export function GeoMapPage() {
                 type="button"
                 className="geo-alert"
                 onClick={() => {
+                  begin(alert, scenario.key, simTime.getTime());
                   setSelectedId(alert.source);
                 }}
               >

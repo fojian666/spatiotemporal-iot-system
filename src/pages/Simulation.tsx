@@ -1,3 +1,4 @@
+import { useInvestigationView } from '../investigation/InvestigationProvider';
 import { useScenarioRequest } from '../hooks/useScenarioRequest';
 import { useMemo, type CSSProperties } from 'react';
 import { Link } from 'react-router-dom';
@@ -87,6 +88,7 @@ export function SimulationPage() {
   const pageRef = usePageScroll();
   const focus = DEVICES.find((device) => device.id === params.get('focus'));
   const selectedId = focus?.id ?? 'WQ-04';
+  useInvestigationView('telemetry', selectedId);
   const defaultGroup: ChartGroup = focus?.kind === 'weather' ? 'weather' : focus?.kind === 'air' ? 'air' : focus?.kind === 'geology' ? 'geology' : 'water';
   const groupParam = params.get('chart');
   const chartGroup: ChartGroup = groupParam && Object.prototype.hasOwnProperty.call(GROUP_META, groupParam) ? groupParam as ChartGroup : defaultGroup;

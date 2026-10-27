@@ -1,3 +1,4 @@
+import { useInvestigation } from '../investigation/InvestigationProvider';
 import { useScenarioRequest } from '../hooks/useScenarioRequest';
 import { useEffect, useMemo, useState, type CSSProperties, type ReactNode } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
@@ -128,6 +129,7 @@ export function OverviewPage() {
   const [params, updateQuery] = usePageQuery();
   const pageRef = usePageScroll();
   const expandedAlert = params.get('alert');
+  const { begin } = useInvestigation();
   const [chartTab, setChartTab] = useState<ChartTab>('weather');
   const navigate = useNavigate();
   const theme = useTheme();
@@ -575,8 +577,9 @@ export function OverviewPage() {
                       <div className="alert-row__detail">
                         <p>{alert.detail}</p>
                         <div className="alert-row__actions">
-                          <Link to={`/map?focus=${alert.source}`} tabIndex={expandedAlert === alert.id ? 0 : -1}><MapPin size={12} /> 地图定位</Link>
-                          <Link to={`/simulation?focus=${alert.source}`} tabIndex={expandedAlert === alert.id ? 0 : -1}><Activity size={12} /> 查看遥测</Link>
+                          <Link to={`/map?focus=${alert.source}`} onClick={() => begin(alert, scenarioKey, simTime.getTime(), params.toString())} tabIndex={expandedAlert === alert.id ? 0 : -1}><MapPin size={12} /> 地图定位</Link>
+                          <Link to={`/simulation?focus=${alert.source}`} onClick={() => begin(alert, scenarioKey, simTime.getTime(), params.toString())} tabIndex={expandedAlert === alert.id ? 0 : -1}><Activity size={12} /> 查看遥测</Link>
+                          <Link to={`/copilot?q=${encodeURIComponent(`${alert.source}当前状态如何？`)}`} onClick={() => begin(alert, scenarioKey, simTime.getTime(), params.toString())} tabIndex={expandedAlert === alert.id ? 0 : -1}><Bot size={12} /> 辅助研判</Link>
                           <button type="button" onClick={() => void acknowledgeAlert(alert.id)} disabled={!canOperate || pendingAlert !== null} tabIndex={expandedAlert === alert.id ? 0 : -1} title={canOperate ? undefined : '观察员为只读角色，可查看地图与遥测'}>
                             <Sparkles size={12} /> {pendingAlert === alert.id ? '提交中…' : alert.status === '待处置' ? '联动处置' : alert.status === '处置中' ? '标记完成' : '重新打开'}
                           </button>

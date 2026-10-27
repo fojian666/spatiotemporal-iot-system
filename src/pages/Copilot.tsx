@@ -1,6 +1,8 @@
+import { useInvestigation } from '../investigation/InvestigationProvider';
+import type { ChatMessage, InvestigationChat } from '../investigation/chat';
 import { prefersReducedMotion, useReducedMotion } from '../motion';
-import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties, type KeyboardEvent as ReactKeyboardEvent } from 'react';
-import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties, type KeyboardEvent as ReactKeyboardEvent } from 'react';
+import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import {
   Activity,
   ArrowUp,
@@ -39,18 +41,6 @@ import {
   type CopilotReply,
   type EvidenceKind,
 } from '../services/llm';
-
-interface ChatMessage {
-  id: string;
-  role: 'user' | 'assistant';
-  text: string;
-  reply?: CopilotReply;
-  /* 每条回答的真实来源：通道后来失效也不改写历史署名 */
-  source?: 'cloud' | 'local';
-  modelName?: string;
-  time: string;
-  animate: boolean;
-}
 
 const EVIDENCE_ICONS: Record<EvidenceKind, typeof Activity> = {
   telemetry: Gauge,
@@ -260,23 +250,27 @@ export function CopilotPage() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const initialQuery = searchParams.get('q');
+  const { investigation, readChat, saveChat, recordView } = useInvestigation();
+  const location = useLocation();
+  const cachedChat = useRef(readChat());
   const { canOperate } = useAuth();
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
-  const [input, setInput] = useState('');
+  const [messages, setMessages] = useState<ChatMessage[]>(() => cachedChat.current?.messages ?? []);
+  const [input, setInput] = useState(() => cachedChat.current?.draft ?? '');
   const [pending, setPending] = useState(false);
   const [toast, setToast] = useState('');
   const [toastLeaving, setToastLeaving] = useState(false);
-  const [lastPipeline, setLastPipeline] = useState<CopilotReply['pipeline'] | null>(null);
-  const [lastEvidence, setLastEvidence] = useState<CopilotReply['evidence']>([]);
-  const [lastIntent, setLastIntent] = useState('');
+  const [lastPipeline, setLastPipeline] = useState<CopilotReply['pipeline'] | null>(() => (cachedChat.current ? [...cachedChat.current.messages].reverse().find(message => message.reply) : undefined)?.reply?.pipeline ?? null);
+  const [lastEvidence, setLastEvidence] = useState<CopilotReply['evidence']>(() => (cachedChat.current ? [...cachedChat.current.messages].reverse().find(message => message.reply) : undefined)?.reply?.evidence ?? []);
+  const [lastIntent, setLastIntent] = useState(() => (cachedChat.current ? [...cachedChat.current.messages].reverse().find(message => message.reply) : undefined)?.reply?.intent ?? '');
   const scrollRef = useRef<HTMLDivElement>(null);
-  const stickToBottomRef = useRef(true);
+  const stickToBottomRef = useRef(!cachedChat.current);
   const forceScrollRef = useRef(false);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const timerRef = useRef<number | null>(null);
   const toastTimerRef = useRef<number | null>(null);
   const toastLeaveTimerRef = useRef<number | null>(null);
-  const lastInitialQueryRef = useRef<string | null>(null);
+  const scheduledQueryRef = useRef<string | null>(null);
+  const lastInitialQueryRef = useRef<string | null>(cachedChat.current?.initialQuery ?? null);
   /* 云端通道是否可用。探测失败或未启用时保持 false，整条链路退回本地规则引擎。 */
   const llmReadyRef = useRef(false);
   /* 仅用于界面署名：接上云端后顶栏要显示真实模型名，而不是"本地演示推理" */
@@ -288,6 +282,22 @@ export function CopilotPage() {
 
   const time = formatSimTime(simTime);
   const lastReply = useMemo(() => [...messages].reverse().find((message) => message.reply)?.reply ?? null, [messages]);
+  const latestChat = useRef<InvestigationChat>({ messages, draft: input, initialQuery, scrollTop: 0 });
+  latestChat.current = {
+    messages: pending && messages[messages.length - 1]?.role === 'user' ? messages.slice(0, -1) : messages,
+    draft: pending ? messages[messages.length - 1]?.text ?? input : input,
+    initialQuery,
+    scrollTop: 0,
+  };
+  useLayoutEffect(() => {
+    const node = scrollRef.current;
+    if (node && cachedChat.current) node.scrollTop = cachedChat.current.scrollTop;
+    const caseId = investigation?.id;
+    return () => {
+      if (caseId) saveChat(caseId, { ...latestChat.current, draft: latestChat.current.draft || scheduledQueryRef.current || '', scrollTop: node?.scrollTop ?? 0 });
+    };
+  }, [saveChat, investigation?.id]);
+
 
   const handleChatScroll = useCallback(() => {
     const node = scrollRef.current;
@@ -409,6 +419,8 @@ export function CopilotPage() {
         setLastPipeline(reply.pipeline);
         setLastEvidence(reply.evidence);
         setLastIntent(reply.intent);
+        const focusDevice = resolveFocusDevice(query);
+        if (focusDevice) recordView('copilot', focusDevice, `${location.pathname}${location.search}`, scenario.key);
       })()
         .catch(() => {
           /* 规则引擎自身抛错时也要落到本地兜底，不能让 pending 永久挂着 */
@@ -422,7 +434,8 @@ export function CopilotPage() {
   useEffect(() => {
     if (!initialQuery || lastInitialQueryRef.current === initialQuery) return undefined;
     lastInitialQueryRef.current = initialQuery;
-    const timer = window.setTimeout(() => send(initialQuery), 350);
+    scheduledQueryRef.current = initialQuery;
+    const timer = window.setTimeout(() => { scheduledQueryRef.current = null; send(initialQuery); }, 350);
     return () => window.clearTimeout(timer);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initialQuery]);
@@ -479,6 +492,7 @@ export function CopilotPage() {
   };
 
   const clearChat = () => {
+    scheduledQueryRef.current = null;
     generationRef.current += 1;
     if (timerRef.current) {
       window.clearTimeout(timerRef.current);

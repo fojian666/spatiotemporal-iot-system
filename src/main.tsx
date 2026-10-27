@@ -8,6 +8,7 @@ import './styles/auth.css';
 import './styles/welcome.css';
 import './styles/drone.css';
 import './styles/theme.css';
+import './styles/investigation.css';
 import './styles/responsive.css';
 import App from './App';
 import { AuthGate, AuthProvider } from './components/AuthProvider';

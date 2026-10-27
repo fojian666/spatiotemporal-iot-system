@@ -102,7 +102,15 @@ def test_logout_revokes_all_tokens_and_unused_ws_ticket(client):
         assert error.value.code == 4401
 
 
-def test_ws_snapshot_ticket_replay_and_logout_closes_connection(client):
+def test_ws_snapshot_ticket_replay_and_logout_closes_connection(client, monkeypatch):
+    from app.main import app
+
+    async def pause_periodic_broadcast(_payload):
+        # This test covers authentication, not the independent 1Hz producer.
+        # An already-buffered telemetry frame can otherwise precede the close frame.
+        pass
+
+    monkeypatch.setattr(app.state.manager, 'broadcast', pause_periodic_broadcast)
     headers = login(client, 'viewer')
     ticket = client.post('/api/auth/ws-ticket', headers=headers).json()['ticket']
     with client.websocket_connect('/ws/telemetry?ticket=' + ticket) as socket:

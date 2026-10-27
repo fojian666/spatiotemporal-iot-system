@@ -787,15 +787,15 @@
 }
 
 .alert-row__body strong {
-  font-size: 10px;
-  font-weight: 500;
+  font-size: 13px;
+  font-weight: 600;
   line-height: 1.4;
-  color: var(--amber);
+  color: var(--text);
 }
 
 .alert-row__body span {
-  font-size: 8px;
-  color: var(--dim);
+  font-size: 11px;
+  color: var(--muted);
   font-family: var(--font-mono);
   white-space: nowrap;
   overflow: hidden;
@@ -836,8 +836,8 @@
 }
 
 .alert-row__detail p {
-  font-size: 9.5px;
-  line-height: 1.55;
+  font-size: 13px;
+  line-height: 1.65;
   color: var(--muted);
   padding: 6px 0 4px;
 }
@@ -1312,20 +1312,20 @@
 }
 
 .env-param > span {
-  font-size: 8px;
-  color: var(--dim);
+  font-size: 11px;
+  color: var(--muted);
 }
 
 .env-param strong {
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 500;
-  color: var(--amber);
+  color: var(--text);
 }
 
 .env-param em {
   font-style: normal;
-  font-size: 7px;
-  color: var(--amber);
+  font-size: 11px;
+  color: var(--muted);
   margin-left: 1px;
 }
 
@@ -1530,8 +1530,8 @@
   padding: 7px 14px;
   background: rgba(var(--panel-rgb), 0.5);
   border-bottom: 1px solid var(--line-soft);
-  font-size: 8px;
-  color: var(--amber);
+  font-size: 11px;
+  color: var(--muted);
   letter-spacing: 0.04em;
   position: sticky;
   top: 0;
@@ -1591,9 +1591,9 @@
 }
 
 .device-table__name strong {
-  font-size: 10px;
-  font-weight: 500;
-  color: var(--danger);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -1601,12 +1601,12 @@
 
 .device-table__name em {
   font-style: normal;
-  font-size: 7.5px;
-  color: var(--amber);
+  font-size: 11px;
+  color: var(--muted);
 }
 
 .device-table__kind {
-  font-size: 8.5px;
+  font-size: 11px;
   color: var(--muted);
   white-space: nowrap;
 }
@@ -1615,7 +1615,7 @@
   display: flex;
   align-items: center;
   gap: 3px;
-  font-size: 8.5px;
+  font-size: 11px;
   color: var(--muted);
   white-space: nowrap;
   overflow: hidden;
@@ -1631,14 +1631,14 @@
 
 .device-table__metric em {
   font-style: normal;
-  font-size: 7.5px;
-  color: var(--amber);
+  font-size: 11px;
+  color: var(--muted);
 }
 
 .device-table__metric strong {
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 500;
-  color: var(--amber);
+  color: var(--text);
   white-space: nowrap;
 }
 
@@ -1667,8 +1667,8 @@
 
 .device-table__battery em {
   font-style: normal;
-  font-size: 8px;
-  color: var(--danger);
+  font-size: 11px;
+  color: var(--text);
 }
 
 .signal {
@@ -1678,7 +1678,7 @@
   height: 10px;
   margin-left: 2px;
   color: var(--muted);
-  font-size: 7px;
+  font-size: 11px;
 }
 
 .signal i {
@@ -1724,8 +1724,8 @@
 }
 
 .inspector-head h4 {
-  font-size: 12px;
-  font-weight: 500;
+  font-size: 13px;
+  font-weight: 600;
   color: var(--text);
   white-space: nowrap;
   overflow: hidden;
@@ -1733,7 +1733,7 @@
 }
 
 .inspector-head span {
-  font-size: 8px;
+  font-size: 11px;
   color: var(--dim);
 }
 
@@ -2494,17 +2494,17 @@
 }
 
 .geo-target h4 {
-  font-size: 11.5px;
-  font-weight: 500;
-  color: var(--danger);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
 .geo-target > div > span {
-  font-size: 8px;
-  color: var(--dim);
+  font-size: 11px;
+  color: var(--muted);
 }
 
 .geo-target .icon-btn {
@@ -2531,21 +2531,21 @@
 }
 
 .geo-metric span {
-  font-size: 7.5px;
-  color: var(--dim);
+  font-size: 11px;
+  color: var(--muted);
 }
 
 .geo-metric strong {
   font-size: 14px;
   font-weight: 500;
-  color: var(--danger);
+  color: var(--text);
   white-space: nowrap;
 }
 
 .geo-metric strong em {
   font-style: normal;
-  font-size: 7.5px;
-  color: var(--danger);
+  font-size: 11px;
+  color: inherit;
   margin-left: 1px;
 }
 
@@ -2593,8 +2593,8 @@
   margin-top: 8px;
   padding-top: 7px;
   border-top: 1px solid var(--line-soft);
-  font-size: 8px;
-  color: var(--dim);
+  font-size: 11px;
+  color: var(--muted);
 }
 
 .geo-target__actions {
@@ -2747,9 +2747,9 @@
 }
 
 .asset-row__title strong {
-  font-size: 9.5px;
-  font-weight: 500;
-  color: var(--danger);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -2777,7 +2777,7 @@
 }
 
 .asset-row__sub {
-  font-size: 7.5px;
+  font-size: 11px;
   color: var(--muted);
   white-space: nowrap;
   overflow: hidden;
@@ -2802,16 +2802,16 @@
 }
 
 .asset-row__value strong {
-  font-size: 8.5px;
+  font-size: 12px;
   font-weight: 500;
-  color: var(--danger);
+  color: var(--text);
   white-space: nowrap;
 }
 
 .asset-row__value em {
   font-style: normal;
-  font-size: 7px;
-  color: var(--amber);
+  font-size: 11px;
+  color: var(--muted);
   white-space: nowrap;
 }
 
@@ -2900,7 +2900,7 @@
 
 .geo-alert__top em {
   font-style: normal;
-  font-size: 7.5px;
+  font-size: 11px;
   color: var(--dim);
 }
 
@@ -2909,8 +2909,8 @@
 }
 
 .geo-alert strong {
-  font-size: 9.5px;
-  font-weight: 500;
+  font-size: 13px;
+  font-weight: 600;
   color: var(--text);
   line-height: 1.4;
   padding-right: 45px;
@@ -2920,7 +2920,7 @@
   display: inline-flex;
   align-items: center;
   gap: 3px;
-  font-size: 7.5px;
+  font-size: 11px;
   color: var(--muted);
 }
 
@@ -2931,7 +2931,7 @@
   display: inline-flex;
   align-items: center;
   gap: 2px;
-  font-size: 7.5px;
+  font-size: 11px;
   color: var(--violet);
   opacity: 0;
   transition: opacity var(--dur-fast) var(--ease-out);
@@ -4614,7 +4614,7 @@
 .alert-row__actions { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px; }
 .alert-row__actions a, .alert-row__actions button { display: inline-flex; align-items: center; gap: 4px; min-height: 32px; font-size: 11px; }
 .alert-row__actions a { color: var(--cyan); }
-.alert-row__detail p { font-size: 11px; }
+.alert-row__detail p { font-size: 13px; }
 .table-empty .btn { display: block; margin: 12px auto 0; }
 @media (pointer: coarse) and (max-width: 900px) {
   .alert-row__actions a, .alert-row__actions button { min-height: 44px; }

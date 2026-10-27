@@ -55,6 +55,7 @@ backend/scripts/publish_device.py    # 以外部设备身份向 MQTT 灌数（�
 - **控制台状态动效**：KPI 数字滚动（`useAnimatedNumber`）、toast/模态两段式退场、列表 24ms stagger（`--i`）、状态徽章脉冲、主题切换走 View Transitions API（`src/theme.ts`）。七模块路由入场为「空间展开」（`base.css`）：标题行框揭示/图标轻旋，指标 32ms 错峰，主面板上浮 20px、两翼从左右 22px 归位，顶缘光迹一次，总计 ≤620ms；每次模块挂载重播，筛选/遥测更新不重播，地图画布不缩放。
 - **交互反馈**：地图定位环只动画 Marker 子元素，移动标记按实际 selectedId 重播、遥测不重播；场景交接由 `ScenarioFeedback` 观察已确认 key，失败不播成功提示；告警 `cycleAlert` 返回 `Promise<boolean>`，成功后短暂反馈、失败保留状态并提示、列表不重排。Copilot 证据 href 在规则引擎按实体 ID 绑定，回答完成后依次展开，勿从生成文案猜定位。
 - **地图立体层**：`MapView.tsx` 的「立体地形」开关（图层面板首项）挂 Mapzen terrarium DEM（`maxzoom: 12`，再高会在软件渲染下出现无影像空区），做地形起伏 + 山体晕渲。参数锁 `TERRAIN_EXAGGERATION = 1.65`、`TERRAIN_PITCH = 36°` / `FLAT_PITCH = 18°`——压到 1.2/28° 时全图平均像素差只有 33/765，肉眼判为"没做"，1.65 才看得出黄土沟壑。**已知限制：DOM Marker（设备点、围栏标签、航点）不参与地形高程，而围栏 fill/line 会贴地形**，抬高俯角时两者有轻微错位；这是 1.65 的上限理由，不要再加码。晕渲用独立 source `terrain-shade`（与 terrain 共用 raster-dem 会被 MapLibre 告警）。DEM 不可用时（主动探测中心瓦片失败或 error 命中）面板项变「立体地形 · 不可用」并置灰，**点击即重试**、不锁死会话；2D 不受影响。窄屏 ≤900 默认关。注意 `.geo-page .map-layers` 在 ≤1280 断点**不得 `display: none`**——它是该宽度下地形的唯一入口。
+- **告警调查**：`src/investigation/` 统一保留原告警/设备/场景/告警时间、固定参考时段、地图与遥测最后访问参数和研判完成记录；调查条在顶栏下正常占位。参考时段仅是调查记录，不筛选实时遥测。导航元数据按用户隔离保存在当前标签页 sessionStorage，退出工作区清除；Copilot 最多 40 条消息和草稿只在内存恢复，刷新不保留正文。结束调查不自动更改告警状态。
 - **响应式层**：`src/styles/responsive.css` 最后加载，宽度 ≤640（底部导航）/≤900/≤1100 + 高度 ≤760/≤560；顶栏高度只写 `var(--topbar)`，页面高度跟随内容区，改布局先读这份覆盖层。
 - 入场编排集中在 `auth.css` / `base.css` 的 motion layer；全局降级开关是 `base.css` 的 `@media (prefers-reduced-motion: reduce)`，勿在组件里另造降级分支。
 

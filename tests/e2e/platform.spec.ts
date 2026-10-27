@@ -387,7 +387,7 @@ for (const [width, height] of [[390, 844], [768, 1024], [1440, 720]]) {
       await page.locator('.scenario-card:not(.is-active)').first().click();
       await expect(page.locator('.scenario-feedback')).toBeVisible();
       const metric = page.locator('.env-param strong span').first();
-      await expect(metric).toHaveCSS('font-size', '10px');
+      await expect(metric).toHaveCSS('font-size', '12px');
       const feedback = page.locator('.scenario-feedback');
       const bounds = await feedback.boundingBox();
       expect(bounds!.y + bounds!.height).toBeLessThan(height - (width <= 640 ? 58 : 0));
@@ -405,3 +405,117 @@ for (const [width, height] of [[390, 844], [768, 1024], [1440, 720]]) {
     }
   });
 }
+
+
+test('investigation preserves origin, filters and chat across evidence visits', async ({ page }) => {
+  await prepare(page);
+  await page.goto(local + '/#/');
+  await page.locator('.alert-row__main').first().click();
+  await page.locator('.alert-row.is-open').getByRole('link', { name: '地图定位' }).click();
+  const guide = page.getByRole('complementary', { name: '当前告警调查' });
+  await expect(guide).toContainText('WQ-04');
+  await expect(guide.getByRole('link', { name: /地图定位/ })).toHaveAttribute('data-visited', 'true');
+  await guide.getByLabel('调查参考时段').selectOption('60');
+  await guide.getByRole('link', { name: /遥测复核/ }).click();
+  await page.getByPlaceholder('搜索设备 / 区域').fill('WQ');
+  await guide.getByRole('link', { name: /地图定位/ }).click();
+  await guide.getByRole('link', { name: /遥测复核/ }).click();
+  await expect(page.getByPlaceholder('搜索设备 / 区域')).toHaveValue('WQ');
+  await guide.getByRole('link', { name: /辅助研判/ }).click();
+  await expect(page.locator('.chat-message--assistant .evidence-card').first()).toBeVisible();
+  await expect(page.locator('.chat-message--assistant')).toHaveCount(1);
+  const input = page.getByPlaceholder('询问实时态势、设备读数、知识概念，或让我生成巡检任务…');
+  await input.fill('稍后继续复核');
+  await expect(guide.getByRole('link', { name: /辅助研判/ })).toHaveAttribute('data-visited', 'true');
+  await page.locator('.chat-message--assistant .evidence-card').first().getByRole('link').click();
+  await expect(page).toHaveURL(/map\?focus=WQ-04/);
+  await guide.getByRole('link', { name: /辅助研判/ }).click();
+  await expect(page.locator('.chat-message--assistant .evidence-card').first()).toBeVisible();
+  await expect(page.locator('.chat-message--assistant')).toHaveCount(1);
+  await expect(input).toHaveValue('稍后继续复核');
+  await guide.getByRole('link', { name: '返回原告警' }).click();
+  await expect(page.locator('.alert-row.is-open')).toContainText('WQ-04');
+  await page.reload();
+  await expect(guide.getByLabel('调查参考时段')).toHaveValue('60');
+  await guide.getByRole('button', { name: '结束本次调查' }).click();
+  await expect(guide).toHaveCount(0);
+});
+
+for (const [width, height] of [[390, 844], [768, 1024], [1024, 768], [1440, 720], [844, 390]]) {
+  test(`investigation reading review at ${width}px`, async ({ page }, testInfo) => {
+    await prepare(page);
+    await page.setViewportSize({ width, height });
+    await page.emulateMedia({ reducedMotion: 'reduce' });
+    await page.goto(local + '/#/');
+    await page.locator('.alert-row__main').first().click();
+    await page.locator('.alert-row.is-open').getByRole('link', { name: '辅助研判' }).click();
+    await expect(page.locator('.chat-message--assistant .evidence-card').first()).toBeVisible();
+    await expect(page.locator('.chat-message--assistant')).toHaveCount(1);
+    for (const theme of ['dark', 'light']) {
+      if (await page.locator('html').getAttribute('data-theme') !== theme) await page.getByRole('button', { name: '切换主题' }).click();
+      await expect(page.locator('html')).toHaveAttribute('data-theme', theme);
+      await page.waitForTimeout(200);
+      await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth - innerWidth)).toBeLessThanOrEqual(1);
+      await expect(page.getByRole('complementary', { name: '当前告警调查' })).toBeVisible();
+      mkdirSync('output/playwright', { recursive: true });
+      const shot = await page.screenshot({ path: `output/playwright/investigation-${width}-${theme}.png`, animations: 'disabled' });
+      await testInfo.attach(`${width}-${theme}`, { body: shot, contentType: 'image/png' });
+      const input = page.getByRole('textbox', { name: '向物联大模型提问' });
+      await input.scrollIntoViewIfNeeded();
+      await expect(input).toBeInViewport();
+      await input.fill('继续复核');
+      if (height <= 560) expect((await page.locator('.chat-scroll').boundingBox())!.height).toBeGreaterThan(100);
+      await page.screenshot({ path: `output/playwright/investigation-${width}-${theme}-input.png`, animations: 'disabled' });
+      await page.locator('.copilot-page').evaluate(node => { node.scrollTop = 0; });
+    }
+    await page.getByRole('navigation', { name: '告警调查步骤' }).getByRole('link', { name: /遥测复核/ }).click();
+    await page.locator('.device-table-panel .panel-title').scrollIntoViewIfNeeded();
+    const title = await page.locator('.device-table-panel .panel-title').boundingBox();
+    expect(title!.height).toBeLessThan(32);
+    await page.locator('.device-table__row').first().scrollIntoViewIfNeeded();
+    await expect(page.locator('.device-table__row').first()).toBeInViewport();
+    await page.screenshot({ path: `output/playwright/investigation-${width}-table.png`, animations: 'disabled' });
+  });
+}
+
+
+test('viewer investigation clears on logout and a changed scene keeps its own alerts', async ({ page }) => {
+  await prepare(page);
+  await login(page, '观察员');
+  await page.locator('.alert-row__main').first().click();
+  await page.locator('.alert-row.is-open').getByRole('link', { name: '地图定位' }).click();
+  const guide = page.getByRole('complementary', { name: '当前告警调查' });
+  await expect(guide).toBeVisible();
+  await guide.getByRole('link', { name: '返回原告警' }).click();
+  await expect(page.locator('.alert-row.is-open .alert-row__actions button')).toBeDisabled();
+  await page.getByRole('button', { name: '退出登录' }).click();
+  await expect(page.getByRole('heading', { name: '登录操作台' })).toBeVisible();
+  expect(await page.evaluate(() => sessionStorage.getItem('stiot-investigation-v1'))).toBeNull();
+  await page.goto(local + '/#/');
+  await page.locator('.alert-row__main').first().click();
+  await page.locator('.alert-row.is-open').getByRole('link', { name: '地图定位' }).click();
+  await guide.getByRole('link', { name: /遥测复核/ }).click();
+  await page.locator('.scenario-card:not(.is-active)').first().click();
+  await expect(guide).toContainText('原告警不在当前场景');
+  await guide.getByRole('link', { name: '查看当前告警' }).click();
+  await expect(page).toHaveURL(/#\/$/);
+  await expect(guide).toContainText('原告警不在当前场景');
+});
+
+
+test('leaving an unsent investigation question keeps a draft without automatic retry', async ({ page }) => {
+  await prepare(page);
+  await page.goto(local + '/#/');
+  await page.locator('.alert-row__main').first().click();
+  await page.locator('.alert-row.is-open').getByRole('link', { name: '辅助研判' }).click();
+  await expect(page.locator('.copilot-page')).toBeVisible();
+  // Same-task hash navigation deterministically interrupts the 350ms arrival timer.
+  await page.evaluate(() => { location.hash = '/map?focus=WQ-04'; });
+  const guide = page.getByRole('complementary', { name: '当前告警调查' });
+  await expect(page.locator('.geo-page')).toBeVisible();
+  await guide.getByRole('link', { name: /辅助研判/ }).click();
+  await expect(page.getByRole('textbox', { name: '向物联大模型提问' })).toHaveValue('WQ-04当前状态如何？');
+  await page.waitForTimeout(1100);
+  await expect(page.locator('.chat-message--user')).toHaveCount(0);
+  await expect(guide.getByRole('link', { name: /辅助研判/ })).toHaveAttribute('data-visited', 'false');
+});

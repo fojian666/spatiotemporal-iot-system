@@ -1,0 +1,35 @@
+/* Investigation is part of the workspace flow, never a map/chat overlay. */
+.investigation-guide {
+  flex: 0 0 auto;
+  padding: 10px 20px;
+  border-bottom: 1px solid var(--line);
+  background: var(--panel-strong);
+  color: var(--text);
+  position: relative;
+  z-index: 1;
+}
+.investigation-guide__summary, .investigation-guide__title, .investigation-guide__tools,
+.investigation-guide__body, .investigation-guide__steps, .investigation-guide__range {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+.investigation-guide__summary { justify-content: space-between; flex-wrap: wrap; gap: 6px 16px; }
+.investigation-guide__title { flex-wrap: wrap; gap: 4px 10px; font-size: 12px; }
+.investigation-guide__title > span:first-child { color: var(--muted); }
+.investigation-guide__title strong { font-size: 13px; font-weight: 600; overflow-wrap: anywhere; }
+.investigation-guide__title .mono { color: var(--accent-text); font-size: 11px; }
+.investigation-guide__tools { flex-wrap: wrap; gap: 8px 12px; font-size: 12px; }
+.investigation-guide__tools label { display: flex; align-items: center; gap: 6px; color: var(--muted); }
+.investigation-guide select { background: var(--bg-soft); color: var(--text); border: 1px solid var(--line-strong); border-radius: 5px; padding: 5px 7px; min-height: 32px; font-size: 12px; }
+.investigation-guide__return { display: inline-flex; align-items: center; gap: 5px; color: var(--accent-text); min-height: 32px; }
+.investigation-guide__body { flex-wrap: wrap; margin-top: 5px; gap: 5px 16px; }
+.investigation-guide__steps { flex-wrap: wrap; gap: 6px; }
+.investigation-guide__steps a { display: inline-flex; align-items: center; gap: 4px; min-height: 32px; padding: 4px 8px; border: 1px solid var(--line); border-radius: 5px; color: var(--muted); font-size: 12px; }
+.investigation-guide__steps a[aria-current] { border-color: var(--line-strong); color: var(--accent-text); background: var(--cyan-soft); }
+.investigation-guide__steps a[data-visited='true'] > svg { color: var(--teal); }
+.investigation-guide__steps small { font-size: 11px; color: var(--muted); }
+.investigation-guide__hint { font-size: 12px; color: var(--muted); }
+.investigation-guide__range { flex-wrap: wrap; font-size: 11px; color: var(--muted); margin-top: 4px; gap: 2px 12px; }
+.investigation-guide__range time { font-variant-numeric: tabular-nums; }

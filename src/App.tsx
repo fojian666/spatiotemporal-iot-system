@@ -1,3 +1,4 @@
+import { InvestigationProvider } from './investigation/InvestigationProvider';
 import { lazy, Suspense, useEffect } from 'react';
 import { HashRouter, Navigate, Route, Routes } from 'react-router-dom';
 import { Shell } from './components/Shell';
@@ -50,22 +51,24 @@ export default function App() {
   return (
     <HashRouter>
       <SimulationProvider>
-        <Shell>
-          <Suspense fallback={<RouteFallback />}>
-            <Routes>
-              <Route path="/" element={<OverviewPage />} />
-              <Route path="/drone" element={<DroneOpsPage />} />
-              <Route path="/simulation" element={<SimulationPage />} />
-              <Route path="/map" element={<GeoMapPage />} />
-              <Route path="/graph" element={<KnowledgeGraphPage />} />
-              <Route path="/copilot" element={<CopilotPage />} />
-              <Route path="/platform" element={<PlatformPage />} />
-              {/* #/welcome 由 AuthGate 渲染整屏欢迎页，这里只兜住 HashRouter 的 * 重定向 */}
-              <Route path="/welcome" element={null} />
-              <Route path="*" element={<Navigate to="/" replace />} />
-            </Routes>
-          </Suspense>
-        </Shell>
+        <InvestigationProvider>
+          <Shell>
+            <Suspense fallback={<RouteFallback />}>
+              <Routes>
+                <Route path="/" element={<OverviewPage />} />
+                <Route path="/drone" element={<DroneOpsPage />} />
+                <Route path="/simulation" element={<SimulationPage />} />
+                <Route path="/map" element={<GeoMapPage />} />
+                <Route path="/graph" element={<KnowledgeGraphPage />} />
+                <Route path="/copilot" element={<CopilotPage />} />
+                <Route path="/platform" element={<PlatformPage />} />
+                {/* #/welcome 由 AuthGate 渲染整屏欢迎页，这里只兜住 HashRouter 的 * 重定向 */}
+                <Route path="/welcome" element={null} />
+                <Route path="*" element={<Navigate to="/" replace />} />
+              </Routes>
+            </Suspense>
+          </Shell>
+        </InvestigationProvider>
       </SimulationProvider>
     </HashRouter>
   );
