@@ -201,3 +201,76 @@ test('offline terrain is marked unavailable and can be retried at tablet width',
   await expect(page.locator('.asset-list')).toBeVisible();
   await page.screenshot({ path: 'output/playwright/1024-map.png', animations: 'disabled' });
 });
+
+test('route entrances replay on SPA visits and back, but not on query or telemetry updates', async ({ page }) => {
+  await prepare(page);
+  await page.addInitScript(() => {
+    const state = window as typeof window & { routeStarts: { route: string; name: string }[]; documentMarker: string };
+    state.routeStarts = [];
+    state.documentMarker = crypto.randomUUID();
+    document.addEventListener('animationstart', event => {
+      if (event.animationName.startsWith('route')) state.routeStarts.push({
+        route: document.querySelector('main')?.getAttribute('data-route') ?? '', name: event.animationName,
+      });
+    });
+  });
+  await page.goto(local + '/#/simulation');
+  const documentMarker = await page.evaluate(() => (window as typeof window & { documentMarker: string }).documentMarker);
+  const entered = async (route: string) => {
+    await expect.poll(() => page.evaluate(path => {
+      const events = (window as typeof window & { routeStarts: { route: string; name: string }[] }).routeStarts;
+      return events.filter(e => e.route === path).map(e => e.name);
+    }, route)).toEqual(expect.arrayContaining(['routeTitle', 'routeTrace']));
+  };
+  const clear = () => page.evaluate(() => { (window as typeof window & { routeStarts: unknown[] }).routeStarts = []; });
+  await entered('/simulation');
+  for (const route of ['/', '/map', '/graph', '/platform', '/copilot', '/drone', '/simulation']) {
+    await clear();
+    await page.locator(`.rail__nav a[href="#${route}"]`).click();
+    await entered(route);
+    await expect(page.locator('main')).toHaveAttribute('data-route', route);
+    expect(await page.evaluate(() => (window as typeof window & { documentMarker: string }).documentMarker)).toBe(documentMarker);
+    const timings = await page.locator('.page-header, .geo-header, .panel, .kpi, .chat-panel, .docs-layout').evaluateAll(nodes => nodes.map(node => {
+      const style = getComputedStyle(node);
+      return { name: style.animationName, end: parseFloat(style.animationDuration) + parseFloat(style.animationDelay) };
+    }));
+    expect(timings.filter(t => t.name.startsWith('route')).every(t => t.end <= .381)).toBe(true);
+  }
+  // Let the initial events finish before testing actual in-place query/data updates.
+  await page.waitForFunction(() => !document.getAnimations().some(animation =>
+    animation instanceof CSSAnimation && animation.animationName.startsWith('route') && animation.playState === 'running'));
+  await clear();
+  await page.getByPlaceholder('搜索设备 / 区域').fill('WQ-04');
+  await expect(page).toHaveURL(/search=WQ-04/);
+  await expect(page.locator('.app-content')).toContainText('WQ-04');
+  const clock = page.locator('.sim-clock');
+  const clockBefore = await clock.innerText();
+  await expect(clock).not.toHaveText(clockBefore);
+  await page.waitForFunction(() => !document.getAnimations().some(animation =>
+    animation instanceof CSSAnimation && animation.animationName.startsWith('route') && animation.playState === 'running'));
+  expect(await page.evaluate(() => (window as typeof window & { routeStarts: unknown[] }).routeStarts)).toEqual([]);
+  await clear();
+  await page.goBack();
+  await entered('/drone');
+  expect(await page.evaluate(() => (window as typeof window & { documentMarker: string }).documentMarker)).toBe(documentMarker);
+});
+
+for (const viewport of [{ width: 390, height: 844 }, { width: 768, height: 1024 }, { width: 1440, height: 720 }]) {
+  test(`review route surfaces and static reduction at ${viewport.width}×${viewport.height}`, async ({ page }, testInfo) => {
+    await prepare(page);
+    await page.setViewportSize(viewport);
+    await page.emulateMedia({ reducedMotion: 'reduce' });
+    for (const path of ['/', '/drone', '/platform', '/simulation', '/map', '/graph', '/copilot']) {
+      await page.goto(local + '/#' + path);
+      const header = page.locator('.page-header, .geo-header');
+      await expect(header).toBeVisible();
+      await expect(header).toHaveCSS('opacity', '1');
+      await expect(header).toHaveCSS('transform', 'none');
+      const cue = await header.evaluate(node => ({ opacity: getComputedStyle(node, '::after').opacity, duration: getComputedStyle(node, '::after').animationDuration }));
+      expect(cue.opacity).toBe('0');
+      expect(parseFloat(cue.duration)).toBeLessThanOrEqual(.00001);
+      const shot = await page.screenshot({ path: `output/playwright/arrival-${viewport.width}-${path.slice(1) || 'overview'}.png`, animations: 'disabled' });
+      await testInfo.attach(`${viewport.width}-${path || 'overview'}`, { body: shot, contentType: 'image/png' });
+    }
+  });
+}

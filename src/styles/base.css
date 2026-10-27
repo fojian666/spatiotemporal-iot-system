@@ -33,6 +33,7 @@
   --dur-base: 260ms;
   --dur-slow: 460ms;
   --dur-enter: 520ms;
+  --dur-route: 380ms;
   /* 全局层级：页面内元素用局部堆叠，只有跨页面的浮层走这套 */
   --z-topbar: 25;
   --z-rail: 30;
@@ -600,30 +601,84 @@ ul {
   animation: none;
 }
 
-.kpi-grid > .kpi:nth-child(1) { animation-delay: 20ms; }
-.kpi-grid > .kpi:nth-child(2) { animation-delay: 55ms; }
-.kpi-grid > .kpi:nth-child(3) { animation-delay: 90ms; }
-.kpi-grid > .kpi:nth-child(4) { animation-delay: 125ms; }
-.kpi-grid > .kpi:nth-child(5) { animation-delay: 160ms; }
+/* 路由入场：标题 → 关键数字 → 工作面板；仅挂载时播放，数据更新不重播。
+ * 页面本身不移动，地图/图表画布不做缩放，避免多层位移和重新栅格化。 */
+.app-content :is(.page, .kg-page, .copilot-page, .geo-page) {
+  animation: none;
+}
 
+.app-content :is(.page-header, .geo-header) {
+  animation: routeTitle var(--dur-base) var(--ease-out) backwards;
+}
+.page-header { position: relative; }
 
-.simulation-page .scenario-card:nth-child(1) { animation-delay: 30ms; }
-.simulation-page .scenario-card:nth-child(2) { animation-delay: 65ms; }
-.simulation-page .scenario-card:nth-child(3) { animation-delay: 100ms; }
-.simulation-page .scenario-card:nth-child(4) { animation-delay: 135ms; }
-.simulation-page .env-ribbon { animation: riseIn var(--dur-enter) var(--ease-out) 150ms backwards; }
+/* 短标尺展开后收淡；静止姿态透明，减少动态效果时不会留下半截线。 */
+:is(.page-header, .geo-header)::after {
+  content: '';
+  position: absolute;
+  left: 55px;
+  bottom: -3px;
+  width: 44px;
+  height: 1px;
+  background: var(--cyan);
+  opacity: 0;
+  transform: scaleX(1);
+  transform-origin: left;
+  pointer-events: none;
+  animation: routeTrace var(--dur-route) var(--ease-out) backwards;
+}
+.geo-header::after { left: 16px; bottom: 8px; }
 
-.kg-page { animation: pageIn var(--dur-enter) var(--ease-out) backwards; }
-.copilot-page { animation: pageIn var(--dur-enter) var(--ease-out) backwards; }
-.geo-page { animation: pageFade 480ms var(--ease-out) backwards; }
+/* 指标同一行错开 24ms，最大只延后 120ms；悬停仍使用组件原有 transform。 */
+.app-content .kpi-grid > .kpi {
+  animation: routeMetric var(--dur-base) var(--ease-out) calc(24ms * var(--arrival-order, 1)) backwards;
+}
+.kpi-grid > .kpi:nth-child(2) { --arrival-order: 2; }
+.kpi-grid > .kpi:nth-child(3) { --arrival-order: 3; }
+.kpi-grid > .kpi:nth-child(4) { --arrival-order: 4; }
+.kpi-grid > .kpi:nth-child(n + 5) { --arrival-order: 5; }
 
+/* 只编排工作表面，不再逐个装饰其内部行，避免信息密集页层层浮动。 */
+.app-content :is(.panel, .chat-panel, .docs-layout, .ops-summary, .ops-tabs, .ops-state) {
+  animation: routeSurface var(--dur-base) var(--ease-out) var(--arrival-delay, 64ms) backwards;
+}
+:is(.overview-col, .sim-main, .sim-side, .kg-left, .kg-right, .copilot-side, .geo-left, .geo-right) > .panel:nth-child(n + 2) {
+  --arrival-delay: 112ms;
+}
+.overview-col--center .panel, .kg-graph-panel, .chat-panel { --arrival-delay: 40ms; }
+.overview-col--right .panel, .geo-right > .panel, .copilot-side > .panel { --arrival-delay: 88ms; }
+.app-content .geo-page .geo-mission-strip {
+  animation: routeSurface var(--dur-base) var(--ease-out) 112ms backwards;
+}
+.app-content .simulation-page .scenario-card {
+  animation: routeMetric var(--dur-base) var(--ease-out) 32ms backwards;
+}
+.app-content .simulation-page .scenario-card:nth-child(2) { animation-delay: 56ms; }
+.app-content .simulation-page .scenario-card:nth-child(3) { animation-delay: 80ms; }
+.app-content .simulation-page .scenario-card:nth-child(4) { animation-delay: 104ms; }
+.app-content .simulation-page .env-ribbon {
+  animation: pageFade var(--dur-base) var(--ease-out) 64ms backwards;
+}
 
+@keyframes routeTitle {
+  from { opacity: .4; transform: translateY(4px); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes routeMetric {
+  from { opacity: .45; transform: translateY(4px); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes routeSurface {
+  from { opacity: .65; transform: translateY(6px); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes routeTrace {
+  0% { opacity: 0; transform: scaleX(0); }
+  32% { opacity: .65; }
+  70% { opacity: .45; transform: scaleX(1); }
+  100% { opacity: 0; transform: scaleX(1); }
+}
 
-.geo-page .geo-header { animation: riseIn var(--dur-enter) var(--ease-out) 30ms backwards; }
-.geo-page .geo-mission-strip { animation: riseIn var(--dur-enter) var(--ease-out) 150ms backwards; }
-
-/* 面板轻入场，避免整页与子面板的位移叠加。 */
-.kg-page, .copilot-page, .geo-page { animation-name: pageFade; animation-duration: var(--dur-base); }
 .rail__item.is-active::before { animation: navIndicator var(--dur-base) var(--ease-out); }
 @keyframes navIndicator {
   from { opacity: 0; transform: scaleY(.35); }

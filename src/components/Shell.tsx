@@ -235,7 +235,7 @@ export function Shell({ children }: { children: ReactNode }) {
           </div>
         </header>
 
-        <main className={`app-content ${isFlush ? 'app-content--flush' : ''}`}>
+        <main className={`app-content ${isFlush ? 'app-content--flush' : ''}`} data-route={location.pathname}>
           <div className="app-content__backdrop" aria-hidden="true">
             <div className="app-content__grid" />
             <div className="app-content__glow" />
