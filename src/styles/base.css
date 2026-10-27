@@ -33,7 +33,9 @@
   --dur-base: 260ms;
   --dur-slow: 460ms;
   --dur-enter: 520ms;
-  --dur-route: 380ms;
+  --dur-route: 620ms;
+  --dur-route-surface: 460ms;
+  --dur-route-title: 480ms;
   /* 全局层级：页面内元素用局部堆叠，只有跨页面的浮层走这套 */
   --z-topbar: 25;
   --z-rail: 30;
@@ -607,76 +609,120 @@ ul {
   animation: none;
 }
 
-.app-content :is(.page-header, .geo-header) {
-  animation: routeTitle var(--dur-base) var(--ease-out) backwards;
-}
+.app-content :is(.page-header, .geo-header) { animation: none; }
 .page-header { position: relative; }
 
-/* 短标尺展开后收淡；静止姿态透明，减少动态效果时不会留下半截线。 */
+/* 标题从自身行框内展开，图标先归位，说明稍后接入；控件始终可操作。 */
+:is(.page-header, .geo-header) h1 { overflow: hidden; }
+.route-title__text { display: inline-block; vertical-align: top; }
+.app-content .route-title__text {
+  animation: routeTitle var(--dur-route-title) var(--ease-out) 40ms backwards;
+}
+.app-content .page-header__icon {
+  animation: routeEmblem var(--dur-route-title) var(--ease-out) backwards;
+}
+.app-content :is(.page-header__text, .geo-header) > .overline {
+  animation: routeCaption var(--dur-base) var(--ease-out) backwards;
+}
+.app-content :is(.page-header__text, .geo-header) > p {
+  animation: routeDescription var(--dur-route-title) var(--ease-out) 100ms backwards;
+}
+
+/* 一次短光迹呼应标题揭示；基础姿态透明，降级不会留下光条。 */
 :is(.page-header, .geo-header)::after {
   content: '';
   position: absolute;
   left: 55px;
   bottom: -3px;
-  width: 44px;
+  width: 112px;
   height: 1px;
-  background: var(--cyan);
+  background: linear-gradient(90deg, transparent, var(--cyan), transparent);
   opacity: 0;
-  transform: scaleX(1);
+  transform: none;
   transform-origin: left;
   pointer-events: none;
   animation: routeTrace var(--dur-route) var(--ease-out) backwards;
 }
 .geo-header::after { left: 16px; bottom: 8px; }
 
-/* 指标同一行错开 24ms，最大只延后 120ms；悬停仍使用组件原有 transform。 */
+/* 指标像一组仪表依次通电，末项不超过 620ms；不持有结束 transform。 */
 .app-content .kpi-grid > .kpi {
-  animation: routeMetric var(--dur-base) var(--ease-out) calc(24ms * var(--arrival-order, 1)) backwards;
+  animation: routeMetric var(--dur-route-surface) var(--ease-out) calc(32ms * var(--arrival-order, 1)) backwards;
 }
 .kpi-grid > .kpi:nth-child(2) { --arrival-order: 2; }
 .kpi-grid > .kpi:nth-child(3) { --arrival-order: 3; }
 .kpi-grid > .kpi:nth-child(4) { --arrival-order: 4; }
 .kpi-grid > .kpi:nth-child(n + 5) { --arrival-order: 5; }
 
-/* 只编排工作表面，不再逐个装饰其内部行，避免信息密集页层层浮动。 */
+/* 主面板上浮，两翼向内归位：只平移工作表面，画布不缩放/旋转。 */
 .app-content :is(.panel, .chat-panel, .docs-layout, .ops-summary, .ops-tabs, .ops-state) {
-  animation: routeSurface var(--dur-base) var(--ease-out) var(--arrival-delay, 64ms) backwards;
+  animation: routeSurface var(--dur-route-surface) var(--ease-out) var(--arrival-delay, 80ms) backwards;
+}
+:is(.overview-col--left, .kg-left, .geo-left) > .panel {
+  --arrival-x: -22px;
+  --arrival-y: 8px;
+  --arrival-delay: 120ms;
 }
 :is(.overview-col, .sim-main, .sim-side, .kg-left, .kg-right, .copilot-side, .geo-left, .geo-right) > .panel:nth-child(n + 2) {
-  --arrival-delay: 112ms;
+  --arrival-delay: 160ms;
 }
 .overview-col--center .panel, .kg-graph-panel, .chat-panel { --arrival-delay: 40ms; }
-.overview-col--right .panel, .geo-right > .panel, .copilot-side > .panel { --arrival-delay: 88ms; }
+:is(.overview-col--right, .sim-side, .kg-right, .geo-right, .copilot-side) > .panel {
+  --arrival-x: 22px;
+  --arrival-y: 8px;
+  --arrival-delay: 160ms;
+}
+.chat-panel { --arrival-edge-opacity: 1; }
+.app-content :is(.panel, .chat-panel)::before {
+  animation: routeEdge var(--dur-route) var(--ease-out) backwards;
+}
 .app-content .geo-page .geo-mission-strip {
-  animation: routeSurface var(--dur-base) var(--ease-out) 112ms backwards;
+  animation: routeSurface var(--dur-route-surface) var(--ease-out) 160ms backwards;
 }
 .app-content .simulation-page .scenario-card {
-  animation: routeMetric var(--dur-base) var(--ease-out) 32ms backwards;
+  animation: routeMetric var(--dur-route-surface) var(--ease-out) 32ms backwards;
 }
-.app-content .simulation-page .scenario-card:nth-child(2) { animation-delay: 56ms; }
-.app-content .simulation-page .scenario-card:nth-child(3) { animation-delay: 80ms; }
-.app-content .simulation-page .scenario-card:nth-child(4) { animation-delay: 104ms; }
+.app-content .simulation-page .scenario-card:nth-child(2) { animation-delay: 64ms; }
+.app-content .simulation-page .scenario-card:nth-child(3) { animation-delay: 96ms; }
+.app-content .simulation-page .scenario-card:nth-child(4) { animation-delay: 128ms; }
 .app-content .simulation-page .env-ribbon {
-  animation: pageFade var(--dur-base) var(--ease-out) 64ms backwards;
+  animation: pageFade var(--dur-route-title) var(--ease-out) 100ms backwards;
 }
 
 @keyframes routeTitle {
-  from { opacity: .4; transform: translateY(4px); }
+  from { opacity: 0; transform: translate3d(-12px, 105%, 0); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes routeEmblem {
+  from { opacity: 0; transform: rotate(-18deg) scale(.72); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes routeCaption {
+  from { opacity: 0; transform: translateX(-16px); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes routeDescription {
+  from { opacity: 0; transform: translateY(10px); }
   to { opacity: 1; transform: none; }
 }
 @keyframes routeMetric {
-  from { opacity: .45; transform: translateY(4px); }
+  from { opacity: .15; transform: translateY(18px); }
   to { opacity: 1; transform: none; }
 }
 @keyframes routeSurface {
-  from { opacity: .65; transform: translateY(6px); }
+  from { opacity: .15; transform: translate3d(var(--arrival-x, 0px), var(--arrival-y, 20px), 0); }
   to { opacity: 1; transform: none; }
 }
+@keyframes routeEdge {
+  0% { opacity: 0; transform: scaleX(.05); }
+  52% { opacity: 1; transform: scaleX(1); }
+  100% { opacity: var(--arrival-edge-opacity, .5); transform: scaleX(1); }
+}
 @keyframes routeTrace {
-  0% { opacity: 0; transform: scaleX(0); }
-  32% { opacity: .65; }
-  70% { opacity: .45; transform: scaleX(1); }
-  100% { opacity: 0; transform: scaleX(1); }
+  0% { opacity: 0; transform: translateX(-12px) scaleX(0); }
+  30% { opacity: .9; transform: translateX(0) scaleX(1); }
+  70% { opacity: .6; }
+  100% { opacity: 0; transform: translateX(56px) scaleX(.25); }
 }
 
 .rail__item.is-active::before { animation: navIndicator var(--dur-base) var(--ease-out); }

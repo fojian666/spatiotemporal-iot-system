@@ -230,11 +230,11 @@ test('route entrances replay on SPA visits and back, but not on query or telemet
     await entered(route);
     await expect(page.locator('main')).toHaveAttribute('data-route', route);
     expect(await page.evaluate(() => (window as typeof window & { documentMarker: string }).documentMarker)).toBe(documentMarker);
-    const timings = await page.locator('.page-header, .geo-header, .panel, .kpi, .chat-panel, .docs-layout').evaluateAll(nodes => nodes.map(node => {
+    const timings = await page.locator('.route-title__text, .page-header__icon, .panel, .kpi, .chat-panel, .docs-layout').evaluateAll(nodes => nodes.map(node => {
       const style = getComputedStyle(node);
       return { name: style.animationName, end: parseFloat(style.animationDuration) + parseFloat(style.animationDelay) };
     }));
-    expect(timings.filter(t => t.name.startsWith('route')).every(t => t.end <= .381)).toBe(true);
+    expect(timings.filter(t => t.name.startsWith('route')).every(t => t.end <= .621)).toBe(true);
   }
   // Let the initial events finish before testing actual in-place query/data updates.
   await page.waitForFunction(() => !document.getAnimations().some(animation =>
@@ -266,6 +266,8 @@ for (const viewport of [{ width: 390, height: 844 }, { width: 768, height: 1024 
       await expect(header).toBeVisible();
       await expect(header).toHaveCSS('opacity', '1');
       await expect(header).toHaveCSS('transform', 'none');
+      await expect(header.locator('.route-title__text')).toHaveCSS('transform', 'none');
+      await expect(header.locator('.route-title__text')).toHaveCSS('opacity', '1');
       const cue = await header.evaluate(node => ({ opacity: getComputedStyle(node, '::after').opacity, duration: getComputedStyle(node, '::after').animationDuration }));
       expect(cue.opacity).toBe('0');
       expect(parseFloat(cue.duration)).toBeLessThanOrEqual(.00001);

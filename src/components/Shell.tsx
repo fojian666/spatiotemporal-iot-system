@@ -284,7 +284,7 @@ export function PageHeader({
       <div className="page-header__icon">{Icon && <Icon size={20} />}</div>
       <div className="page-header__text">
         <span className="overline">{overline}</span>
-        <h1>{title}</h1>
+        <h1><span className="route-title__text">{title}</span></h1>
         {description && <p>{description}</p>}
       </div>
       {actions && <div className="page-header__actions">{actions}</div>}

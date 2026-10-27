@@ -876,3 +876,11 @@
     top: 76px;
   }
 }
+
+/* 单列时取消两翼横移，保留更短的纵向展开，避免手机上左右摆动。 */
+@media (max-width: 900px) {
+  .app-content :is(.panel, .chat-panel, .docs-layout) {
+    --arrival-x: 0px;
+    --arrival-y: 14px;
+  }
+}

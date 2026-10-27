@@ -148,7 +148,7 @@ export function GeoMapPage() {
 
       <header className="geo-header">
         <span className="overline">SPATIOTEMPORAL ONE MAP · {scenario.code}</span>
-        <h1>时空一张图</h1>
+        <h1><span className="route-title__text">时空一张图</span></h1>
         <p>卫星遥感 · 无人机 · 视频 · 全无人系统</p>
         <div className="geo-header__chips">
           <StatusPill tone="online" dot>实时融合</StatusPill>
