@@ -27,6 +27,11 @@ backend/scripts/publish_device.py    # 以外部设备身份向 MQTT 灌数（�
 
 自动回归入口：`npm run test:all`，准备步骤与覆盖矩阵见 `TESTING.md`。完整检查需要专用 `iot_regression_test` PostGIS 测试库；测试会重建其中的表，禁止指向演示库。快速验证可用 `npm test` / `npm run test:backend:unit`。浏览器测试使用 :8020/:4175/:4176 临时实例，**不要打断正在演示的 :8000 实例**。
 
+## 交付与审查要求
+
+- 大段代码修改必须完成代码审查；涉及前端时还要做页面审查。发现问题当场修复并验证，通过后再 commit、push 到 remote。小段修改不强制执行整套审查，仍需做与改动相称的验证。
+- 全量回归按 `TESTING.md` 准备后运行 `npm run test:all`；不得把快速检查或集成项跳过称为完整通过。UI 变更另按 `DESIGN.md` 的指定尺寸做人工截图检查，自动化浏览器覆盖不替代人工页面审查。
+
 ## 修改前必读的同步点（最容易踩的坑）
 
 1. **仿真逻辑双实现**：`src/engine/simulation.tsx`（TS）与 `backend/app/data.py`（Python）是逐行等价移植（computeReading/deriveStatus/buildAlerts/stats）。改公式必须两边同步，已知唯一合法分歧：速度倍数（local 生效、api 固定 1×）。
