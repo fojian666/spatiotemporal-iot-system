@@ -320,7 +320,7 @@ async def create_plan(
         raise HTTPException(status_code=400, detail="设备不存在")
     now = now_local()
     plan = FlightPlan(
-        id=f"P-{now.strftime('%Y%m%d')}-{secrets.token_hex(2).upper()}",
+        id=f"P-{now.strftime('%Y%m%d')}-{secrets.token_hex(8).upper()}",
         name=payload.name,
         route_id=route.id,
         route_name=route.name,

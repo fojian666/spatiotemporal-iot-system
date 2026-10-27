@@ -150,3 +150,8 @@ public/assets/  演示航拍影像
 - 演示地理坐标相对真实卫星影像做了可读性扩散（见 `src/data/devices.ts` 注释），数据库与地图使用同一坐标系，内部一致。
 - API 模式下仿真时钟固定 1×，本地模式支持 2×/4× 加速。
 - 书籍/课程资料（`*.docx`、`*.pptx`）只保留在本地工作区，.gitignore 已忽略，不进入仓库。
+
+
+## 自动回归
+
+提交前运行 `npm run test:all`，覆盖构建、前后端一致性、认证权限、遥测与 TLS MQTT、PostGIS 持久化、飞控状态机、Copilot 和多尺寸浏览器流程。完整环境准备、独立测试库安全约束、分层命令和覆盖边界见 [TESTING.md](TESTING.md)。GitHub Actions 在 main 推送和 PR 时自动执行，失败报告包含覆盖率、页面截图和 trace。

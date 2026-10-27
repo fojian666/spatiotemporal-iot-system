@@ -158,5 +158,6 @@ def build_context(
 
     text = "\n".join(blocks)
     if len(text) > MAX_CONTEXT_CHARS:
-        text = text[:MAX_CONTEXT_CHARS] + "…（已截断）"
+        suffix = "…（已截断）"
+        text = text[: MAX_CONTEXT_CHARS - len(suffix)] + suffix
     return text

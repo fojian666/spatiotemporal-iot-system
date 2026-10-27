@@ -25,7 +25,7 @@ backend/scripts/setup_db.sh          # 建 iot_platform 库 + PostGIS 扩展
 backend/scripts/publish_device.py    # 以外部设备身份向 MQTT 灌数（联调/验收用）
 ```
 
-无测试套列。改动后的验证方式：`npm run build` + 临时端口起 uvicorn 冒烟（如 `IOT_API_PORT=8020 backend/run.sh`），**不要打断正在演示的 :8000 实例**。
+自动回归入口：`npm run test:all`，准备步骤与覆盖矩阵见 `TESTING.md`。完整检查需要专用 `iot_regression_test` PostGIS 测试库；测试会重建其中的表，禁止指向演示库。快速验证可用 `npm test` / `npm run test:backend:unit`。浏览器测试使用 :8020/:4175/:4176 临时实例，**不要打断正在演示的 :8000 实例**。
 
 ## 修改前必读的同步点（最容易踩的坑）
 

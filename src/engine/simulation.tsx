@@ -124,7 +124,7 @@ function waterWeight(id: string) {
   return 0.3;
 }
 
-function computeReading(device: DeviceDefinition, tick: number, scenario: ScenarioConfig): Reading {
+export function computeReading(device: DeviceDefinition, tick: number, scenario: ScenarioConfig): Reading {
   const env = scenario.environment;
   const t = tick;
   const id = device.id;
@@ -222,7 +222,7 @@ export function metricState(def: MetricDef, value: number): 'normal' | 'warning'
   return 'normal';
 }
 
-function deriveStatus(device: DeviceDefinition, reading: Reading, scenarioKey: ScenarioKey): DeviceStatus {
+export function deriveStatus(device: DeviceDefinition, reading: Reading, scenarioKey: ScenarioKey): DeviceStatus {
   if (device.status === 'offline') return 'offline';
   if (!device.metrics.length) return 'online';
   if (device.id === 'WQ-04' && scenarioKey === 'normal') return 'warning';
@@ -234,7 +234,7 @@ function deriveStatus(device: DeviceDefinition, reading: Reading, scenarioKey: S
   return status;
 }
 
-function buildAlerts(key: ScenarioKey, base: Date): AlertItem[] {
+export function buildAlerts(key: ScenarioKey, base: Date): AlertItem[] {
   if (key === 'storm') {
     return [
       {

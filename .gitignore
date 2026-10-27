@@ -28,3 +28,11 @@ backend/mosquitto/passwd
 
 # local agent workspace (per-session notes, machine-specific paths)
 .workbuddy/
+
+# regression reports and browser artifacts
+coverage/
+.pytest_cache/
+.coverage
+playwright-report/
+test-results/
+output/playwright/

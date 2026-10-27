@@ -240,6 +240,7 @@ export function MapView({
   const [loaded, setLoaded] = useState(false);
   const [mapError, setMapError] = useState(false);
   const [terrainFailed, setTerrainFailed] = useState(false);
+  const [terrainRetry, setTerrainRetry] = useState(0);
   /* 窄屏默认关地形：它要额外的 DEM 请求与网格构建，手机上优先保单页流畅。
    * 只在初始化时读一次视口宽度，之后不跟随 resize——面板里有手动开关。 */
   const [layers, setLayers] = useState<MapLayers>(() => ({
@@ -630,7 +631,7 @@ export function MapView({
 
   /* DEM 可用性探测：MapLibre 会吞掉 404 不抛 error，只靠 error 事件兑现不了「不可用」降级 */
   useEffect(() => {
-    if (!layers.terrain || terrainFailed || !loaded) return undefined;
+    if (!layers.terrain || !loaded) return undefined;
     const map = mapRef.current;
     if (!map) return undefined;
     const center = map.getCenter();
@@ -639,7 +640,7 @@ export function MapView({
     let cancelled = false;
     fetch(demTileUrl(center.lng, center.lat), { signal: controller.signal })
       .then((res) => {
-        if (!res.ok && !cancelled) setTerrainFailed(true);
+        if (!cancelled) setTerrainFailed(!res.ok);
       })
       .catch(() => {
         /* 超时导致的 abort 算不可用；组件卸载/依赖变更导致的 abort 不算 */
@@ -651,7 +652,7 @@ export function MapView({
       window.clearTimeout(timer);
       controller.abort();
     };
-  }, [layers.terrain, terrainFailed, loaded]);
+  }, [layers.terrain, terrainRetry, loaded]);
 
   useEffect(() => {
     const map = mapRef.current;
@@ -748,7 +749,7 @@ export function MapView({
                   onClick={() => {
                     /* 不可用不锁死会话：点一下即重新探测，而不是逼用户切路由重挂载 */
                     if (unavailable) {
-                      setTerrainFailed(false);
+                      setTerrainRetry((attempt) => attempt + 1);
                       return;
                     }
                     setLayers((current) => ({ ...current, [item.key]: !current[item.key] }));

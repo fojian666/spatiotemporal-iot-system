@@ -102,8 +102,18 @@ async def chat(query: str, context_block: str, *, reason: bool = False) -> dict[
             if not isinstance(data, dict):
                 last_error = "unexpected payload shape"
                 break
-            choice = (data.get("choices") or [{}])[0]
-            text = (choice.get("message") or {}).get("content") or ""
+            choices = data.get("choices") or [{}]
+            if not isinstance(choices, list) or not isinstance(choices[0], dict):
+                last_error = "unexpected choices shape"
+                break
+            message = choices[0].get("message") or {}
+            if not isinstance(message, dict):
+                last_error = "unexpected message shape"
+                break
+            text = message.get("content") or ""
+            if not isinstance(text, str):
+                last_error = "unexpected content shape"
+                break
             if not text.strip():
                 # 推理 token 吃光了 max_tokens 时会走到这里，属于可恢复的上游问题
                 last_error = "empty completion"

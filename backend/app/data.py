@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 import math
 from datetime import datetime, timedelta
+from decimal import Decimal, ROUND_HALF_UP
 from pathlib import Path
 from typing import Any
 from zoneinfo import ZoneInfo
@@ -49,6 +50,15 @@ def clamp(value: float, low: float, high: float) -> float:
     return min(high, max(low, value))
 
 
+def _fixed(value: float, digits: int = 0) -> float:
+    """Match JS Number.toFixed: round the exact binary float, ties away from zero."""
+    # JS switches to ordinary number formatting at this magnitude. Avoid
+    # Decimal context overflow for large, but valid, external sensor values.
+    if abs(value) >= 1e21:
+        return value
+    return float(Decimal.from_float(float(value)).quantize(Decimal(1).scaleb(-digits), rounding=ROUND_HALF_UP))
+
+
 def _hash(text: str) -> int:
     value = 0
     for char in text:
@@ -82,10 +92,10 @@ def compute_reading(device: dict[str, Any], tick: int, scenario: dict[str, Any])
     if kind == "weather":
         forest = device["zone"] == "峡群林场"
         return {
-            "temperature": round(env["temperature"] + (0.9 if forest else 0) + noise * 0.7 + math.sin(tick / 13) * 0.25, 1),
-            "humidity": round(clamp(env["humidity"] + (-4 if forest else 0) + noise * 3 + math.sin(tick / 11) * 1.5, 5, 100)),
-            "wind": round(max(0.2, env["wind"] + noise * 0.8), 1),
-            "pm25": round(max(1, env["pm25"] + noise * 4)),
+            "temperature": _fixed(env["temperature"] + (0.9 if forest else 0) + noise * 0.7 + math.sin(tick / 13) * 0.25, 1),
+            "humidity": _fixed(clamp(env["humidity"] + (-4 if forest else 0) + noise * 3 + math.sin(tick / 11) * 1.5, 5, 100)),
+            "wind": _fixed(max(0.2, env["wind"] + noise * 0.8), 1),
+            "pm25": _fixed(max(1, env["pm25"] + noise * 4)),
         }
     if kind == "water":
         weight = water_weight(device_id)
@@ -93,60 +103,60 @@ def compute_reading(device: dict[str, Any], tick: int, scenario: dict[str, Any])
         level_offset = 0.0 if device_id == "WQ-01" else 0.7 if device_id == "WQ-03" else -0.85 if outlet else 0.08
         turbidity = 10 + env["turbidity"] * weight + (18 if outlet else 0) + noise * 2.5
         return {
-            "ph": round(clamp(7.2 + (env["ph"] - 7.2) * weight + noise * 0.05, 5.5, 10.5), 2),
-            "turbidity": round(max(1, turbidity)),
-            "ammonia": round(max(0.01, env["ammonia"] * weight + (0.05 if outlet else 0) + noise * 0.02), 2),
-            "level": round(max(0.2, env["waterLevel"] + level_offset + noise * 0.025), 2),
-            "oxygen": round(clamp(9.4 - turbidity / 48 - env["ammonia"] * 0.3 + noise * 0.3, 1.2, 12), 1),
+            "ph": _fixed(clamp(7.2 + (env["ph"] - 7.2) * weight + noise * 0.05, 5.5, 10.5), 2),
+            "turbidity": _fixed(max(1, turbidity)),
+            "ammonia": _fixed(max(0.01, env["ammonia"] * weight + (0.05 if outlet else 0) + noise * 0.02), 2),
+            "level": _fixed(max(0.2, env["waterLevel"] + level_offset + noise * 0.025), 2),
+            "oxygen": _fixed(clamp(9.4 - turbidity / 48 - env["ammonia"] * 0.3 + noise * 0.3, 1.2, 12), 1),
         }
     if kind == "soil":
         return {
-            "moisture": round(clamp(env["soilMoisture"] + noise * 3.5 + math.sin(tick / 15) * 0.8, 2, 100)),
-            "soilTemperature": round(env["temperature"] - 1.6 + noise * 0.5, 1),
-            "ec": round(max(80, 420 - env["soilMoisture"] * 1.2 + noise * 45)),
+            "moisture": _fixed(clamp(env["soilMoisture"] + noise * 3.5 + math.sin(tick / 15) * 0.8, 2, 100)),
+            "soilTemperature": _fixed(env["temperature"] - 1.6 + noise * 0.5, 1),
+            "ec": _fixed(max(80, 420 - env["soilMoisture"] * 1.2 + noise * 45)),
         }
     if kind == "air":
         return {
-            "pm25": round(max(1, env["pm25"] + noise * 5)),
-            "pm10": round(max(2, env["pm25"] * 1.65 + noise * 8)),
-            "temperature": round(env["temperature"] + noise * 0.4, 1),
-            "humidity": round(clamp(env["humidity"] + noise * 2, 5, 100)),
+            "pm25": _fixed(max(1, env["pm25"] + noise * 5)),
+            "pm10": _fixed(max(2, env["pm25"] * 1.65 + noise * 8)),
+            "temperature": _fixed(env["temperature"] + noise * 0.4, 1),
+            "humidity": _fixed(clamp(env["humidity"] + noise * 2, 5, 100)),
         }
     if kind == "geology":
         risk = 10.4 if scenario["key"] == "storm" and device_id == "SL-03" else 4.6 if scenario["key"] == "storm" else 0.8 if scenario["key"] == "fire" else 0.0
         return {
-            "displacement": round(2.2 + risk + noise * 0.25, 1),
-            "crack": round(0.82 + risk * 0.26 + noise * 0.02, 2),
-            "tilt": round(0.32 + risk * 0.09 + noise * 0.008, 2),
+            "displacement": _fixed(2.2 + risk + noise * 0.25, 1),
+            "crack": _fixed(0.82 + risk * 0.26 + noise * 0.02, 2),
+            "tilt": _fixed(0.32 + risk * 0.09 + noise * 0.008, 2),
         }
     if kind == "video":
         events = 3 if scenario["key"] == "fire" and device_id == "CAM-03" else 1 if scenario["key"] == "fire" else 2 if scenario["key"] == "storm" else 1 if scenario["key"] == "pollution" else 0
         return {"aiEvents": events}
     if kind == "drone":
         return {
-            "battery": round(clamp(device["battery"] - tick * 0.01, 12, 100)),
-            "altitude": round(96 + math.sin(tick / 6) * 24),
-            "speed": round(8.4 + math.sin(tick / 5) * 1.2, 1),
-            "progress": round(min(99, 18 + (tick * 1.2) % 80)),
+            "battery": math.floor(clamp(device["battery"] - tick * 0.01, 12, 100) + 0.5),
+            "altitude": _fixed(96 + math.sin(tick / 6) * 24),
+            "speed": _fixed(8.4 + math.sin(tick / 5) * 1.2, 1),
+            "progress": min(99, 18 + (tick * 1.2) % 80),
         }
     if kind in {"ugv", "usv"}:
         return {
-            "battery": round(clamp(device["battery"] - tick * 0.008, 10, 100)),
-            "speed": round(2.1 + math.sin(tick / 7) * 0.6, 1),
-            "progress": round(min(99, 34 + (tick * 0.8) % 60)),
+            "battery": math.floor(clamp(device["battery"] - tick * 0.008, 10, 100) + 0.5),
+            "speed": _fixed(2.1 + math.sin(tick / 7) * 0.6, 1),
+            "progress": min(99, 34 + (tick * 0.8) % 60),
         }
     if kind == "satellite":
         return {
             "altitude": 561000,
             "resolution": 2,
             "cloud": 12,
-            "progress": round(min(99, 22 + (tick * 0.7) % 70)),
+            "progress": min(99, 22 + (tick * 0.7) % 70),
         }
     if kind == "gateway":
         return {
             "connected": 9 + (_hash(device_id) % 4),
-            "latency": round(16 + math.sin(tick / 9) * 3 + (11 if scenario["key"] == "storm" else 0)),
-            "throughput": round(1180 + math.sin(tick / 5) * 60 + (0 if scenario["key"] == "normal" else 240)),
+            "latency": _fixed(16 + math.sin(tick / 9) * 3 + (11 if scenario["key"] == "storm" else 0)),
+            "throughput": _fixed(1180 + math.sin(tick / 5) * 60 + (0 if scenario["key"] == "normal" else 240)),
         }
     return {}
 
@@ -302,7 +312,11 @@ def compute_stats(
     water = [device for device in DEVICES if device["kind"] == "water"]
 
     def average(items: list[float]) -> float:
-        return sum(items) / max(1, len(items))
+        # Python 3.12+ sum() compensates float error; JS reduce() adds left to right.
+        total = 0.0
+        for item in items:
+            total += item
+        return total / max(1, len(items))
 
     def reported(devices: list[dict[str, Any]], key: str) -> list[float]:
         return [
@@ -327,17 +341,17 @@ def compute_stats(
         "online": online,
         "warning": warning,
         "offline": offline,
-        "onlineRate": round(online / len(DEVICES) * 100, 1),
+        "onlineRate": _fixed(online / len(DEVICES) * 100, 1),
         "criticalAlerts": critical_alerts,
         "activeAlerts": active_alerts,
         "unmannedActive": sum(1 for device in DEVICES if device["kind"] in UNMANNED_KINDS),
         "regionHealth": region_health,
-        "messageRate": round(1280 + math.sin(tick / 5) * 48 + (0 if scenario_key == "normal" else 310)),
-        "avgTemperature": round(average(reported(weather, "temperature")), 1),
-        "avgHumidity": round(average(reported(weather, "humidity"))),
-        "avgPm25": round(average(reported([device for device in weather if device["id"] != "AQ-02"], "pm25"))),
-        "avgWaterLevel": round(average(reported(water, "level")), 2),
-        "avgPh": round(average(reported(water, "ph")), 2),
+        "messageRate": _fixed(1280 + math.sin(tick / 5) * 48 + (0 if scenario_key == "normal" else 310)),
+        "avgTemperature": _fixed(average(reported(weather, "temperature")), 1),
+        "avgHumidity": math.floor(average(reported(weather, "humidity")) + 0.5),
+        "avgPm25": math.floor(average(reported([device for device in weather if device["id"] != "AQ-02"], "pm25")) + 0.5),
+        "avgWaterLevel": _fixed(average(reported(water, "level")), 2),
+        "avgPh": _fixed(average(reported(water, "ph")), 2),
         "todayTasks": 24 + (0 if scenario_key == "normal" else 3),
         "dataQuality": 98.4 if scenario_key == "normal" else 96.7,
     }

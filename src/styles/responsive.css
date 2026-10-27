@@ -849,3 +849,30 @@
   .ops-plans .ops-mini-search { flex: 1; min-width: 0; }
   .ops-plans .ops-mini-search input { width: 100%; }
 }
+
+/* 地图工具栏独占顶行，避免被标题和资产面板盖住。 */
+@media (min-width: 901px) {
+  .geo-page .map-layers {
+    top: 18px;
+    left: 22px;
+    right: 126px;
+    max-width: calc(100% - 148px);
+    transform: none;
+    overflow-x: auto;
+  }
+
+  .geo-page .map-layers__title,
+  .geo-page .map-layers__items {
+    flex-shrink: 0;
+  }
+
+  .geo-page .map-tools {
+    top: 22px;
+    right: 22px;
+  }
+
+  .geo-page .geo-header,
+  .geo-page .geo-right {
+    top: 76px;
+  }
+}
