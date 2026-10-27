@@ -24,6 +24,7 @@ import { useAuth } from '../auth/AuthContext';
 import { formatSimTime, useSimulation } from '../engine/simulation';
 import { toggleTheme, useTheme } from '../theme';
 import { ArchitectureModal, useArchitectureModal } from './ArchitectureModal';
+import { ScenarioFeedback } from './ScenarioFeedback';
 import { StatusPill } from './ui';
 
 const NAV = [
@@ -117,6 +118,7 @@ export function Shell({ children }: { children: ReactNode }) {
 
   return (
     <div className="app-shell" style={{ '--scenario-color': scenario.color } as CSSProperties}>
+      <ScenarioFeedback scenario={scenario} />
       <aside className={`rail ${railCollapsed ? 'is-collapsed' : ''}`}>
         <Logo />
         <nav className="rail__nav" aria-label="主导航">

@@ -19,6 +19,7 @@ export interface CopilotEvidence {
   detail: string;
   meta?: string;
   score: number;
+  href?: string;
 }
 
 export interface CopilotAction {
@@ -256,6 +257,7 @@ function alertEvidence(ctx: SimContextValue): CopilotEvidence[] {
     .slice(0, 3)
     .map((alert) => ({
       id: `alert-${alert.id}`,
+      href: DEVICES.some((device) => device.id === alert.source) ? `/map?focus=${alert.source}` : undefined,
       kind: 'alert' as const,
       title: alert.title,
       detail: `${alert.source} · ${alert.zone} · ${alert.detail}`,
@@ -267,6 +269,7 @@ function alertEvidence(ctx: SimContextValue): CopilotEvidence[] {
 function telemetryEvidence(ctx: SimContextValue, title = '区域实时遥测快照', detail?: string): CopilotEvidence {
   return {
     id: 'telemetry-region',
+    href: '/simulation',
     kind: 'telemetry',
     title,
     detail:
@@ -280,6 +283,7 @@ function telemetryEvidence(ctx: SimContextValue, title = '区域实时遥测快�
 function graphEvidence(node: KnowledgeNode): CopilotEvidence {
   return {
     id: `graph-${node.id}`,
+    href: `/graph?focus=${node.id}`,
     kind: 'graph',
     title: node.name,
     detail: node.desc,
@@ -397,6 +401,7 @@ ${status === 'warning' ? `当前场景「${ctx.scenario.name}」下，该设备�
     evidence: uniqEvidence([
       {
         id: `device-${device.id}`,
+        href: `/map?focus=${device.id}`,
         kind: 'telemetry',
         title: `${device.shortName} · ${device.id}`,
         detail: metrics.join('　') || `状态：${statusLabel[status]}`,
@@ -517,6 +522,7 @@ ${warning.length ? `预警节点主要集中在：${[...new Set(warning.map((dev
       telemetryEvidence(ctx),
       ...warning.slice(0, 2).map((device) => ({
         id: `warn-${device.id}`,
+        href: `/map?focus=${device.id}`,
         kind: 'telemetry' as const,
         title: `${device.shortName} · 预警`,
         detail: readingLines(ctx, device).join('　'),
@@ -525,6 +531,7 @@ ${warning.length ? `预警节点主要集中在：${[...new Set(warning.map((dev
       })),
       ...offline.slice(0, 1).map((device) => ({
         id: `offline-${device.id}`,
+        href: `/map?focus=${device.id}`,
         kind: 'alert' as const,
         title: `${device.shortName} · 离线`,
         detail: device.note ?? '设备心跳丢失',
@@ -594,6 +601,7 @@ ${waterAlerts.length ? `当前关联告警 ${waterAlerts.length} 条：${waterAl
     evidence: uniqEvidence([
       {
         id: 'water-summary',
+        href: '/simulation?chart=water',
         kind: 'telemetry',
         title: '水质多站实时聚合',
         detail: rows
@@ -604,6 +612,7 @@ ${waterAlerts.length ? `当前关联告警 ${waterAlerts.length} 条：${waterAl
       },
       ...waterAlerts.slice(0, 2).map((alert) => ({
         id: `water-alert-${alert.id}`,
+        href: DEVICES.some((device) => device.id === alert.source) ? `/map?focus=${alert.source}` : undefined,
         kind: 'alert' as const,
         title: alert.title,
         detail: alert.detail,
@@ -654,6 +663,7 @@ ${ctx.scenario.key === 'fire' ? '当前林区处于高温低湿状态，热红�
       telemetryEvidence(ctx),
       ...stations.slice(0, 2).map((device) => ({
         id: `weather-${device.id}`,
+        href: `/map?focus=${device.id}`,
         kind: 'telemetry' as const,
         title: device.name,
         detail: readingLines(ctx, device).join('　'),
@@ -703,6 +713,7 @@ function dispatchAnswer(ctx: SimContextValue): Draft {
     evidence: uniqEvidence([
       {
         id: `dispatch-${drone.id}`,
+        href: `/map?focus=${drone.id}`,
         kind: 'telemetry',
         title: `${drone.shortName} · 可调度`,
         detail: `电量 ${battery}% · 信号 ${drone.signal}% · 载荷 ${drone.model}`,

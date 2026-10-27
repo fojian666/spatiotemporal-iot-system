@@ -1,3 +1,4 @@
+import { useScenarioRequest } from '../hooks/useScenarioRequest';
 import { useMemo, type CSSProperties } from 'react';
 import { Link } from 'react-router-dom';
 import {
@@ -22,6 +23,7 @@ import { graphic, type EChartsOption } from '../lib/echarts';
 import { PageHeader } from '../components/Shell';
 import { EChart } from '../components/charts';
 import {
+  AnimatedMetric,
   DeviceIcon,
   EventIcon,
   Panel,
@@ -66,7 +68,6 @@ export function SimulationPage() {
   const {
     scenario,
     scenarioKey,
-    setScenario,
     running,
     setRunning,
     speed,
@@ -81,6 +82,7 @@ export function SimulationPage() {
     linkStatus,
   } = useSimulation();
   const { canOperate } = useAuth();
+  const scenarioRequest = useScenarioRequest();
   const [params, updateQuery] = usePageQuery();
   const pageRef = usePageScroll();
   const focus = DEVICES.find((device) => device.id === params.get('focus'));
@@ -211,6 +213,7 @@ export function SimulationPage() {
 
   return (
     <div ref={pageRef} className="page simulation-page">
+      {scenarioRequest.error && <p role="alert" className="interaction-error">{scenarioRequest.error}</p>}
       <PageHeader
         icon={FlaskConical}
         overline={`IOT SIMULATION SANDBOX · TICK ${String(tick).padStart(4, '0')}`}
@@ -222,7 +225,7 @@ export function SimulationPage() {
               type="button"
               className={`btn ${running ? 'btn--ghost' : 'btn--primary'}`}
               onClick={() => setRunning(!running)}
-              disabled={!canOperate}
+              disabled={!canOperate || scenarioRequest.pending}
               title={canOperate ? undefined : '观察员为只读角色'}
             >
               {running ? <Pause size={14} /> : <Play size={14} />}
@@ -262,8 +265,8 @@ export function SimulationPage() {
               className={`scenario-card ${scenarioKey === item.key ? 'is-active' : ''}`}
               aria-pressed={scenarioKey === item.key}
               style={{ '--sc': item.color } as CSSProperties}
-              onClick={() => setScenario(item.key)}
-              disabled={!canOperate}
+              onClick={() => void scenarioRequest.request(item.key)}
+              disabled={!canOperate || scenarioRequest.pending}
               title={canOperate ? undefined : '观察员为只读角色'}
             >
               <div className="scenario-card__top">
@@ -299,7 +302,7 @@ export function SimulationPage() {
         ].map((item) => (
           <div className="env-param" key={item.label}>
             <span>{item.label}</span>
-            <strong className="mono">{item.value}<em>{item.unit}</em></strong>
+            <strong className="mono"><AnimatedMetric value={item.value} digits={2} /><em>{item.unit}</em></strong>
           </div>
         ))}
         <div className="env-ribbon__spacer" />

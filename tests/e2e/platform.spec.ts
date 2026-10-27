@@ -276,3 +276,132 @@ for (const viewport of [{ width: 390, height: 844 }, { width: 768, height: 1024 
     }
   });
 }
+
+test('committed alert feedback keeps order and the completed count accurate', async ({ page }) => {
+  await prepare(page);
+  await page.goto(local + '/#/');
+  const rows = page.locator('.alert-row');
+  await expect(rows.first()).toBeVisible();
+  const titles = await rows.locator('.alert-row__body strong').allTextContents();
+  const statuses = await rows.locator('.alert-status').allTextContents();
+  const row = rows.nth(statuses.findIndex(status => status.trim() === '待处置'));
+  await row.locator('.alert-row__main').click();
+  await row.getByRole('button', { name: '联动处置', exact: true }).click();
+  await expect(row.locator('.alert-status')).toHaveText('处置中');
+  await expect(row.locator('.alert-confirmation')).toHaveCount(1);
+  const before = Number(await page.locator('.feed-tabs button').first().locator('[aria-label]').getAttribute('aria-label'));
+  await row.getByRole('button', { name: '标记完成', exact: true }).click();
+  await expect(row.locator('.alert-status')).toHaveText('已完成');
+  await expect(page.locator('.feed-tabs button').first().locator('[aria-label]')).toHaveAttribute('aria-label', String(before - 1));
+  expect(await rows.locator('.alert-row__body strong').allTextContents()).toEqual(titles);
+  await page.locator('.feed-tabs button').nth(1).click();
+  await page.locator('.feed-tabs button').first().click();
+  await expect(page.locator('.alert-confirmation')).toHaveCount(0);
+});
+
+test('rejected acknowledgement preserves server status, reports failure and can retry', async ({ page }) => {
+  await prepare(page);
+  await login(page, '值班长');
+  await page.route('**/api/alerts/*/ack', route => route.fulfill({ status: 503, json: { detail: 'unavailable' } }));
+  const row = page.locator('.alert-row').first();
+  await row.locator('.alert-row__main').click();
+  const status = await row.locator('.alert-status').textContent();
+  await row.locator('.alert-row__actions button').click();
+  await expect(page.getByRole('alert')).toHaveText('状态更新失败，请重试。');
+  await expect(row.locator('.alert-status')).toHaveText(status!);
+  await expect(page.locator('.alert-confirmation')).toHaveCount(0);
+  await expect(row.locator('.alert-row__actions button')).toBeEnabled();
+});
+
+test('scenario handoff follows commit and does not replay on ticks or rejected writes', async ({ page }) => {
+  await prepare(page);
+  await page.goto(local + '/#/simulation');
+  await page.locator('.scenario-card').nth(1).click();
+  await expect(page.locator('.scenario-feedback')).toContainText('场景已切换');
+  const once = await page.locator('.scenario-feedback').evaluate(node => { node.setAttribute('data-probe', 'same'); return node.textContent; });
+  await expect(page.locator('.scenario-feedback[data-probe="same"]')).toHaveText(once!);
+  await expect(page.locator('.scenario-feedback')).toHaveCount(0, { timeout: 4000 });
+  await page.waitForTimeout(1100);
+  await expect(page.locator('.scenario-feedback')).toHaveCount(0);
+  await login(page, '值班长');
+  await page.goto(remote + '/#/simulation');
+  const selected = await page.locator('.scenario-card.is-active').getAttribute('aria-pressed');
+  expect(selected).toBe('true');
+  await page.route('**/api/scenarios/*', route => route.fulfill({ status: 503, json: { detail: 'unavailable' } }));
+  await page.locator('.scenario-card:not(.is-active)').first().click();
+  await expect(page.getByRole('alert')).toHaveText('场景切换失败，请重试。');
+  await expect(page.locator('.scenario-feedback')).toHaveCount(0);
+});
+
+test('Copilot evidence links locate real devices and graph nodes, including static motion', async ({ page }) => {
+  await prepare(page);
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await page.goto(local + '/#/copilot');
+  await page.getByRole('textbox', { name: '向物联大模型提问' }).fill('WQ-04当前状态');
+  await page.getByRole('button', { name: '发送', exact: true }).click();
+  const cards = page.locator('.chat-message--assistant').last().locator('.evidence-card');
+  await expect(cards.first()).toBeVisible();
+  await expect(cards.first()).toHaveCSS('transform', 'none');
+  await cards.first().getByRole('link').click();
+  await expect(page).toHaveURL(/map\?focus=WQ-04/);
+  await expect(page.locator('.asset-row.is-selected')).toContainText('WQ-04');
+  await expect(page.locator('.geo-target-body')).toBeVisible();
+  await page.goto(local + '/#/copilot');
+  await page.getByRole('textbox', { name: '向物联大模型提问' }).fill('MQTT是什么');
+  await page.getByRole('button', { name: '发送', exact: true }).click();
+  const graph = page.locator('.chat-message--assistant').last().locator('.evidence-card--graph').first().getByRole('link');
+  const href = await graph.getAttribute('href');
+  await graph.click();
+  expect(page.url()).toContain(href!.replace('#', ''));
+  await expect(page.locator('.kg-detail__body')).toBeVisible();
+});
+
+test('moving selection rings replay for different UAV assets but not telemetry', async ({ page }) => {
+  await prepare(page);
+  await page.route('**/World_Imagery/MapServer/tile/**', route => route.fulfill({ contentType: 'image/png', body: Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=', 'base64') }));
+  await page.goto(local + '/#/map?focus=UAV-01');
+  const moving = page.locator('.map-moving--drone');
+  await expect(moving).toHaveAttribute('data-selection', 'UAV-01');
+  const initialRing = await moving.locator('.map-selection-ring').elementHandle();
+  expect(initialRing).toBeTruthy();
+  await page.waitForTimeout(1200);
+  expect(await initialRing!.evaluate(node => node.isConnected)).toBe(true);
+  await page.locator('.asset-row').filter({ hasText: 'UAV-02' }).click();
+  await expect(moving).toHaveAttribute('data-selection', 'UAV-02');
+  expect(await initialRing!.evaluate(node => node.isConnected)).toBe(false);
+  await expect(moving.locator('.map-selection-ring')).toHaveCSS('animation-name', 'selectionLocate');
+  await page.waitForTimeout(850);
+  await expect(moving.locator('.map-selection-ring')).toHaveCSS('opacity', '0');
+});
+
+for (const [width, height] of [[390, 844], [768, 1024], [1440, 720]]) {
+  test(`interaction review screenshots in both themes at ${width}×${height}`, async ({ page }) => {
+    await prepare(page);
+    await page.setViewportSize({ width, height });
+    await page.route('**/World_Imagery/MapServer/tile/**', route => route.fulfill({ contentType: 'image/png', body: Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=', 'base64') }));
+    mkdirSync('output/playwright', { recursive: true });
+    for (const theme of ['dark', 'light']) {
+      await page.goto(local + '/#/simulation');
+      if (await page.locator('html').getAttribute('data-theme') !== theme) await page.getByRole('button', { name: '切换主题', exact: true }).click();
+      await expect(page.locator('html')).toHaveAttribute('data-theme', theme);
+      await page.locator('.scenario-card:not(.is-active)').first().click();
+      await expect(page.locator('.scenario-feedback')).toBeVisible();
+      const metric = page.locator('.env-param strong span').first();
+      await expect(metric).toHaveCSS('font-size', '10px');
+      const feedback = page.locator('.scenario-feedback');
+      const bounds = await feedback.boundingBox();
+      expect(bounds!.y + bounds!.height).toBeLessThan(height - (width <= 640 ? 58 : 0));
+      await page.screenshot({ path: `output/playwright/interaction-${width}-${theme}-scenario.png` });
+      await page.goto(local + '/#/map?focus=WQ-04');
+      await expect(page.locator('.geo-target-body')).toBeVisible();
+      await page.screenshot({ path: `output/playwright/interaction-${width}-${theme}-map.png`, animations: 'disabled' });
+      await page.goto(local + '/#/copilot');
+      await page.getByRole('textbox', { name: '向物联大模型提问' }).fill('WQ-04当前状态');
+      await page.getByRole('button', { name: '发送', exact: true }).click();
+      const evidence = page.locator('.chat-message--assistant').last().locator('.evidence-card').first();
+      await evidence.getByRole('link').waitFor({ state: 'visible' });
+      await evidence.scrollIntoViewIfNeeded();
+      await page.screenshot({ path: `output/playwright/interaction-${width}-${theme}-evidence.png`, animations: 'disabled' });
+    }
+  });
+}

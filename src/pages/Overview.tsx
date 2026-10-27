@@ -1,4 +1,5 @@
-import { useMemo, useState, type CSSProperties, type ReactNode } from 'react';
+import { useScenarioRequest } from '../hooks/useScenarioRequest';
+import { useEffect, useMemo, useState, type CSSProperties, type ReactNode } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import {
   Activity,
@@ -22,6 +23,7 @@ import {
 } from 'lucide-react';
 import { graphic, type EChartsOption } from '../lib/echarts';
 import { PageHeader } from '../components/Shell';
+import { AnimatedMetric } from '../components/ui';
 import { useAnimatedNumber } from '../hooks/useAnimatedNumber';
 import { MapView } from '../components/MapView';
 import { EChart } from '../components/charts';
@@ -98,15 +100,31 @@ export function OverviewPage() {
     history,
     scenario,
     scenarioKey,
-    setScenario,
     readings,
     deviceStatuses,
     cycleAlert,
     simTime,
   } = useSimulation();
   const { canOperate } = useAuth();
+  const scenarioRequest = useScenarioRequest();
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [pendingAlert, setPendingAlert] = useState<string | null>(null);
+  const [alertFeedback, setAlertFeedback] = useState<{ id: string; serial: number } | null>(null);
+  const [alertError, setAlertError] = useState('');
+  async function acknowledgeAlert(id: string) {
+    setPendingAlert(id);
+    setAlertError('');
+    const ok = await cycleAlert(id);
+    setPendingAlert(null);
+    if (ok) setAlertFeedback((previous) => ({ id, serial: (previous?.serial ?? 0) + 1 }));
+    else setAlertError('状态更新失败，请重试。');
+  }
   const [feedTab, setFeedTab] = useState<'alerts' | 'events'>('alerts');
+  useEffect(() => {
+    if (!alertFeedback) return;
+    const timer = window.setTimeout(() => setAlertFeedback(null), 620);
+    return () => window.clearTimeout(timer);
+  }, [alertFeedback]);
   const [params, updateQuery] = usePageQuery();
   const pageRef = usePageScroll();
   const expandedAlert = params.get('alert');
@@ -258,6 +276,7 @@ export function OverviewPage() {
 
   return (
     <div ref={pageRef} className="page overview-page">
+      {scenarioRequest.error && <p role="alert" className="interaction-error">{scenarioRequest.error}</p>}
       <PageHeader
         icon={Radar}
         overline={`SPATIOTEMPORAL INTELLIGENT IOT · ${time.date.replaceAll('-', '.')}`}
@@ -274,8 +293,8 @@ export function OverviewPage() {
                   className={`scenario-switch__item ${scenarioKey === item.key ? 'is-active' : ''}`}
                   aria-pressed={scenarioKey === item.key}
                   style={{ '--sc': item.color } as CSSProperties}
-                  onClick={() => setScenario(item.key)}
-                  disabled={!canOperate}
+                  onClick={() => void scenarioRequest.request(item.key)}
+                  disabled={!canOperate || scenarioRequest.pending}
                   title={canOperate ? undefined : '观察员为只读角色'}
                 >
                   <i />
@@ -519,10 +538,10 @@ export function OverviewPage() {
             className="alert-panel"
             extra={
               <div className="feed-tabs">
-                <button type="button" className={feedTab === 'alerts' ? 'is-active' : ''} onClick={() => setFeedTab('alerts')}>
-                  告警 <em>{stats.activeAlerts}</em>
+                <button type="button" className={feedTab === 'alerts' ? 'is-active' : ''} onClick={() => { setAlertFeedback(null); setFeedTab('alerts'); }}>
+                  告警 <em><AnimatedMetric value={stats.activeAlerts} /></em>
                 </button>
-                <button type="button" className={feedTab === 'events' ? 'is-active' : ''} onClick={() => setFeedTab('events')}>
+                <button type="button" className={feedTab === 'events' ? 'is-active' : ''} onClick={() => { setAlertFeedback(null); setFeedTab('events'); }}>
                   动态 <em>{events.length}</em>
                 </button>
               </div>
@@ -530,8 +549,10 @@ export function OverviewPage() {
           >
             {feedTab === 'alerts' ? (
               <div className="alert-list">
+                {alertError && <p className="interaction-error" role="alert">{alertError}</p>}
                 {alerts.map((alert) => (
                   <div key={alert.id} className={`alert-row ${expandedAlert === alert.id ? 'is-open' : ''}`}>
+                    {alertFeedback?.id === alert.id && <span key={alertFeedback.serial} className="alert-confirmation" aria-hidden="true" />}
                     <button
                       type="button"
                       className="alert-row__main"
@@ -543,7 +564,7 @@ export function OverviewPage() {
                         <strong>{alert.title}</strong>
                         <span>{alert.source} · {alert.zone} · {alert.time}</span>
                       </div>
-                      <span className={`alert-status alert-status--${alert.status === '已完成' ? 'done' : alert.status === '处置中' ? 'doing' : 'todo'}`}>
+                      <span key={alert.status} className={`alert-status alert-status--${alert.status === '已完成' ? 'done' : alert.status === '处置中' ? 'doing' : 'todo'}`}>
                         {alert.status}
                       </span>
                     </button>
@@ -556,8 +577,8 @@ export function OverviewPage() {
                         <div className="alert-row__actions">
                           <Link to={`/map?focus=${alert.source}`} tabIndex={expandedAlert === alert.id ? 0 : -1}><MapPin size={12} /> 地图定位</Link>
                           <Link to={`/simulation?focus=${alert.source}`} tabIndex={expandedAlert === alert.id ? 0 : -1}><Activity size={12} /> 查看遥测</Link>
-                          <button type="button" onClick={() => cycleAlert(alert.id)} disabled={!canOperate} tabIndex={expandedAlert === alert.id ? 0 : -1} title={canOperate ? undefined : '观察员为只读角色，可查看地图与遥测'}>
-                            <Sparkles size={12} /> {alert.status === '待处置' ? '联动处置' : alert.status === '处置中' ? '标记完成' : '重新打开'}
+                          <button type="button" onClick={() => void acknowledgeAlert(alert.id)} disabled={!canOperate || pendingAlert !== null} tabIndex={expandedAlert === alert.id ? 0 : -1} title={canOperate ? undefined : '观察员为只读角色，可查看地图与遥测'}>
+                            <Sparkles size={12} /> {pendingAlert === alert.id ? '提交中…' : alert.status === '待处置' ? '联动处置' : alert.status === '处置中' ? '标记完成' : '重新打开'}
                           </button>
                         </div>
                       </div>

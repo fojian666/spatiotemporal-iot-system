@@ -171,7 +171,7 @@ function createNode(device: (typeof DEVICES)[number], onClick: (id: string) => v
   el.style.setProperty('--node-color', KIND_META[device.kind].color);
   el.style.setProperty('--marker-delay', `${Math.min(12, index) * 32}ms`);
   el.style.setProperty('--pulse-delay', `${-((index * 0.21) % 2.8).toFixed(2)}s`);
-  el.innerHTML = `<span class="map-node__pulse"></span><span class="map-node__core">${MARKER_CHAR[device.kind]}</span><span class="map-node__label">${device.shortName}<em>${device.id}</em></span>`;
+  el.innerHTML = `<span class="map-selection-ring"></span><span class="map-node__pulse"></span><span class="map-node__core">${MARKER_CHAR[device.kind]}</span><span class="map-node__label">${device.shortName}<em>${device.id}</em></span>`;
   el.addEventListener('click', (event) => {
     event.stopPropagation();
     onClick(device.id);
@@ -191,7 +191,7 @@ function createMovingMarker(
   el.setAttribute('aria-label', label);
   el.className = `map-moving map-moving--${kind} ${extraClass}`;
   el.style.setProperty('--node-color', KIND_META[kind].color);
-  el.innerHTML = `<span class="map-moving__ring"></span><span class="map-moving__core">${text}</span><span class="map-moving__label">${label}</span>`;
+  el.innerHTML = `<span class="map-selection-ring"></span><span class="map-moving__ring"></span><span class="map-moving__core">${text}</span><span class="map-moving__label">${label}</span>`;
   el.addEventListener('click', (event) => {
     event.stopPropagation();
     onClick();
@@ -608,6 +608,15 @@ export function MapView({
     movingElsRef.current['ugv']?.classList.toggle('is-selected', selectedId === 'UGV-01');
     movingElsRef.current['usv']?.classList.toggle('is-selected', selectedId === 'USV-01');
     movingElsRef.current['satellite']?.classList.toggle('is-selected', selectedId === 'SAT-01');
+    // Two UAV assets share one moving marker. Restart only its child ring when
+    // the actual asset changes; telemetry updates retain the same DOM node.
+    Object.values(movingElsRef.current).forEach((el) => {
+      if (!el.classList.contains('is-selected')) { delete el.dataset.selection; return; }
+      if (el.dataset.selection === selectedId) return;
+      el.dataset.selection = selectedId ?? '';
+      const ring = el.querySelector('.map-selection-ring');
+      if (ring) ring.replaceWith(ring.cloneNode(true));
+    });
   }, [layers, loaded, selectedId, deviceStatuses, terrainFailed]);
 
   /* 立体地形：抬升相机 + 挂 terrain，关掉时回到平面并恢复轻微俯角 */

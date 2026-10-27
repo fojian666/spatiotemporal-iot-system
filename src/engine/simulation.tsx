@@ -94,7 +94,7 @@ export interface SimContextValue {
   setScenario: (key: ScenarioKey) => Promise<boolean>;
   setRunning: (running: boolean) => void;
   setSpeed: (speed: number) => void;
-  cycleAlert: (id: string) => void;
+  cycleAlert: (id: string) => Promise<boolean>;
 }
 
 const SimulationContext = createContext<SimContextValue | null>(null);
@@ -547,7 +547,8 @@ function LocalSimulationProvider({ children }: { children: ReactNode }) {
   );
 
   const cycleAlert = useCallback(
-    (id: string) => {
+    async (id: string) => {
+      if (!alerts.some((alert) => alert.id === id)) return false;
       setAlerts((current) =>
         current.map((alert) => {
           if (alert.id !== id) return alert;
@@ -567,6 +568,7 @@ function LocalSimulationProvider({ children }: { children: ReactNode }) {
           ...current.slice(0, 7),
         ]);
       }
+      return true;
     },
     [alerts, simTime],
   );
@@ -703,10 +705,15 @@ function RemoteSimulationProvider({ children }: { children: ReactNode }) {
       .catch((error) => console.error('Simulation speed update failed', error));
   }, []);
 
-  const ackAlert = useCallback((id: string) => {
-    void postAlertAck(id)
-      .then((next) => setSnapshot(next))
-      .catch((error) => console.error('Alert acknowledgement failed', error));
+  const ackAlert = useCallback(async (id: string) => {
+    try {
+      const next = await postAlertAck(id);
+      setSnapshot(next);
+      return true;
+    } catch (error) {
+      console.error('Alert acknowledgement failed', error);
+      return false;
+    }
   }, []);
 
   if (phase === 'checking') return <BootSplash title="正在接入服务端数据总线" detail="WSS · JWT · POSTGIS · MQTT" />;

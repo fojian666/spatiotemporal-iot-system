@@ -26,7 +26,8 @@ it('local clock pauses, accelerates, cycles alerts and cleans its interval', asy
   expect(result.current.scenarioKey).toBe('storm');
   expect(result.current.alerts.some(a => a.level === 'critical')).toBe(true);
   const alert = result.current.alerts[0];
-  for (let i = 0; i < 3; i++) act(() => result.current.cycleAlert(alert.id));
+  for (let i = 0; i < 3; i++) await act(async () => { expect(await result.current.cycleAlert(alert.id)).toBe(true); });
+  await act(async () => { expect(await result.current.cycleAlert('missing')).toBe(false); });
   expect(result.current.alerts[0].status).toBe(alert.status);
   expect(result.current.history.length).toBeLessThanOrEqual(36);
   expect(result.current.events.length).toBeLessThanOrEqual(8);

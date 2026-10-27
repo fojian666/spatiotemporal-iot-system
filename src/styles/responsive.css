@@ -884,3 +884,7 @@
     --arrival-y: 14px;
   }
 }
+
+@media (max-width: 640px) {
+  .scenario-feedback-region { bottom: calc(var(--mobile-nav) + var(--safe-bottom) + 12px); }
+}

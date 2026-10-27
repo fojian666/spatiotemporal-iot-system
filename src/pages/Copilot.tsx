@@ -188,10 +188,10 @@ function AssistantBubble({
               </div>
 
               <div className="evidence-grid">
-                {reply.evidence.map((evidence) => {
+                {reply.evidence.map((evidence, index) => {
                   const Icon = EVIDENCE_ICONS[evidence.kind];
                   return (
-                    <div className={`evidence-card evidence-card--${evidence.kind}`} key={evidence.id}>
+                    <div className={`evidence-card evidence-card--${evidence.kind}`} key={evidence.id} style={{ '--i': index } as CSSProperties}>
                       <div className="evidence-card__top">
                         <span className="evidence-card__icon"><Icon size={12} /></span>
                         <em>{EVIDENCE_LABELS[evidence.kind]}</em>
@@ -200,6 +200,9 @@ function AssistantBubble({
                       <strong>{evidence.title}</strong>
                       <p>{evidence.detail}</p>
                       {evidence.meta && <span className="evidence-meta">{evidence.meta}</span>}
+                      {evidence.href && <Link className="evidence-card__open" to={evidence.href} aria-label={`查看证据：${evidence.title}`}>
+                        {evidence.kind === 'graph' ? '展开图谱' : evidence.href.includes('focus=') ? '定位来源' : '查看遥测'} <ArrowUpRight size={12} />
+                      </Link>}
                     </div>
                   );
                 })}

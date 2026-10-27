@@ -1,3 +1,4 @@
+import { useAnimatedNumber } from '../hooks/useAnimatedNumber';
 import { memo, useId, type ReactNode } from 'react';
 import {
   Activity,
@@ -287,4 +288,10 @@ export function EventIcon({ type }: { type: SimEvent['type'] }) {
 
 export function EmptyState({ children }: { children: ReactNode }) {
   return <div className="empty-state">{children}</div>;
+}
+
+/** Keep the spoken value exact while visually interpolating a metric. */
+export function AnimatedMetric({ value, digits = 0 }: { value: number; digits?: number }) {
+  const display = useAnimatedNumber(value);
+  return <span aria-label={String(value)}><span aria-hidden="true">{Number(display.toFixed(digits))}</span></span>;
 }

@@ -1311,7 +1311,7 @@
   white-space: nowrap;
 }
 
-.env-param span {
+.env-param > span {
   font-size: 8px;
   color: var(--dim);
 }

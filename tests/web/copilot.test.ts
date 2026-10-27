@@ -22,6 +22,7 @@ describe('device-specific investigations', () => {
       expect(resolveFocusDevice(`${name}当前状态`)).toBe(d.id);
       const answer = askCopilot(`${name}当前状态`, context('normal'));
       expect(answer.text).toContain(d.id);
+      expect(answer.evidence.find(e => e.id === `device-${d.id}`)?.href).toBe(`/map?focus=${d.id}`);
       const paths = answer.actions.filter(a => a.kind === 'navigate').map(a => a.value);
       expect(paths).toContain(`/map?focus=${d.id}`);
       expect(paths).toContain(`/simulation?focus=${d.id}`);
