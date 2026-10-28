@@ -70,6 +70,8 @@ class Settings(BaseSettings):
     embedding_api_key: str = ""
     embedding_model: str = "BAAI/bge-m3"
 
+    # Live devices are offline after this many seconds without a server-side receipt.
+    device_offline_after_seconds: float = 30.0
     simulation_enabled: bool = True
     simulation_interval_seconds: float = 1.0
     history_interval_seconds: int = 5

@@ -22,7 +22,7 @@ bearer_scheme = HTTPBearer(auto_error=False)
 ROLES = {"admin", "operator", "viewer"}
 
 _ticket_lock = threading.Lock()
-_ws_tickets: dict[str, tuple[int, int, float]] = {}
+_ws_tickets: dict[str, tuple[int, int, float, float]] = {}
 _login_lock = threading.Lock()
 _login_attempts: defaultdict[str, deque[float]] = defaultdict(deque)
 
@@ -117,26 +117,28 @@ def require_roles(*roles: str) -> Callable:
     return dependency
 
 
-def issue_ws_ticket(user: User) -> tuple[str, int]:
+def issue_ws_ticket(user: User, session_expires_at: float) -> tuple[str, int]:
+    now = time.time()
+    expires_at = min(now + settings.ws_ticket_seconds, session_expires_at)
+    if expires_at <= now:
+        raise HTTPException(status_code=401, detail="登录已过期，请重新登录")
     ticket = secrets.token_urlsafe(32)
-    expires_at = time.time() + settings.ws_ticket_seconds
     with _ticket_lock:
-        now = time.time()
-        for key in [key for key, (_, _, exp) in _ws_tickets.items() if exp <= now]:
+        for key in [key for key, (_, _, exp, _) in _ws_tickets.items() if exp <= now]:
             _ws_tickets.pop(key, None)
-        _ws_tickets[ticket] = (user.id, user.token_version, expires_at)
-    return ticket, settings.ws_ticket_seconds
+        _ws_tickets[ticket] = (user.id, user.token_version, expires_at, session_expires_at)
+    return ticket, max(0, int(expires_at - now))
 
 
-def consume_ws_ticket(ticket: str) -> tuple[int, int] | None:
+def consume_ws_ticket(ticket: str) -> tuple[int, int, float] | None:
     with _ticket_lock:
         item = _ws_tickets.pop(ticket, None)
     if not item:
         return None
-    user_id, token_version, expires_at = item
-    if expires_at < time.time():
+    user_id, token_version, expires_at, session_expires_at = item
+    if expires_at <= time.time():
         return None
-    return user_id, token_version
+    return user_id, token_version, session_expires_at
 
 
 def check_login_rate(key: str) -> tuple[bool, int]:

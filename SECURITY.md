@@ -38,7 +38,7 @@
 
 ### 输入与遥测契约
 
-- 遥测契约 v1（`backend/app/schemas.py`，pydantic）：除字段校验外**拒绝非数值指标（NaN/Inf）、超量指标（>32）与过长键名**，并拒绝未注册/伪造 `device_id`；`backend/app/mqtt_bridge.py` 额外校验 topic 与 payload 的 device_id 一致。拒收计数进 `mqtt.messagesRejected`，可观测。
+- 遥测契约 v1（`backend/app/schemas.py`，pydantic）：除字段校验外**拒绝非数值指标（NaN/Inf）、绝对值超过 1e100、超量指标（>32）与过长键名**，并拒绝未注册设备；`backend/app/mqtt_bridge.py` 额外校验 topic 与 payload 的 device_id 一致。发布者身份与设备 topic 的绑定必须由 broker 的逐设备 ACL 强制执行。拒收计数进 `mqtt.messagesRejected`，可观测。
 - 飞控指令走声明式转换表 `PLAN_TRANSITIONS`（`backend/app/drone_api.py`）：非法状态转换返回 409 且**不写审计行**，避免审计日志被非法指令污染。
 
 ### 大模型与数据外发
@@ -77,7 +77,7 @@ Copilot 有一条**可选**的云端推理通道，默认关闭。开启与否�
 
 1. `IOT_DEMO_LOGIN_ENABLED=false`，关闭一键演示登录；
 2. 替换 mkcert 本地证书为受信任证书，并收紧 CORS/TrustedHost 到实际域名；
-3. 轮换全部环境变量凭据（`IOT_JWT_SECRET`、三角色密码、`IOT_MQTT_PASSWORD`、`IOT_LLM_API_KEY`、`IOT_EMBEDDING_API_KEY`），为每台真实设备建独立 MQTT 账号与 ACL（见 README「接入真实设备」）；
+3. 轮换全部环境变量凭据（`IOT_JWT_SECRET`、三角色密码、`IOT_MQTT_PASSWORD`、`IOT_LLM_API_KEY`、`IOT_EMBEDDING_API_KEY`），为每台真实设备建独立 MQTT 账号与仅限自身 telemetry topic 的写入 ACL（见 README「接入真实设备」；不要授权 devices/#）；
 4. 接受单进程约束：单实例部署，或先将会话/限流/遥测状态外置；
 5. 复核 `.gitignore` 红线：`.env`、`backend/certs/`、`backend/mosquitto/passwd`、书籍资料永不入库（提交前 `git status` 复核）；
 6. 评估大模型通道：对外部署时要么保持 `IOT_LLM_ENABLED=false` 完全离线，要么先确认态势数据外发给第三方服务的合规性（见「大模型与数据外发」）。

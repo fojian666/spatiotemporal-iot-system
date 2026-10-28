@@ -8,14 +8,18 @@ export function EChart({
   height = 260,
   className = '',
   onClick,
+  replaceSeries = false,
 }: {
   option: EChartsOption;
   height?: number | string;
   className?: string;
   onClick?: (params: ECElementEvent) => void;
+  replaceSeries?: boolean;
 }) {
   const ref = useRef<HTMLDivElement>(null);
   const chartRef = useRef<ECharts | null>(null);
+  const replaceSeriesRef = useRef(replaceSeries);
+  replaceSeriesRef.current = replaceSeries;
   const optionRef = useRef(option);
   optionRef.current = option;
   const renderRef = useRef<(() => void) | null>(null);
@@ -36,7 +40,7 @@ export function EChart({
       // Canvas 不受全局 CSS 降级规则影响，在共享图表入口统一处理。
       const current = optionRef.current;
       chart.setOption({ ...current, animation: prefersReducedMotion() ? false : current.animation ?? true,
-        aria: { enabled: true, data: { maxCount: 6 } } }, { notMerge: false });
+        aria: { enabled: true, data: { maxCount: 6 } } }, { notMerge: false, ...(replaceSeriesRef.current ? { replaceMerge: ['series'] } : {}) });
     };
     renderRef.current = render;
     const observer = new ResizeObserver(() => {

@@ -41,12 +41,12 @@ export interface AlertItem {
 export interface TrendPoint {
   ts: number;
   t: string;
-  temperature: number;
-  humidity: number;
-  pm25: number;
-  waterLevel: number;
-  turbidity: number;
-  ph: number;
+  temperature: number | null;
+  humidity: number | null;
+  pm25: number | null;
+  waterLevel: number | null;
+  turbidity: number | null;
+  ph: number | null;
 }
 
 export interface SimEvent {
@@ -90,6 +90,7 @@ export interface SimContextValue {
   events: SimEvent[];
   stats: SimStats;
   source: DataSource;
+  liveMode?: boolean;
   linkStatus: LinkStatus;
   setScenario: (key: ScenarioKey) => Promise<boolean>;
   setRunning: (running: boolean) => void;
@@ -751,6 +752,7 @@ function RemoteSimulationProvider({ children }: { children: ReactNode }) {
     events: snapshot.events,
     stats: snapshot.stats,
     source: 'api',
+    liveMode: snapshot.mode === 'live',
     linkStatus,
     setScenario: applyScenario,
     setRunning: applyRunning,

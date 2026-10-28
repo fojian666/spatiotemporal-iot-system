@@ -61,3 +61,46 @@ for (const key of Object.keys(SCENARIOS) as ScenarioKey[]) {
     });
   });
 }
+
+it('live mode does not invent values for missing or partially reported water and weather', () => {
+  const ctx = context('normal');
+  ctx.liveMode = true;
+  ctx.readings = { 'WQ-04': { ph: 7.2, turbidity: 20 } };
+  ctx.deviceStatuses = Object.fromEntries(DEVICES.map(d => [d.id, d.id === 'WQ-04' ? 'online' : 'offline']));
+  const water = askCopilot('分析水质', ctx);
+  expect(water.text).toContain('1 个有数据的水质站');
+  expect(water.text).toContain('平均 pH 7.20');
+  expect(water.text).toContain('平均浊度 20');
+  expect(water.text).toContain('无数据');
+  expect(water.text).not.toMatch(/NaN|undefined|平均氨氮 0\.00/);
+  const device = askCopilot('WQ-01当前状态', ctx);
+  expect(device.text).toContain('暂无实时观测');
+  expect(device.text).toContain('无数据');
+  expect(device.text).not.toMatch(/NaN|undefined|数据已参与空间聚合/);
+  const weather = askCopilot('分析气象', ctx);
+  expect(weather.text).toContain('森林火险气象等级：暂无数据');
+  expect(weather.text).toContain('无法判断飞行条件');
+  expect(weather.text).not.toMatch(/平均湿度 0%|NaN|undefined/);
+});
+
+it('live trends ignore missing samples rather than treating them as zero', () => {
+  const ctx = context('normal');
+  ctx.liveMode = true;
+  ctx.readings = {}; // Historical values remain even after every device times out.
+  ctx.history = [
+    { ts: 1000, t: '10:00', temperature: 20, humidity: null, pm25: null, waterLevel: null, turbidity: null, ph: null },
+    { ts: 2000, t: '10:01', temperature: 21, humidity: null, pm25: null, waterLevel: null, turbidity: null, ph: null },
+  ];
+  const missing = askCopilot('最近水位趋势如何', ctx);
+  expect(missing.text).toContain('只有 0 个采样点');
+  expect(missing.text).not.toContain('0.00 m');
+  const available = askCopilot('最近气温趋势如何', ctx);
+  expect(available.text).toContain('20.0°C');
+  expect(available.text).toContain('21.0°C');
+  expect(available.text).toContain('最后有效观测');
+  expect(available.text).toContain('采样时间');
+  expect(available.text).not.toContain('当前 21.0');
+  const offline = askCopilot('在线率和离线设备', { ...ctx, deviceStatuses: Object.fromEntries(DEVICES.map(d => [d.id, 'offline' as const])), readings: {} });
+  expect(offline.text).toContain('暂无实时电量');
+  expect(offline.text).not.toContain('最后有效电量');
+});

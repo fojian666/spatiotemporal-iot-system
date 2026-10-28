@@ -22,6 +22,7 @@ export interface MqttStatus {
 }
 
 export interface ServerSnapshot {
+  mode?: 'simulated' | 'live';
   server_time: string;
   data_time: string;
   scenario_key: ScenarioKey;

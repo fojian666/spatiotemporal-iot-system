@@ -407,7 +407,7 @@ for (const [width, height] of [[390, 844], [768, 1024], [1440, 720]]) {
 }
 
 
-test('investigation preserves origin, filters and chat across evidence visits', async ({ page }) => {
+test('investigation preserves origin and filters across map and telemetry visits', async ({ page }) => {
   await prepare(page);
   await page.goto(local + '/#/');
   await page.locator('.alert-row__main').first().click();
@@ -421,7 +421,20 @@ test('investigation preserves origin, filters and chat across evidence visits', 
   await guide.getByRole('link', { name: /地图定位/ }).click();
   await guide.getByRole('link', { name: /遥测复核/ }).click();
   await expect(page.getByPlaceholder('搜索设备 / 区域')).toHaveValue('WQ');
-  await guide.getByRole('link', { name: /辅助研判/ }).click();
+  await guide.getByRole('link', { name: '返回原告警' }).click();
+  await expect(page.locator('.alert-row.is-open')).toContainText('WQ-04');
+  await page.reload();
+  await expect(guide.getByLabel('调查参考时段')).toHaveValue('60');
+  await guide.getByRole('button', { name: '结束本次调查' }).click();
+  await expect(guide).toHaveCount(0);
+});
+
+test('investigation preserves chat across evidence visits', async ({ page }) => {
+  await prepare(page);
+  await page.goto(local + '/#/');
+  await page.locator('.alert-row__main').first().click();
+  await page.locator('.alert-row.is-open').getByRole('link', { name: '辅助研判' }).click();
+  const guide = page.getByRole('complementary', { name: '当前告警调查' });
   await expect(page.locator('.chat-message--assistant .evidence-card').first()).toBeVisible();
   await expect(page.locator('.chat-message--assistant')).toHaveCount(1);
   const input = page.getByPlaceholder('询问实时态势、设备读数、知识概念，或让我生成巡检任务…');
@@ -435,10 +448,6 @@ test('investigation preserves origin, filters and chat across evidence visits', 
   await expect(input).toHaveValue('稍后继续复核');
   await guide.getByRole('link', { name: '返回原告警' }).click();
   await expect(page.locator('.alert-row.is-open')).toContainText('WQ-04');
-  await page.reload();
-  await expect(guide.getByLabel('调查参考时段')).toHaveValue('60');
-  await guide.getByRole('button', { name: '结束本次调查' }).click();
-  await expect(guide).toHaveCount(0);
 });
 
 for (const [width, height] of [[390, 844], [768, 1024], [1024, 768], [1440, 720], [844, 390]]) {
@@ -479,7 +488,7 @@ for (const [width, height] of [[390, 844], [768, 1024], [1024, 768], [1440, 720]
 }
 
 
-test('viewer investigation clears on logout and a changed scene keeps its own alerts', async ({ page }) => {
+test('viewer investigation clears on logout', async ({ page }) => {
   await prepare(page);
   await login(page, '观察员');
   await page.locator('.alert-row__main').first().click();
@@ -491,7 +500,12 @@ test('viewer investigation clears on logout and a changed scene keeps its own al
   await page.getByRole('button', { name: '退出登录' }).click();
   await expect(page.getByRole('heading', { name: '登录操作台' })).toBeVisible();
   expect(await page.evaluate(() => sessionStorage.getItem('stiot-investigation-v1'))).toBeNull();
+});
+
+test('investigation keeps its origin when the scene changes', async ({ page }) => {
+  await prepare(page);
   await page.goto(local + '/#/');
+  const guide = page.getByRole('complementary', { name: '当前告警调查' });
   await page.locator('.alert-row__main').first().click();
   await page.locator('.alert-row.is-open').getByRole('link', { name: '地图定位' }).click();
   await guide.getByRole('link', { name: /遥测复核/ }).click();
@@ -519,3 +533,52 @@ test('leaving an unsent investigation question keeps a draft without automatic r
   await expect(page.locator('.chat-message--user')).toHaveCount(0);
   await expect(guide.getByRole('link', { name: /辅助研判/ })).toHaveAttribute('data-visited', 'false');
 });
+
+for (const [width, height] of [[390, 844], [768, 1024], [1024, 768], [1440, 720], [844, 390]]) {
+  test(`live missing readings stay honest at ${width}x${height}`, async ({ page }, testInfo) => {
+    await prepare(page);
+    await page.setViewportSize({ width, height });
+    await page.emulateMedia({ reducedMotion: 'reduce' });
+    await page.route('**/api/auth/ws-ticket', route => route.fulfill({ status: 503, json: { detail: 'offline test socket' } }));
+    await page.route('**/api/bootstrap', async route => {
+      const response = await route.fetch();
+      const body = await response.json();
+      body.mode = 'live';
+      body.readings = { 'WQ-04': { ph: 7.2, turbidity: 20 }, 'WT-01': { temperature: 20 }, 'UAV-01': { altitude: 70 } };
+      body.statuses = Object.fromEntries(Object.keys(body.statuses).map(id => [id, ['WQ-04', 'WT-01', 'UAV-01'].includes(id) ? 'online' : 'offline']));
+      body.history = [];
+      await route.fulfill({ response, json: body });
+    });
+    await login(page, '观察员');
+    await page.goto(remote + '/#/simulation?focus=WQ-01');
+    const inspector = page.locator('.inspector');
+    await expect(inspector).toContainText('暂无实时读数');
+    await expect(inspector.locator('.inspector-hero strong')).toHaveText('--');
+    await inspector.scrollIntoViewIfNeeded();
+    for (const theme of ['dark', 'light']) {
+      if (await page.locator('html').getAttribute('data-theme') !== theme) await page.getByRole('button', { name: '切换主题' }).click();
+      await expect(page.locator('html')).toHaveAttribute('data-theme', theme);
+      mkdirSync('output/playwright', { recursive: true });
+      const shot = await page.screenshot({ path: `output/playwright/live-missing-${width}-${theme}.png`, animations: 'disabled' });
+      await testInfo.attach(`${width}-${theme}`, { body: shot, contentType: 'image/png' });
+      await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth - innerWidth)).toBeLessThanOrEqual(1);
+    }
+    await page.goto(remote + '/#/simulation?focus=WQ-04');
+    await expect(inspector.locator('.inspector-hero strong')).toContainText('7.20');
+    await expect(inspector.locator('.inspector-hero .sparkline')).toHaveCount(0);
+    await expect(page.getByRole('heading', { name: /实时读数 · 单点/ })).toBeVisible();
+    await inspector.scrollIntoViewIfNeeded();
+    await page.screenshot({ path: `output/playwright/live-partial-${width}.png`, animations: 'disabled' });
+    await page.goto(remote + '/#/map?focus=WQ-04');
+    await expect(page.locator('.geo-target-body')).toContainText('--');
+    await page.goto(remote + '/#/drone');
+    await expect(page.locator('.airport-card').first().locator('.airport-card__grid')).toContainText('--');
+    await expect(page.locator('.ops-console__readings')).toContainText('altitude');
+    await expect(page.locator('.ops-console__readings')).not.toContainText('battery');
+    await page.goto(remote + '/#/copilot');
+    await page.getByRole('textbox', { name: '向物联大模型提问' }).fill('分析水质');
+    await page.getByRole('button', { name: '发送', exact: true }).click();
+    await expect(page.locator('.chat-message--assistant').last()).toContainText('无数据');
+    await expect(page.locator('.chat-message--assistant').last()).not.toContainText('NaN');
+  });
+}

@@ -1748,6 +1748,12 @@
   background: linear-gradient(120deg, rgba(35, 230, 176, 0.055), rgba(var(--text-rgb), 0.012));
 }
 
+.inspector-hero--missing {
+  border-color: var(--line);
+  background: rgba(var(--text-rgb), 0.02);
+}
+.inspector-hero--missing p, .metric-row__head strong.metric--missing { color: var(--muted); }
+
 .inspector-hero--warning {
   border-color: rgba(255, 188, 92, 0.2);
   background: linear-gradient(120deg, rgba(255, 188, 92, 0.06), rgba(var(--text-rgb), 0.012));

@@ -12,6 +12,8 @@ import math
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 MAX_METRICS = 32
+# Leaves headroom for aggregating every registered device without float overflow.
+MAX_METRIC_ABS = 1e100
 
 
 class DeviceReadingPayload(BaseModel):
@@ -32,8 +34,8 @@ class DeviceReadingPayload(BaseModel):
         for key, item in value.items():
             if not key or len(key) > 40:
                 raise ValueError("metric 名称长度必须在 1-40 之间")
-            if not math.isfinite(item):
-                raise ValueError(f"metric '{key}' 必须是有限数值")
+            if not math.isfinite(item) or abs(item) > MAX_METRIC_ABS:
+                raise ValueError(f"metric '{key}' 必须是有限数值且绝对值不超过 {MAX_METRIC_ABS:g}")
         return value
 
     model_config = ConfigDict(extra="ignore")

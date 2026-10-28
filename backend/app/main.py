@@ -2,16 +2,18 @@ from __future__ import annotations
 
 import asyncio
 import logging
+import time
 from contextlib import asynccontextmanager
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Any, Literal
+from typing import Any, Callable, Literal
 from zoneinfo import ZoneInfo
 
 from fastapi import Depends, FastAPI, HTTPException, Query, Request, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.trustedhost import TrustedHostMiddleware
 from fastapi.staticfiles import StaticFiles
+from fastapi.security import HTTPAuthorizationCredentials
 from geoalchemy2.elements import WKTElement
 from pydantic import BaseModel, Field
 from sqlalchemy import func, select, text
@@ -29,6 +31,8 @@ from .security import (
     check_login_rate,
     clear_login_failures,
     consume_ws_ticket,
+    bearer_scheme,
+    decode_access_token,
     create_access_token,
     get_current_user,
     issue_ws_ticket,
@@ -45,6 +49,7 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 TZ = ZoneInfo(settings.timezone)
+_scenario_lock = asyncio.Lock()
 
 
 class SimulationStateUpdate(BaseModel):
@@ -68,18 +73,25 @@ def user_to_dict(user: User) -> dict[str, Any]:
 
 class ConnectionManager:
     def __init__(self) -> None:
-        self.active: dict[WebSocket, int] = {}
+        self.active: dict[WebSocket, tuple[int, float, bool]] = {}
 
-    async def connect(self, websocket: WebSocket, user_id: int) -> None:
+    async def connect(self, websocket: WebSocket, user_id: int, session_expires_at: float, *, ready: bool = True) -> None:
         await websocket.accept()
-        self.active[websocket] = user_id
+        self.active[websocket] = (user_id, session_expires_at, ready)
+
+    def activate(self, websocket: WebSocket) -> bool:
+        session = self.active.get(websocket)
+        if session is None:
+            return False
+        self.active[websocket] = (session[0], session[1], True)
+        return True
 
     def disconnect(self, websocket: WebSocket) -> None:
         self.active.pop(websocket, None)
 
     async def close_user(self, user_id: int, code: int = 4401) -> None:
         """Close every socket owned by a user (logout bumps token_version)."""
-        targets = [websocket for websocket, owner in self.active.items() if owner == user_id]
+        targets = [websocket for websocket, (owner, _, _) in self.active.items() if owner == user_id]
         for websocket in targets:
             self.active.pop(websocket, None)
             try:
@@ -91,9 +103,30 @@ class ConnectionManager:
         sockets = list(self.active)
 
         async def send(websocket: WebSocket) -> bool:
-            try:
-                await asyncio.wait_for(websocket.send_json(payload), timeout=2)
+            session = self.active.get(websocket)
+            if session is None:
+                return False
+            if not session[2]:
                 return True
+            if session[1] <= time.time():
+                try:
+                    await websocket.close(code=4401, reason="session expired")
+                except Exception:  # noqa: BLE001
+                    pass
+                return False
+            try:
+                remaining = session[1] - time.time()
+                if remaining <= 0:
+                    raise asyncio.TimeoutError
+                await asyncio.wait_for(websocket.send_json(payload), timeout=min(2, remaining))
+                return True
+            except asyncio.TimeoutError:
+                if session[1] <= time.time():
+                    try:
+                        await websocket.close(code=4401, reason="session expired")
+                    except Exception:  # noqa: BLE001
+                        pass
+                return False
             except Exception:  # noqa: BLE001
                 return False
 
@@ -371,8 +404,12 @@ async def auth_me(current_user: User = Depends(get_current_user)) -> dict[str, A
 
 
 @app.post("/api/auth/ws-ticket")
-async def auth_ws_ticket(current_user: User = Depends(get_current_user)) -> dict[str, Any]:
-    ticket, expires_in = issue_ws_ticket(current_user)
+async def auth_ws_ticket(
+    current_user: User = Depends(get_current_user),
+    credentials: HTTPAuthorizationCredentials = Depends(bearer_scheme),
+) -> dict[str, Any]:
+    claims = decode_access_token(credentials.credentials)
+    ticket, expires_in = issue_ws_ticket(current_user, float(claims["exp"]))
     return {"ticket": ticket, "expires_in": expires_in}
 
 
@@ -595,6 +632,26 @@ async def list_scenarios(_user: User = Depends(get_current_user)) -> dict[str, A
     }
 
 
+async def _commit_and_apply(session: AsyncSession, operation: Callable[[], dict[str, Any]]) -> dict[str, Any]:
+    async def commit_then_apply() -> dict[str, Any]:
+        await session.commit()
+        return await asyncio.to_thread(operation)
+
+    task = asyncio.create_task(commit_then_apply())
+    try:
+        return await asyncio.shield(task)
+    except asyncio.CancelledError:
+        # Commit and the thread can outlive a cancelled request. Keep the state
+        # lock until both finish, so another request cannot overtake either.
+        while not task.done():
+            try:
+                await asyncio.shield(task)
+            except asyncio.CancelledError:
+                continue
+        task.result()
+        raise
+
+
 @app.post("/api/scenarios/{scenario_key}")
 async def set_scenario(
     scenario_key: str,
@@ -604,13 +661,15 @@ async def set_scenario(
     if scenario_key not in SCENARIOS:
         raise HTTPException(status_code=404, detail="scenario not found")
     service: TelemetryService = app.state.service
-    result = await asyncio.to_thread(service.set_scenario, scenario_key)
-    state = await session.get(ScenarioState, 1)
-    if state:
+    # Serialize commit and in-memory publication so failed writes cannot change
+    # the running scenario, and concurrent requests remain in commit order.
+    async with _scenario_lock:
+        state = await session.get(ScenarioState, 1)
+        if state is None:
+            raise HTTPException(status_code=503, detail="scenario state unavailable")
         state.key = scenario_key
         state.updated_at = now_local()
-        await session.commit()
-    return result
+        return await _commit_and_apply(session, lambda: service.set_scenario(scenario_key))
 
 
 @app.post("/api/simulation/state")
@@ -620,18 +679,23 @@ async def update_simulation_state(
     _operator: User = Depends(require_roles("operator", "admin")),
 ) -> dict[str, Any]:
     service: TelemetryService = app.state.service
-    if update.running is not None:
-        await asyncio.to_thread(service.set_running, update.running)
-    if update.speed is not None:
-        await asyncio.to_thread(service.set_speed, update.speed)
-    state = await session.get(ScenarioState, 1)
-    if state:
+    async with _scenario_lock:
+        state = await session.get(ScenarioState, 1)
+        if state is None:
+            raise HTTPException(status_code=503, detail="scenario state unavailable")
         if update.running is not None:
             state.running = update.running
         state.speed = 1
         state.updated_at = now_local()
-        await session.commit()
-    return await asyncio.to_thread(service.snapshot)
+
+        def apply_update() -> dict[str, Any]:
+            if update.running is not None:
+                service.set_running(update.running)
+            if update.speed is not None:
+                service.set_speed(update.speed)
+            return service.snapshot()
+
+        return await _commit_and_apply(session, apply_update)
 
 
 @app.get("/api/spatial/nearby")
@@ -706,28 +770,46 @@ async def telemetry_socket(websocket: WebSocket) -> None:
         await websocket.accept()
         await websocket.close(code=4401, reason="invalid or expired ws ticket")
         return
-    user_id, token_version = ticket_info
+    user_id, token_version, session_expires_at = ticket_info
     async with SessionLocal() as session:
         user = await session.get(User, user_id)
         if user is None or not user.active or user.token_version != token_version:
             await websocket.accept()
             await websocket.close(code=4401, reason="session revoked")
             return
-    await manager.connect(websocket, user_id)
+    await manager.connect(websocket, user_id, session_expires_at, ready=False)
     # 上面校验与注册之间可能发生登出，close_user 会漏掉这条尚未注册的连接；注册后复核一次
     async with SessionLocal() as session:
         user = await session.get(User, user_id)
-    if user is None or not user.active or user.token_version != token_version:
+    if user is None or not user.active or user.token_version != token_version or session_expires_at <= time.time():
         manager.disconnect(websocket)
         try:
             await websocket.close(code=4401, reason="session revoked")
         except Exception:  # noqa: BLE001
             pass
         return
+    if not manager.activate(websocket):
+        return  # logout closed it while authentication was being rechecked
     try:
-        await websocket.send_json(await asyncio.to_thread(service.snapshot))
+        timeout = session_expires_at - time.time()
+        if timeout <= 0:
+            raise asyncio.TimeoutError
+        snapshot = await asyncio.wait_for(asyncio.to_thread(service.snapshot), timeout=timeout)
+        timeout = session_expires_at - time.time()
+        if timeout <= 0 or websocket not in manager.active:
+            raise asyncio.TimeoutError
+        await asyncio.wait_for(websocket.send_json(snapshot), timeout=timeout)
         while True:
-            await websocket.receive_text()
+            timeout = session_expires_at - time.time()
+            if timeout <= 0:
+                raise asyncio.TimeoutError
+            await asyncio.wait_for(websocket.receive_text(), timeout=timeout)
+    except asyncio.TimeoutError:
+        manager.disconnect(websocket)
+        try:
+            await websocket.close(code=4401, reason="session expired")
+        except Exception:  # noqa: BLE001
+            pass
     except WebSocketDisconnect:
         pass
     except Exception:  # noqa: BLE001

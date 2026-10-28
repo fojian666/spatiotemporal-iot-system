@@ -266,6 +266,12 @@ function alertEvidence(ctx: SimContextValue): CopilotEvidence[] {
     }));
 }
 
+function aggregateText(ctx: SimContextValue, key: string, value: number, unit = ''): string {
+  const kinds = key === 'ph' || key === 'level' ? ['water'] : ['weather', 'air'];
+  const available = DEVICES.some(device => kinds.includes(device.kind) && ctx.readings[device.id]?.[key] !== undefined);
+  return ctx.liveMode && !available ? '无数据' : `${value}${unit}`;
+}
+
 function telemetryEvidence(ctx: SimContextValue, title = '区域实时遥测快照', detail?: string): CopilotEvidence {
   return {
     id: 'telemetry-region',
@@ -274,7 +280,7 @@ function telemetryEvidence(ctx: SimContextValue, title = '区域实时遥测快�
     title,
     detail:
       detail ??
-      `在线 ${ctx.stats.online}/${ctx.stats.total} · 气温 ${ctx.stats.avgTemperature}°C · 湿度 ${ctx.stats.avgHumidity}% · PM2.5 ${ctx.stats.avgPm25} µg/m³ · 平均水位 ${ctx.stats.avgWaterLevel} m`,
+      `在线 ${ctx.stats.online}/${ctx.stats.total} · 气温 ${aggregateText(ctx, 'temperature', ctx.stats.avgTemperature, '°C')} · 湿度 ${aggregateText(ctx, 'humidity', ctx.stats.avgHumidity, '%')} · PM2.5 ${aggregateText(ctx, 'pm25', ctx.stats.avgPm25, ' µg/m³')} · 平均水位 ${aggregateText(ctx, 'level', ctx.stats.avgWaterLevel, ' m')}`,
     meta: `${timeLabel(ctx)} ${nowTime(ctx)}`,
     score: 0.95,
   };
@@ -350,7 +356,7 @@ function readingLines(ctx: SimContextValue, device: (typeof DEVICES)[number]) {
     return device.metrics.map((def) => {
       const value = reading[def.key];
       const digits = def.digits;
-      return `${def.label} ${Number(value).toFixed(digits)}${def.unit}`;
+      return value === undefined ? `${def.label} 无数据` : `${def.label} ${value.toFixed(digits)}${def.unit}`;
     });
   }
   return Object.entries(reading)
@@ -381,17 +387,17 @@ function deviceAnswer(ctx: SimContextValue, device: (typeof DEVICES)[number]): D
     status === 'warning'
       ? '存在指标越限或趋势异常，建议进入仿真沙盘查看明细并触发工单。'
       : status === 'offline'
-        ? '当前离线，平台显示的是最后一次有效观测；建议核查供电与边缘网关心跳。'
+        ? Object.keys(reading).length ? '当前离线，平台显示的是最后一次有效观测；建议核查供电与边缘网关心跳。' : '当前离线，暂无实时观测；建议核查供电与边缘网关心跳。'
         : '运行平稳，数据链路与设备健康度正常。';
   const text = `【${device.name}】${statusLabel[status]}
 
 · 设备编号：${device.id}
 · 空间位置：${device.zone} · ${device.lng.toFixed(4)}°E / ${device.lat.toFixed(4)}°N
-· 接入方式：${device.protocol} · 信号 ${device.signal}% · 电量 ${device.battery}%
+· 接入方式：${device.protocol} · 信号 ${ctx.liveMode ? reading.signal === undefined ? '无数据' : `${reading.signal}%` : `${device.signal}%`} · 电量 ${ctx.liveMode ? reading.battery === undefined ? '无数据' : `${reading.battery}%` : `${device.battery}%`}
 · 最新观测：${metrics.length ? metrics.join('　') : '资产在线，无环境指标'}
 · 设备研判：${statusCopy}
 
-${status === 'warning' ? `当前场景「${ctx.scenario.name}」下，该设备被标记为预警设备，建议优先复核。` : `当前场景「${ctx.scenario.name}」下，该设备进入区域统一态势，数据已参与空间聚合。`}
+${status === 'offline' && !Object.keys(reading).length ? '该设备暂无可用于聚合的实时数据。' : status === 'warning' ? `当前场景「${ctx.scenario.name}」下，该设备被标记为预警设备，建议优先复核。` : `当前场景「${ctx.scenario.name}」下，该设备进入区域统一态势，数据已参与空间聚合。`}
 
 如需进一步判断，我可以联动打开时空一张图，或生成针对该设备的巡检任务。`;
 
@@ -418,7 +424,7 @@ ${status === 'warning' ? `当前场景「${ctx.scenario.name}」下，该设备�
     followups: ['该设备最近 3 分钟的变化趋势？', '还有哪些设备处于预警状态？', '生成一次针对该设备的巡检任务'],
     confidence: 0.94,
     pipeline: basePipeline(ctx, '设备状态问答', [
-      { label: '设备影子读取', detail: `${device.id} · 最后上报 ${nowTime(ctx)}`, ms: 18 },
+      { label: '设备影子读取', detail: `${device.id} · ${ctx.liveMode ? Object.keys(reading).length ? `快照 ${nowTime(ctx)}` : '暂无实时观测' : `最后上报 ${nowTime(ctx)}`}`, ms: 18 },
       { label: '阈值规则匹配', detail: `${device.metrics.length} 项指标 · 状态 ${statusLabel[status]}`, ms: 7 },
     ]),
   };
@@ -511,7 +517,7 @@ function deviceStatusAnswer(ctx: SimContextValue): Draft {
 · 预警设备 ${warning.length} 个：${list(warning)}
 · 离线设备 ${offline.length} 个：${list(offline)}
 
-${offline.length ? `离线节点 ${offline[0].shortName} 已生成运维工单，最后有效电量 ${offline[0].battery}%。` : '所有节点链路正常。'}
+${offline.length ? ctx.liveMode ? `离线节点 ${offline[0].shortName} 暂无实时电量，请核查设备链路。` : `离线节点 ${offline[0].shortName} 已生成运维工单，最后有效电量 ${offline[0].battery}%。` : '所有节点链路正常。'}
 ${warning.length ? `预警节点主要集中在：${[...new Set(warning.map((device) => device.zone))].join('、')}。` : ''}
 
 边缘侧消息速率 ${ctx.stats.messageRate} msg/s，数据质量 ${ctx.stats.dataQuality}%。`;
@@ -534,8 +540,8 @@ ${warning.length ? `预警节点主要集中在：${[...new Set(warning.map((dev
         href: `/map?focus=${device.id}`,
         kind: 'alert' as const,
         title: `${device.shortName} · 离线`,
-        detail: device.note ?? '设备心跳丢失',
-        meta: `${device.zone} · 电量 ${device.battery}%`,
+        detail: ctx.liveMode ? '设备近期未上报' : device.note ?? '设备心跳丢失',
+        meta: ctx.liveMode ? `${device.zone} · 暂无实时电量` : `${device.zone} · 电量 ${device.battery}%`,
         score: 0.9,
       })),
       graphEvidence(getNode('observability')!),
@@ -554,24 +560,19 @@ ${warning.length ? `预警节点主要集中在：${[...new Set(warning.map((dev
 
 function waterAnswer(ctx: SimContextValue): Draft {
   const stations = DEVICES.filter((device) => device.kind === 'water');
-  const rows = stations.map((device) => {
-    const reading = ctx.readings[device.id] ?? {};
-    return {
-      device,
-      ph: reading.ph ?? 0,
-      turbidity: reading.turbidity ?? 0,
-      ammonia: reading.ammonia ?? 0,
-      level: reading.level ?? 0,
-      oxygen: reading.oxygen ?? 0,
-    };
-  });
-  const worst = [...rows].sort((a, b) => b.turbidity - a.turbidity)[0];
-  const avg = (key: 'ph' | 'turbidity' | 'ammonia') =>
-    (rows.reduce((sum, row) => sum + row[key], 0) / rows.length).toFixed(key === 'turbidity' ? 0 : 2);
+  const rows = stations.map((device) => { const reading = ctx.readings[device.id] ?? {}; return { device, ph: reading.ph, turbidity: reading.turbidity, ammonia: reading.ammonia, level: reading.level, oxygen: reading.oxygen }; });
+  const valueText = (value: number | undefined, digits: number) => value === undefined ? '无数据' : value.toFixed(digits);
+  const worst = rows.filter((row) => row.turbidity !== undefined).sort((a, b) => b.turbidity! - a.turbidity!)[0];
+  const avg = (key: 'ph' | 'turbidity' | 'ammonia') => {
+    const values = rows.map((row) => row[key]).filter((value): value is number => value !== undefined);
+    return values.length ? (values.reduce((sum, value) => sum + value, 0) / values.length).toFixed(key === 'turbidity' ? 0 : 2) : '无数据';
+  };
+  const reportedStations = rows.filter((row) => row.ph !== undefined || row.turbidity !== undefined || row.ammonia !== undefined).length;
   const waterAlerts = activeAlerts(ctx).filter((alert) =>
     stations.some((station) => station.id === alert.source),
   );
   const headline =
+    ctx.liveMode && reportedStations < stations.length ? '部分水质站暂无数据，以下仅依据已上报读数，需人工复核。' :
     ctx.scenario.key === 'pollution'
       ? '排口异常排放已经形成污染带，下游断面同步响应，需要立即溯源。'
       : ctx.scenario.key === 'storm'
@@ -583,10 +584,10 @@ function waterAnswer(ctx: SimContextValue): Draft {
 
 ${headline}
 
-· 4 个水质站平均 pH ${avg('ph')}、平均浊度 ${avg('turbidity')} NTU、平均氨氮 ${avg('ammonia')} mg/L
-· 最高浊度：${worst.device.shortName} ${worst.turbidity.toFixed(0)} NTU（pH ${worst.ph.toFixed(2)}）
-· 平安桥断面：浊度 ${(ctx.readings['WQ-01']?.turbidity ?? 0).toFixed(0)} NTU，水位 ${(ctx.readings['WQ-01']?.level ?? 0).toFixed(2)} m
-· 排口断面：pH ${(ctx.readings['WQ-04']?.ph ?? 0).toFixed(2)}，氨氮 ${(ctx.readings['WQ-04']?.ammonia ?? 0).toFixed(2)} mg/L
+· ${reportedStations} 个有数据的水质站平均 pH ${avg('ph')}、平均浊度 ${avg('turbidity')} NTU、平均氨氮 ${avg('ammonia')} mg/L
+· 最高浊度：${worst ? `${worst.device.shortName} ${valueText(worst.turbidity, 0)} NTU（pH ${valueText(worst.ph, 2)}）` : '无数据'}
+· 平安桥断面：浊度 ${valueText(ctx.readings['WQ-01']?.turbidity, 0)} NTU，水位 ${valueText(ctx.readings['WQ-01']?.level, 2)} m
+· 排口断面：pH ${valueText(ctx.readings['WQ-04']?.ph, 2)}，氨氮 ${valueText(ctx.readings['WQ-04']?.ammonia, 2)} mg/L
 
 ${waterAlerts.length ? `当前关联告警 ${waterAlerts.length} 条：${waterAlerts.map((alert) => alert.title).join('；')}。` : '当前无水质关联告警。'}
 
@@ -605,9 +606,9 @@ ${waterAlerts.length ? `当前关联告警 ${waterAlerts.length} 条：${waterAl
         kind: 'telemetry',
         title: '水质多站实时聚合',
         detail: rows
-          .map((row) => `${row.device.shortName}: pH ${row.ph.toFixed(2)} / 浊度 ${row.turbidity.toFixed(0)} NTU`)
+          .map((row) => `${row.device.shortName}: pH ${valueText(row.ph, 2)} / 浊度 ${valueText(row.turbidity, 0)} NTU`)
           .join('；'),
-        meta: `${timeLabel(ctx)} ${nowTime(ctx)} · 4 站`,
+        meta: `${timeLabel(ctx)} ${nowTime(ctx)} · ${reportedStations} 站有数据`,
         score: 0.96,
       },
       ...waterAlerts.slice(0, 2).map((alert) => ({
@@ -631,7 +632,7 @@ ${waterAlerts.length ? `当前关联告警 ${waterAlerts.length} 条：${waterAl
     confidence: 0.93,
     pipeline: basePipeline(ctx, '水质专题研判', [
       { label: '多站指标对齐', detail: 'pH / 浊度 / 氨氮 / 水位', ms: 24 },
-      { label: '时空异常聚焦', detail: `最大浊度站 ${worst.device.id}`, ms: 17 },
+      { label: '时空异常聚焦', detail: worst ? `最大浊度站 ${worst.device.id}` : '暂无浊度数据', ms: 17 },
     ]),
   };
 }
@@ -644,17 +645,17 @@ function weatherAnswer(ctx: SimContextValue): Draft {
       const reading = ctx.readings[device.id] ?? {};
       return `${device.shortName}：${reading.temperature?.toFixed(1) ?? '--'}°C / ${reading.humidity?.toFixed(0) ?? '--'}%${reading.pm25 !== undefined ? ` / PM2.5 ${reading.pm25} µg/m³` : ''}`;
     });
-  const fireRisk = ctx.stats.avgHumidity < 25 ? '高' : ctx.stats.avgHumidity < 40 ? '中' : '低';
+  const fireRisk = aggregateText(ctx, 'humidity', ctx.stats.avgHumidity) === '无数据' ? '暂无数据' : ctx.stats.avgHumidity < 25 ? '高' : ctx.stats.avgHumidity < 40 ? '中' : '低';
   const text = `气象与空气质量（${ctx.scenario.name}）
 
-· 区域平均气温 ${ctx.stats.avgTemperature}°C，平均湿度 ${ctx.stats.avgHumidity}%，平均 PM2.5 ${ctx.stats.avgPm25} µg/m³
+· 区域平均气温 ${aggregateText(ctx, 'temperature', ctx.stats.avgTemperature, '°C')}，平均湿度 ${aggregateText(ctx, 'humidity', ctx.stats.avgHumidity, '%')}，平均 PM2.5 ${aggregateText(ctx, 'pm25', ctx.stats.avgPm25, ' µg/m³')}
 · 森林火险气象等级：${fireRisk}
-· 峡群林场：温度 ${(ctx.readings['WT-02']?.temperature ?? 0).toFixed(1)}°C，湿度 ${(ctx.readings['WT-02']?.humidity ?? 0).toFixed(0)}%，风速 ${(ctx.readings['WT-02']?.wind ?? 0).toFixed(1)} m/s
+· 峡群林场：温度 ${ctx.readings['WT-02']?.temperature?.toFixed(1) ?? '无数据'}°C，湿度 ${ctx.readings['WT-02']?.humidity?.toFixed(0) ?? '无数据'}%，风速 ${ctx.readings['WT-02']?.wind?.toFixed(1) ?? '无数据'} m/s
 
 站点明细
 ${lines.join('\n')}
 
-${ctx.scenario.key === 'fire' ? '当前林区处于高温低湿状态，热红外与视频烟感应进入高频扫描模式。' : ctx.scenario.key === 'storm' ? '强降雨和大风会影响无人机飞行包线，建议降低巡航高度并缩短单架次时长。' : '当前气象条件总体适合无人机巡检，保持例行任务即可。'}`;
+${ctx.liveMode && fireRisk === '暂无数据' ? '气象数据不足，无法判断飞行条件。' : ctx.scenario.key === 'fire' ? '当前林区处于高温低湿状态，热红外与视频烟感应进入高频扫描模式。' : ctx.scenario.key === 'storm' ? '强降雨和大风会影响无人机飞行包线，建议降低巡航高度并缩短单架次时长。' : '当前气象条件总体适合无人机巡检，保持例行任务即可。'}`;
 
   return {
     intent: '气象环境分析',
@@ -687,16 +688,16 @@ function dispatchAnswer(ctx: SimContextValue): Draft {
   const route = isFire ? FOREST_ROUTE : DRONE_ROUTE;
   const droneId = isFire ? 'UAV-02' : 'UAV-01';
   const drone = DEVICES.find((device) => device.id === droneId)!;
-  const battery = ctx.readings[drone.id]?.battery ?? drone.battery;
+  const batteryText = ctx.liveMode && ctx.readings[drone.id]?.battery === undefined ? '无数据' : `${ctx.readings[drone.id]?.battery ?? drone.battery}%`;
   const isUSV = ctx.scenario.key === 'pollution';
-  const weatherRisk = ctx.stats.avgHumidity > 88 ? '高湿环境，注意镜头结露与链路衰减；阵风超过 10 m/s 应暂停任务。' : '气象条件满足飞行约束。';
+  const weatherRisk = aggregateText(ctx, 'humidity', ctx.stats.avgHumidity) === '无数据' ? '气象数据不足，须人工确认飞行条件。' : ctx.stats.avgHumidity > 88 ? '高湿环境，注意镜头结露与链路衰减；阵风超过 10 m/s 应暂停任务。' : '气象条件满足飞行约束。';
   const text = `建议任务 · 待人工确认（${nowTime(ctx)}）
 
 任务名称：${isFire ? '峡群林场热源复核与火情侦察' : ctx.scenario.key === 'pollution' ? '排口下游污染带加密巡检' : '湟水河—边坡多源例行巡检'}
 执行资产：${isFire ? 'UAV-02（M30T，热成像）' : 'UAV-01（M350 + H20T）'}${isUSV ? ' + USV-01（水质采样无人船）' : ''}
 航线航点：${route.filter((_, index) => index > 0 && index < route.length - 1).map((point) => point.name).join(' → ')}
 载荷动作：${isFire ? '热红外扫描、热点定位、可见光取证' : '多光谱拍照、悬停复核、视频回传'}
-约束检查：电量 ${battery}% · 信号 ${drone.signal}% · ${weatherRisk}
+约束检查：电量 ${batteryText} · 信号 ${ctx.liveMode && ctx.readings[drone.id]?.signal === undefined ? '无数据' : `${ctx.readings[drone.id]?.signal ?? drone.signal}%`} · ${weatherRisk}
 
 执行步骤
 1. 任务编排服务下发航线，校验禁飞区与电子围栏。
@@ -716,7 +717,7 @@ function dispatchAnswer(ctx: SimContextValue): Draft {
         href: `/map?focus=${drone.id}`,
         kind: 'telemetry',
         title: `${drone.shortName} · 可调度`,
-        detail: `电量 ${battery}% · 信号 ${drone.signal}% · 载荷 ${drone.model}`,
+        detail: `电量 ${batteryText} · 信号 ${ctx.liveMode && ctx.readings[drone.id]?.signal === undefined ? '无数据' : `${ctx.readings[drone.id]?.signal ?? drone.signal}%`} · 载荷 ${drone.model}`,
         meta: '任务编排前置检查',
         score: 0.95,
       },
@@ -733,7 +734,7 @@ function dispatchAnswer(ctx: SimContextValue): Draft {
     followups: ['这条航线的风险点在哪？', '巡检成果如何形成线索闭环？', '如果风速继续上升应该如何处理？'],
     confidence: 0.9,
     pipeline: basePipeline(ctx, '任务生成与调度', [
-      { label: '资源与约束检查', detail: `${drone.id} · 电量 ${battery}% · 航点 ${route.length - 2}`, ms: 36 },
+      { label: '资源与约束检查', detail: `${drone.id} · 电量 ${batteryText} · 航点 ${route.length - 2}`, ms: 36 },
       { label: '图谱工具链', detail: '任务编排 ← 无人机 ← 巡检', ms: 18 },
     ]),
   };
@@ -749,7 +750,7 @@ function reportAnswer(ctx: SimContextValue): Draft {
 区域健康度 ${Math.round(ctx.stats.regionHealth)}/100。接入节点 ${ctx.stats.total} 个，在线 ${ctx.stats.online} 个，在线率 ${ctx.stats.onlineRate.toFixed(1)}%；当前活动告警 ${activeAlerts(ctx).length} 条，其中严重 ${critical.length} 条、警告 ${warning.length} 条。
 
 二、感知网络
-平均气温 ${ctx.stats.avgTemperature}°C，湿度 ${ctx.stats.avgHumidity}%，PM2.5 ${ctx.stats.avgPm25} µg/m³；水质站平均 pH ${ctx.stats.avgPh}，平均水位 ${ctx.stats.avgWaterLevel} m。消息速率 ${ctx.stats.messageRate} msg/s，数据质量 ${ctx.stats.dataQuality}%。
+平均气温 ${aggregateText(ctx, 'temperature', ctx.stats.avgTemperature, '°C')}，湿度 ${aggregateText(ctx, 'humidity', ctx.stats.avgHumidity, '%')}，PM2.5 ${aggregateText(ctx, 'pm25', ctx.stats.avgPm25, ' µg/m³')}；水质站平均 pH ${aggregateText(ctx, 'ph', ctx.stats.avgPh)}，平均水位 ${aggregateText(ctx, 'level', ctx.stats.avgWaterLevel, ' m')}。消息速率 ${ctx.stats.messageRate} msg/s，数据质量 ${ctx.stats.dataQuality}%。
 
 三、重点风险
 ${critical.length ? critical.map((alert) => `· ${alert.title}：${alert.detail}`).join('\n') : '· 当前无严重级别告警。'}
@@ -793,41 +794,44 @@ function trendAnswer(ctx: SimContextValue, query: string): Draft | null {
   ];
   const metric = metrics.find((item) => item.keys.some((key) => query.includes(key)));
   if (!metric) return null;
-  if (ctx.history.length < 2) {
+  const points = ctx.history.filter((point) => point[metric.field] !== null && point[metric.field] !== undefined);
+  if (points.length < 2) {
     return {
       intent: '时空趋势分析',
-      text: `${metric.label}时序分析暂时不可用：当前窗口只有 ${ctx.history.length} 个采样点，至少需要 2 个才能计算趋势。
+      text: `${metric.label}时序分析暂时不可用：当前窗口只有 ${points.length} 个采样点，至少需要 2 个才能计算趋势。
 
 服务端处于真实设备直连模式时，历史曲线要等设备持续上报后才会生成；请确认设备已上线并完成至少两个采样周期后再试。`,
       evidence: [
         telemetryEvidence(
           ctx,
           `${metric.label} · 采样窗口`,
-          `已收到历史采样 ${ctx.history.length} 个；趋势分析至少需要 2 个`,
+          `已收到历史采样 ${points.length} 个；趋势分析至少需要 2 个`,
         ),
       ],
       followups: ['现在有哪些设备在线？', '现在平安区有哪些风险？', '生成一份区域态势简报'],
       confidence: 0.55,
     };
   }
-  const values = ctx.history.map((point) => point[metric.field]);
+  const values = points.map((point) => point[metric.field] as number);
   const first = values[0];
   const last = values[values.length - 1];
   const max = Math.max(...values);
   const min = Math.min(...values);
   const delta = last - first;
   const direction = Math.abs(delta) < 0.01 ? '基本持平' : delta > 0 ? '上升' : '下降';
-  const firstPoint = ctx.history[0];
-  const lastPoint = ctx.history[ctx.history.length - 1];
+  const firstPoint = points[0];
+  const lastPoint = points[points.length - 1];
   const windowMinutes = Math.max(1, Math.round((lastPoint.ts - firstPoint.ts) / 60_000));
-  const sampleSeconds = Math.max(1, Math.round((lastPoint.ts - firstPoint.ts) / Math.max(1, ctx.history.length - 1) / 1000));
+  const sampleSeconds = Math.max(1, Math.round((lastPoint.ts - firstPoint.ts) / Math.max(1, points.length - 1) / 1000));
+  const latestLabel = ctx.liveMode ? '最后有效观测' : '当前';
+  const latestTime = ctx.liveMode ? `（采样时间 ${new Date(lastPoint.ts).toLocaleString('zh-CN', { timeZone: 'Asia/Shanghai', hour12: false })}）` : '';
   const text = `${metric.label}时序分析（近 ${windowMinutes} 分钟 · ${timeLabel(ctx)} · ${sampleSeconds} 秒采样）
 
-· 起点 ${first.toFixed(metric.digits)}${metric.unit} → 当前 ${last.toFixed(metric.digits)}${metric.unit}，${direction} ${Math.abs(delta).toFixed(metric.digits)}${metric.unit}
+· 起点 ${first.toFixed(metric.digits)}${metric.unit} → ${latestLabel} ${last.toFixed(metric.digits)}${metric.unit}${latestTime}，${direction} ${Math.abs(delta).toFixed(metric.digits)}${metric.unit}
 · 区间最高 ${max.toFixed(metric.digits)}${metric.unit}，最低 ${min.toFixed(metric.digits)}${metric.unit}
 · 当前场景「${ctx.scenario.name}」：${ctx.scenario.tagline}
 
-${ctx.scenario.key !== 'normal' ? `场景切换已体现在时序曲线中，${metric.label}的变化方向与${ctx.scenario.name}的环境驱动一致。` : '曲线在正常波动区间内，没有出现阶跃式异常。'}
+${ctx.liveMode ? '以上为已收到的历史采样，不代表当前设备仍在线。' : ctx.scenario.key !== 'normal' ? `场景切换已体现在时序曲线中，${metric.label}的变化方向与${ctx.scenario.name}的环境驱动一致。` : '曲线在正常波动区间内，没有出现阶跃式异常。'}
 
 当前解析窗口为实时缓冲（${windowMinutes} 分钟 / ${sampleSeconds} 秒采样）；更长时段需要切换历史遥测库。`;
 
@@ -837,7 +841,7 @@ ${ctx.scenario.key !== 'normal' ? `场景切换已体现在时序曲线中，${m
     intent: '时空趋势分析',
     text,
     evidence: uniqEvidence([
-      telemetryEvidence(ctx, `${metric.label} · 时序窗口`, `起点 ${first.toFixed(metric.digits)} → 当前 ${last.toFixed(metric.digits)}${metric.unit}；峰值 ${max.toFixed(metric.digits)}；窗口 ${windowMinutes} 分钟 · ${sampleSeconds}s 采样 · ${label}`),
+      telemetryEvidence(ctx, `${metric.label} · 时序窗口`, `起点 ${first.toFixed(metric.digits)} → ${latestLabel} ${last.toFixed(metric.digits)}${metric.unit}${latestTime}；峰值 ${max.toFixed(metric.digits)}；窗口 ${windowMinutes} 分钟 · ${sampleSeconds}s 采样 · ${label}`),
       ...alertEvidence(ctx).slice(0, 2),
       graphEvidence(getNode('stream')!),
     ]),
@@ -848,7 +852,7 @@ ${ctx.scenario.key !== 'normal' ? `场景切换已体现在时序曲线中，${m
     followups: ['与告警时间轴对齐分析', '这种变化是否正常？', '未来 1 小时可能怎么变化？'],
     confidence: 0.91,
     pipeline: basePipeline(ctx, '时空趋势分析', [
-      { label: '时序窗口检索', detail: `${ctx.history.length} 个采样点 · ${sampleSeconds}s 粒度`, ms: 19 },
+      { label: '时序窗口检索', detail: `${points.length} 个采样点 · ${sampleSeconds}s 粒度`, ms: 19 },
       { label: '变化点检测', detail: `差值 ${delta.toFixed(metric.digits)}${metric.unit}`, ms: 15 },
     ]),
   };
@@ -886,7 +890,7 @@ function systemNote(node: KnowledgeNode, ctx: SimContextValue): string {
     return `当前 ${ctx.scenario.key === 'fire' ? 'UAV-02 正在执行林火侦察航线' : 'UAV-01 正在湟水河航线巡航'}，共 ${(ctx.scenario.key === 'fire' ? FOREST_ROUTE : DRONE_ROUTE).length} 个航点，遥测、视频与成果均与时空基准对齐。`;
   }
   if (node.id === 'water') {
-    return `当前 4 个水质站平均 pH ${ctx.stats.avgPh}、平均水位 ${ctx.stats.avgWaterLevel} m；在「${ctx.scenario.name}」场景下，水质告警与无人船采样任务联动。`;
+    return `${ctx.liveMode ? '已上报水质站' : '当前 4 个水质站'}平均 pH ${aggregateText(ctx, 'ph', ctx.stats.avgPh)}、平均水位 ${aggregateText(ctx, 'level', ctx.stats.avgWaterLevel, ' m')}；在「${ctx.scenario.name}」场景下，水质告警与无人船采样任务联动。`;
   }
   if (node.id === 'mqtt' || node.id === 'coap' || node.id === 'nbiot' || node.id === 'lora' || node.id === 'g5') {
     const count = DEVICES.filter((device) => device.protocol.toLowerCase().includes(node.name.toLowerCase().replace('网络切片', '').trim())).length;
@@ -1066,8 +1070,8 @@ function fallbackAnswer(ctx: SimContextValue, query: string): Draft {
 当前平安区的实时状态：
 · 场景：${ctx.scenario.name}，区域健康度 ${Math.round(ctx.stats.regionHealth)}/100
 · 在线设备：${ctx.stats.online}/${ctx.stats.total}，活动告警 ${activeAlerts(ctx).length} 条
-· 气象：${ctx.stats.avgTemperature}°C / 湿度 ${ctx.stats.avgHumidity}% / PM2.5 ${ctx.stats.avgPm25}
-· 水域：平均 pH ${ctx.stats.avgPh}，平均水位 ${ctx.stats.avgWaterLevel} m
+· 气象：${aggregateText(ctx, 'temperature', ctx.stats.avgTemperature, '°C')} / 湿度 ${aggregateText(ctx, 'humidity', ctx.stats.avgHumidity, '%')} / PM2.5 ${aggregateText(ctx, 'pm25', ctx.stats.avgPm25)}
+· 水域：平均 pH ${aggregateText(ctx, 'ph', ctx.stats.avgPh)}，平均水位 ${aggregateText(ctx, 'level', ctx.stats.avgWaterLevel, ' m')}
 
 你可以让我做这些事：
 1. 研判风险与告警，并给出处置建议；

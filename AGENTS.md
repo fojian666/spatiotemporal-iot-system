@@ -34,12 +34,12 @@ backend/scripts/publish_device.py    # 以外部设备身份向 MQTT 灌数（�
 
 ## 修改前必读的同步点（最容易踩的坑）
 
-1. **仿真逻辑双实现**：`src/engine/simulation.tsx`（TS）与 `backend/app/data.py`（Python）是逐行等价移植（computeReading/deriveStatus/buildAlerts/stats）。改公式必须两边同步，已知唯一合法分歧：速度倍数（local 生效、api 固定 1×）。
+1. **仿真逻辑双实现**：`src/engine/simulation.tsx`（TS）与 `backend/app/data.py`（Python）是逐行等价移植（computeReading/deriveStatus/buildAlerts/stats）。改公式必须两边同步，仿真模式已知唯一合法分歧：速度倍数（local 生效、api 固定 1×）；真实模式的判活、缺失指标与 AQ-02 聚合单独处理，不改变仿真公式。
 2. **设备台账双源**：前端 `src/data/devices.ts` 存原始坐标、运行时扩散（lng×1.65 / lat×1.05 偏离中心）；`backend/app/data/devices.json` 存扩散后的最终坐标。增改设备时两边必须对齐（backend = frontend × expandPoint 公式）。
 3. **认证双层**：前端 `canOperate`（AuthProvider）禁用 UI + 后端 `require_roles` 拦截 403。改任何写接口时保持两层一致。登出 = DB `token_version+1` 踢全部旧 token；前端 token 存 sessionStorage。
 4. **单进程约束**：WS 票据、登录限流、遥测内存态全在进程内，不支持多 worker/多实例水平部署。
 5. **飞控指令走转换表**：`drone_api.py` 的 `PLAN_TRANSITIONS` 是指令→合法现状态/新状态的声明式映射，非法转换返回 409 且**不写审计行**。增改指令先改表，勿在 handler 里直改 status。
-6. **遥测契约拒绝项**：`schemas.py` 除字段校验外还拒绝**非数值指标（NaN/Inf）与未注册/伪造 device_id**，拒收计数进 `mqtt.messagesRejected`；放宽校验前先想清楚。
+6. **遥测契约拒绝项**：`schemas.py` 除字段校验外还拒绝**非数值指标（NaN/Inf）、绝对值大于 1e100、未注册设备及 topic/载荷 device_id 不一致**，拒收计数进 `mqtt.messagesRejected`；设备身份绑定由 broker 的逐设备 ACL 保证。真实模式按服务端单调接收时间判活（`IOT_DEVICE_OFFLINE_AFTER_SECONDS`，默认 30 秒），过期读数不进入快照与聚合，不复用仿真台账中的固定离线/预警；历史缺失指标为 null，快照 `mode` 区分 simulated/live。真实模式多站图只显示当前上报单点，模拟模式保留合成曲线。放宽校验前先想清楚。
 7. **run.sh 行为**：根 `run.sh` 按需装依赖/构建前端后 `exec backend/run.sh`；后者从 `backend/.env` 读取 `IOT_MQTT_PORT / IOT_MQTT_ENABLED / IOT_TLS_ENABLED / IOT_API_PORT`（不 source 整个文件），并按 `IOT_PYTHON` → 激活中的 conda → `.venv` → Anaconda/Miniconda base → `python3` 的顺序挑第一个**依赖齐全**的解释器（conda 在脚本里常不可见为命令，故同时探测 `/opt/anaconda3` 等常见根目录）；`IOT_MQTT_ENABLED=false` 时跳过 Mosquitto；`IOT_TLS_ENABLED=true` 但缺证书时**拒绝启动**（不回退明文）。
 8. **前端网络层**：`api.ts` 请求默认 15s 超时，**`/api/copilot/chat` 单独放宽到 30s**——必须大于后端 connect 3s + read 8s 的最坏组合，否则前端先 abort，用户拿到的是顶着云端署名的本地答案；瞬时网络错误**不登出会话**；飞控指令的乐观更新在失败时回滚——改 DroneOps 时保持这套模式。
 9. **动效降级基线**：`base.css` 的全局 `prefers-reduced-motion` 规则把动画时长归零且 fill 为 none，**仅靠 keyframes 定位的元素会回落到基础样式**。新增用 keyframe 定位的元素（参照 `.auth-atom__electron`、`.auth-atom__nucleon`）必须把静止姿态写进基础 transform，否则降级下会塌回原点。
@@ -101,7 +101,7 @@ backend/app/schemas.py       遥测消息契约 v1（pydantic，拒收计数进 
 - JWT 密钥、角色密码只经环境变量注入；勿在前端硬编码任何凭据；
 - 大模型与 embedding 的 key 只写 `backend/.env`（根与 backend 两处 .gitignore 均已拦住），**勿写进源码、勿推送到远端**；对话模型与向量模型分属两家供应商，key 不通用；
 - 一键演示登录（`IOT_DEMO_LOGIN_ENABLED`）只用于本地演示：密码永不下发前端，角色会话由 `/api/auth/demo-login` 在服务端签发；对外部署前关闭；
-- WS 用一次性票据（60s）而非长期 token；CORS/TrustedHost 仅限 localhost。
+- WS 用一次性票据（最长 60s）而非长期 token；票据和连接均不能超过登录令牌到期时间。CORS/TrustedHost 仅限 localhost。
 
 ## 演示性内容清单（刻意保留，勿"修复"）
 

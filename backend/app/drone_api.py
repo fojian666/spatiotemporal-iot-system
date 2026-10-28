@@ -9,7 +9,7 @@ from pydantic import BaseModel, Field
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from .data import DEVICE_BY_ID, DEVICES, iso, now_local
+from .data import DEVICE_BY_ID, DEVICES, UNMANNED_KINDS, iso, now_local
 from .db import get_session
 from .models import AiClue, AiModel, DroneRoute, FlightCommand, FlightPlan, MediaAsset, User
 from .security import get_current_user, require_roles
@@ -167,6 +167,14 @@ def _device_card(device: dict, snapshot: dict) -> dict:
     }
 
 
+def validate_unmanned_device(device_id: str) -> None:
+    device = DEVICE_BY_ID.get(device_id)
+    if device is None:
+        raise HTTPException(status_code=400, detail="设备不存在")
+    if device["kind"] not in UNMANNED_KINDS:
+        raise HTTPException(status_code=400, detail="设备不属于无人系统")
+
+
 @router.get("/overview")
 async def overview(
     request: Request,
@@ -236,8 +244,7 @@ async def create_route(
     session: AsyncSession = Depends(get_session),
     _operator: User = Depends(Operator),
 ) -> dict:
-    if payload.device_id not in DEVICE_BY_ID:
-        raise HTTPException(status_code=400, detail="设备不存在")
+    validate_unmanned_device(payload.device_id)
     now = now_local()
     route = DroneRoute(
         id=f"R-{secrets.token_hex(3).upper()}",
@@ -266,6 +273,7 @@ async def update_route(
     route = await session.get(DroneRoute, route_id)
     if route is None:
         raise HTTPException(status_code=404, detail="航线不存在")
+    validate_unmanned_device(payload.device_id)
     route.name = payload.name
     route.route_type = payload.route_type
     route.device_id = payload.device_id
@@ -316,8 +324,7 @@ async def create_plan(
     if route is None:
         raise HTTPException(status_code=404, detail="航线不存在")
     device_id = payload.device_id or route.device_id
-    if device_id not in DEVICE_BY_ID:
-        raise HTTPException(status_code=400, detail="设备不存在")
+    validate_unmanned_device(device_id)
     now = now_local()
     plan = FlightPlan(
         id=f"P-{now.strftime('%Y%m%d')}-{secrets.token_hex(8).upper()}",

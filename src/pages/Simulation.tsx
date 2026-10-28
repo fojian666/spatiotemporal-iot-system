@@ -80,6 +80,7 @@ export function SimulationPage() {
     events,
     tick,
     source,
+    liveMode,
     linkStatus,
   } = useSimulation();
   const { canOperate } = useAuth();
@@ -118,8 +119,8 @@ export function SimulationPage() {
 
   const chartOption = useMemo<EChartsOption>(() => {
     const meta = GROUP_META[chartGroup];
-    const devices = DEVICES.filter((device) => meta.kinds.includes(device.kind) && deviceStatuses[device.id] !== 'offline');
-    const labels = Array.from({ length: 24 }, (_, index) => {
+    const devices = DEVICES.filter((device) => meta.kinds.includes(device.kind) && deviceStatuses[device.id] !== 'offline' && readings[device.id]?.[meta.metric] !== undefined);
+    const labels = liveMode ? [time.time.slice(0, 5)] : Array.from({ length: 24 }, (_, index) => {
       const minutes = (23 - index) * 2;
       const date = new Date(simTime.getTime() - minutes * 60_000);
       return `${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
@@ -174,14 +175,16 @@ export function SimulationPage() {
         const current = readings[device.id]?.[meta.metric] ?? 0;
         const color = meta.colors[index % meta.colors.length];
         return {
+          id: device.id,
           name: device.shortName,
           type: 'line',
           smooth: true,
-          symbol: 'none',
-          data: seriesFor(current, tick, index * 1.7 + 1, meta.metric === 'temperature' ? 0.45 : meta.metric === 'turbidity' ? 4 : 0.18, meta.digits),
+          symbol: liveMode ? 'circle' : 'none',
+          symbolSize: liveMode ? 7 : undefined,
+          data: liveMode ? [current] : seriesFor(current, tick, index * 1.7 + 1, meta.metric === 'temperature' ? 0.45 : meta.metric === 'turbidity' ? 4 : 0.18, meta.digits),
           lineStyle: { width: 1.5, color },
           areaStyle:
-            index === 0
+            !liveMode && index === 0
               ? {
                   color: new graphic.LinearGradient(0, 0, 0, 1, [
                     { offset: 0, color: `${color}33` },
@@ -192,12 +195,17 @@ export function SimulationPage() {
         };
       }),
     };
-  }, [chartGroup, readings, tick, simTime, deviceStatuses, palette]);
+  }, [chartGroup, readings, tick, simTime, deviceStatuses, palette, liveMode, time.time]);
 
   const primaryMetric = (deviceId: string) => {
     const device = DEVICES.find((item) => item.id === deviceId)!;
     const reading = readings[deviceId] ?? {};
+    if (!readings[deviceId]) return { label: '实时观测', value: '--' };
     if (!device.metrics.length) {
+      if (liveMode) {
+        const key = device.kind === 'video' ? 'aiEvents' : device.kind === 'gateway' ? 'connected' : device.kind === 'drone' ? 'progress' : 'battery';
+        return { label: '实时观测', value: reading[key] === undefined ? '--' : String(reading[key]) };
+      }
       if (device.kind === 'drone') return { label: '任务进度', value: `${Math.round(reading.progress ?? 64)}%` };
       if (device.kind === 'video') return { label: 'AI 事件', value: `${reading.aiEvents ?? 0} 起` };
       if (device.kind === 'gateway') return { label: '连接节点', value: `${reading.connected ?? 9} 个` };
@@ -205,13 +213,14 @@ export function SimulationPage() {
       return { label: '电量', value: `${reading.battery ?? device.battery}%` };
     }
     const def = device.metrics[0];
-    return { label: def.label, value: `${Number(reading[def.key] ?? 0).toFixed(def.digits)}${def.unit}` };
+    return { label: def.label, value: reading[def.key] === undefined ? "--" : `${reading[def.key].toFixed(def.digits)}${def.unit}` };
   };
 
   const selectedMetricDefs = selectedDevice.metrics;
   const heroDef = selectedMetricDefs[0];
   const heroValue = heroDef ? Number(selectedReading[heroDef.key] ?? 0) : Number(selectedReading.battery ?? selectedDevice.battery);
-  const heroState = heroDef ? metricState(heroDef, heroValue) : 'normal';
+  const heroMissing = !readings[selectedDevice.id] || (heroDef ? selectedReading[heroDef.key] === undefined : Boolean(liveMode && selectedReading.battery === undefined));
+  const heroState = heroMissing ? 'normal' : heroDef ? metricState(heroDef, heroValue) : 'normal';
 
   return (
     <div ref={pageRef} className="page simulation-page">
@@ -342,13 +351,13 @@ export function SimulationPage() {
                 <strong>GW-01 / GW-02</strong>
                 <span>协议转换 · 时空对齐 · 本地推理</span>
               </div>
-              <em className="mono">{readings['GW-01']?.latency ?? 18} MS</em>
+              <em className="mono">{readings['GW-01']?.latency ?? (liveMode ? '--' : 18)} MS</em>
             </div>
           </div>
           <div className="pipeline-flow">
             <span>时空消息</span>
             <div><i /></div>
-            <em className="mono">↓ {stats.avgWaterLevel} m</em>
+            <em className="mono">↓ {liveMode && !DEVICES.some(device => device.kind === 'water' && readings[device.id]?.level !== undefined) ? '--' : `${stats.avgWaterLevel} m`}</em>
           </div>
           <div className="pipeline-stage">
             <span className="pipeline-stage__label">PLATFORM / 平台层</span>
@@ -384,7 +393,7 @@ export function SimulationPage() {
         <div className="sim-main">
           <Panel
             overline={`MULTI-STATION TELEMETRY · ${GROUP_META[chartGroup].label.toUpperCase()} (${GROUP_META[chartGroup].unit})`}
-            title={`多站实时遥测 · ${GROUP_META[chartGroup].label}`}
+            title={`${liveMode ? '实时读数 · 单点' : '多站实时遥测'} · ${GROUP_META[chartGroup].label}`}
             icon={Waves}
             extra={
               <Segmented
@@ -400,7 +409,7 @@ export function SimulationPage() {
               />
             }
           >
-            <EChart key={chartGroup} option={chartOption} height={252} />
+            <EChart key={chartGroup} option={chartOption} height={252} replaceSeries />
           </Panel>
 
           <Panel
@@ -481,10 +490,10 @@ export function SimulationPage() {
                       </span>
                       <span className="device-table__battery">
                         <span className="battery">
-                          <i style={{ width: `${reading.battery ?? device.battery}%` }} />
+                          <i style={{ width: `${readings[device.id] ? reading.battery ?? (liveMode ? 0 : device.battery) : 0}%` }} />
                         </span>
-                        <em className="mono">{reading.battery ?? device.battery}%</em>
-                        <span className="signal mono"><i style={{ height: `${Math.max(18, device.signal)}%` }} />{device.signal}</span>
+                        <em className="mono">{reading.battery !== undefined ? `${reading.battery}%` : readings[device.id] && !liveMode ? `${device.battery}%` : '--'}</em>
+                        <span className="signal mono"><i style={{ height: `${liveMode && reading.signal === undefined ? 0 : Math.max(18, reading.signal ?? device.signal)}%` }} />{liveMode ? reading.signal ?? '--' : device.signal}</span>
                       </span>
                       <span><StatusText status={deviceStatuses[device.id]} /></span>
                     </button>
@@ -516,41 +525,42 @@ export function SimulationPage() {
               </div>
             </div>
 
-            <div className={`inspector-hero inspector-hero--${heroState}`}>
+            <div className={`inspector-hero inspector-hero--${heroMissing ? 'missing' : heroState}`}>
               <div>
                 <span>{heroDef?.label ?? '设备电量'}</span>
                 <strong className="mono">
-                  {heroDef ? heroValue.toFixed(heroDef.digits) : heroValue}
-                  <em>{heroDef?.unit ?? '%'}</em>
+                  {heroMissing ? '--' : heroDef ? heroValue.toFixed(heroDef.digits) : heroValue}
+                  <em>{heroMissing ? '' : heroDef?.unit ?? '%'}</em>
                 </strong>
                 <p>
-                  {heroState === 'normal' ? '处于正常运行区间' : heroState === 'warning' ? '接近或超过预警阈值' : '已超过严重阈值'}
+                  {heroMissing ? '暂无实时读数' : heroState === 'normal' ? '处于正常运行区间' : heroState === 'warning' ? '接近或超过预警阈值' : '已超过严重阈值'}
                 </p>
               </div>
-              <Sparkline
+              {!heroMissing && !liveMode && <Sparkline
                 data={seriesFor(heroValue, tick, 2.4, heroDef ? (heroDef.crit - heroDef.warn) / 4 || 1 : 4, heroDef?.digits ?? 0)}
                 color={heroState === 'normal' ? '#23e6b0' : heroState === 'warning' ? '#ffbc5c' : '#ff5d6c'}
                 height={54}
-              />
+              />}
             </div>
 
             {selectedMetricDefs.length > 0 ? (
               <div className="metric-list">
                 {selectedMetricDefs.map((def) => {
+                  const missing = selectedReading[def.key] === undefined;
                   const value = Number(selectedReading[def.key] ?? 0);
-                  const state = metricState(def, value);
+                  const state = missing ? 'normal' : metricState(def, value);
                   const span = def.direction === 'low' ? def.warn * 1.8 || 1 : def.direction === 'range' ? def.crit - (def.low ?? 0) : def.crit * 1.15 || 1;
                   const ratio = def.direction === 'low' ? 1 - Math.min(1, value / (def.warn * 2 || 1)) : def.direction === 'range' ? Math.min(1, Math.max(0, (value - (def.low ?? 0)) / (def.crit - (def.low ?? 0)))) : Math.min(1, value / (def.crit * 1.15 || 1));
                   return (
                     <div className="metric-row" key={def.key}>
                       <div className="metric-row__head">
                         <span>{def.label}</span>
-                        <strong className={`mono metric--${state}`}>{value.toFixed(def.digits)}<em>{def.unit}</em></strong>
+                        <strong className={`mono metric--${missing ? 'missing' : state}`}>{missing ? '--' : value.toFixed(def.digits)}<em>{missing ? '' : def.unit}</em></strong>
                       </div>
                       <div className="metric-bar">
                         <span
                           style={{
-                            width: `${Math.max(4, ratio * 100)}%`,
+                            width: `${missing ? 0 : Math.max(4, ratio * 100)}%`,
                             background: state === 'normal' ? '#23e6b0' : state === 'warning' ? '#ffbc5c' : '#ff5d6c',
                           }}
                         />
@@ -569,8 +579,8 @@ export function SimulationPage() {
                 {[
                   { label: '接入协议', value: selectedDevice.protocol },
                   { label: '设备型号', value: selectedDevice.model },
-                  { label: '任务进度', value: `${Math.round(selectedReading.progress ?? 64)}%` },
-                  { label: '在线时长', value: selectedDevice.onlineSince ?? '持续值守' },
+                  { label: '任务进度', value: liveMode && selectedReading.progress === undefined ? '--' : `${Math.round(selectedReading.progress ?? 64)}%` },
+                  { label: '在线时长', value: liveMode ? '--' : selectedDevice.onlineSince ?? '持续值守' },
                 ].map((item) => (
                   <div key={item.label}>
                     <span>{item.label}</span>
@@ -580,12 +590,12 @@ export function SimulationPage() {
               </div>
             )}
 
-            {selectedDevice.note && <div className="inspector-note">{selectedDevice.note}</div>}
+            {!liveMode && selectedDevice.note && <div className="inspector-note">{selectedDevice.note}</div>}
 
             <div className="inspector-meta">
               <div><span>接入协议</span><strong>{selectedDevice.protocol}</strong></div>
-              <div><span>电量</span><strong className="mono">{selectedReading.battery ?? selectedDevice.battery}%</strong></div>
-              <div><span>信号</span><strong className="mono">{selectedDevice.signal}%</strong></div>
+              <div><span>电量</span><strong className="mono">{selectedReading.battery !== undefined ? `${selectedReading.battery}%` : readings[selectedDevice.id] && !liveMode ? `${selectedDevice.battery}%` : '--'}</strong></div>
+              <div><span>信号</span><strong className="mono">{liveMode ? selectedReading.signal === undefined ? '--' : `${selectedReading.signal}%` : `${selectedDevice.signal}%`}</strong></div>
               <div><span>坐标</span><strong className="mono">{selectedDevice.lng.toFixed(4)}, {selectedDevice.lat.toFixed(4)}</strong></div>
             </div>
 

@@ -76,16 +76,17 @@ async def test_operator_rbac(role, allowed):
 
 
 def test_ws_ticket_consumed_once_even_concurrently():
-    ticket, _ = security.issue_ws_ticket(user())
+    expiry = security.time.time() + 1000
+    ticket, _ = security.issue_ws_ticket(user(), expiry)
     with ThreadPoolExecutor(max_workers=8) as pool:
         results = list(pool.map(lambda _: security.consume_ws_ticket(ticket), range(8)))
-    assert results.count((1, 2)) == 1
+    assert results.count((1, 2, expiry)) == 1
     assert results.count(None) == 7
 
 
 def test_expired_ws_ticket(monkeypatch):
     monkeypatch.setattr(security.time, 'time', lambda: 1000)
-    ticket, _ = security.issue_ws_ticket(user())
+    ticket, _ = security.issue_ws_ticket(user(), security.time.time() + 1000)
     monkeypatch.setattr(security.time, 'time', lambda: 1061)
     assert security.consume_ws_ticket(ticket) is None
 
@@ -103,3 +104,13 @@ def test_login_rate_expiry_and_bounded_storage(monkeypatch):
     assert len(security._login_attempts) <= 512
     security.clear_login_failures('699')
     assert '699' not in security._login_attempts
+
+
+def test_ticket_never_outlives_session(monkeypatch):
+    monkeypatch.setattr(security.time, 'time', lambda: 1000)
+    ticket, expires = security.issue_ws_ticket(user(), 1005)
+    assert expires == 5
+    monkeypatch.setattr(security.time, 'time', lambda: 1005)
+    assert security.consume_ws_ticket(ticket) is None
+    with pytest.raises(HTTPException):
+        security.issue_ws_ticket(user(), 1005)

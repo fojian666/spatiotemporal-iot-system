@@ -231,7 +231,7 @@ function OpsModal({
 
 export function DroneOpsPage() {
   const { canOperate } = useAuth();
-  const { readings, deviceStatuses } = useSimulation();
+  const { readings, deviceStatuses, liveMode } = useSimulation();
   const [data, setData] = useState<DroneOverview | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -522,6 +522,7 @@ export function DroneOpsPage() {
               data={data}
               readings={readings}
               statuses={deviceStatuses}
+              liveMode={liveMode}
               canOperate={canOperate}
               onOpenFlight={handleOpenFlightForDevice}
               onOpenRoutes={() => setTab('routes')}
@@ -584,6 +585,7 @@ function AssetsView({
   data,
   readings,
   statuses,
+  liveMode,
   canOperate,
   onOpenFlight,
   onOpenRoutes,
@@ -591,6 +593,7 @@ function AssetsView({
   data: DroneOverview;
   readings: Record<string, Record<string, number>>;
   statuses: Record<string, string>;
+  liveMode?: boolean;
   canOperate: boolean;
   onOpenFlight: (deviceId: string) => void;
   onOpenRoutes: () => void;
@@ -648,7 +651,7 @@ function AssetsView({
           {group === 'airports' ? (
             data.fleet.airports.map((device) => {
               const liveStatus = statuses[device.id] ?? device.status;
-              const liveBattery = readings[device.id]?.battery ?? device.battery;
+              const liveBattery = readings[device.id]?.battery ?? (liveMode ? undefined : device.battery);
               return (
                 <button
                   type="button"
@@ -664,8 +667,8 @@ function AssetsView({
                   <div className="airport-card__grid">
                     <span><em>机型</em><strong>{device.model}</strong></span>
                     <span><em>相机</em><strong>{CAMERA_FOR_AIRPORT[device.id] ?? 'CAM-02'}</strong></span>
-                    <span><em>电量</em><strong className="mono">{liveBattery}%</strong></span>
-                    <span><em>信号</em><strong className="mono">{device.signal}%</strong></span>
+                    <span><em>电量</em><strong className="mono">{liveBattery === undefined ? '--' : `${liveBattery}%`}</strong></span>
+                    <span><em>信号</em><strong className="mono">{liveMode ? readings[device.id]?.signal === undefined ? '--' : `${readings[device.id].signal}%` : `${device.signal}%`}</strong></span>
                   </div>
                   <div className="airport-card__foot">
                     <span className="mono">{device.id}</span>
@@ -677,7 +680,7 @@ function AssetsView({
           ) : (
             currentGroup.items.map((device) => {
               const liveStatus = statuses[device.id] ?? device.status;
-              const liveReading = readings[device.id] ?? device.reading;
+              const liveReading = readings[device.id] ?? (liveMode ? {} : device.reading);
               const firstMetric = Object.entries(liveReading)[0];
               return (
                 <button
@@ -731,11 +734,11 @@ function AssetsView({
               <div className="ops-console__facts">
                 <div><span>接入协议</span><strong>{selected.protocol}</strong></div>
                 <div><span>型号</span><strong>{selected.model}</strong></div>
-                <div><span>信号</span><strong className="mono">{selected.signal}%</strong></div>
+                <div><span>信号</span><strong className="mono">{liveMode ? readings[selected.id]?.signal === undefined ? '--' : `${readings[selected.id].signal}%` : `${selected.signal}%`}</strong></div>
                 <div><span>坐标</span><strong className="mono">{selected.lng.toFixed(4)}, {selected.lat.toFixed(4)}</strong></div>
               </div>
               <div className="ops-console__readings">
-                {Object.entries(readings[selected.id] ?? selected.reading).slice(0, 6).map(([key, value]) => (
+                {Object.entries(readings[selected.id] ?? (liveMode ? {} : selected.reading)).slice(0, 6).map(([key, value]) => (
                   <div key={key}><span>{key}</span><strong className="mono">{String(value)}</strong></div>
                 ))}
               </div>

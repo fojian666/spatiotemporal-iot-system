@@ -25,17 +25,31 @@ type AssetTab = 'unmanned' | 'video' | 'sensing';
 
 const UNMANNED_KINDS = ['drone', 'ugv', 'usv', 'satellite'];
 
-function getGeoMetrics(device: DeviceDefinition, reading: Record<string, number>) {
+function getGeoMetrics(device: DeviceDefinition, reading: Record<string, number>, missing: boolean, liveMode = false) {
+  if (missing && !device.metrics.length) {
+    return [{ label: '实时观测', value: '--', unit: '', state: 'normal' as const }];
+  }
   if (device.metrics.length) {
     return device.metrics.slice(0, 4).map((def) => {
-      const value = Number(reading[def.key] ?? 0);
+      const value = reading[def.key];
       return {
         label: def.label,
-        value: value.toFixed(def.digits),
-        unit: def.unit,
-        state: metricState(def, value),
+        value: value === undefined ? '--' : value.toFixed(def.digits),
+        unit: value === undefined ? '' : def.unit,
+        state: value === undefined ? 'normal' as const : metricState(def, value),
       };
     });
+  }
+  if (liveMode && !device.metrics.length) {
+    const entries: Record<string, [string, string, string][]> = {
+      drone: [['飞行高度', 'altitude', 'm'], ['地速', 'speed', 'm/s'], ['电量', 'battery', '%'], ['任务进度', 'progress', '%']],
+      ugv: [['行驶速度', 'speed', 'm/s'], ['电量', 'battery', '%'], ['任务进度', 'progress', '%'], ['信号', 'signal', '%']],
+      usv: [['行驶速度', 'speed', 'm/s'], ['电量', 'battery', '%'], ['任务进度', 'progress', '%'], ['信号', 'signal', '%']],
+      satellite: [['云量', 'cloud', '%'], ['过境进度', 'progress', '%']],
+      video: [['AI 事件', 'aiEvents', '起']],
+      gateway: [['连接节点', 'connected', '个'], ['平均时延', 'latency', 'ms'], ['吞吐', 'throughput', 'msg/s']],
+    };
+    return (entries[device.kind] ?? []).map(([label, key, unit]) => ({ label, value: reading[key] === undefined ? '--' : String(reading[key]), unit: reading[key] === undefined ? '' : unit, state: 'normal' as const }));
   }
   if (device.kind === 'drone') {
     return [
@@ -80,7 +94,12 @@ function getGeoMetrics(device: DeviceDefinition, reading: Record<string, number>
   return [];
 }
 
-function assetMeta(device: DeviceDefinition, reading: Record<string, number>) {
+function assetMeta(device: DeviceDefinition, reading: Record<string, number>, missing: boolean, liveMode = false) {
+  if (missing) return { primary: '暂无读数', secondary: device.protocol, progress: 0 };
+  if (liveMode && !device.metrics.length) {
+    const key = device.kind === 'video' ? 'aiEvents' : device.kind === 'gateway' ? 'connected' : 'progress';
+    return { primary: reading[key] === undefined ? '--' : String(reading[key]), secondary: device.protocol, progress: reading.progress ?? 0 };
+  }
   if (device.kind === 'drone' || device.kind === 'ugv' || device.kind === 'usv') {
     return { primary: `${Math.round(reading.progress ?? 58)}%`, secondary: `电量 ${reading.battery ?? device.battery}%`, progress: Number(reading.progress ?? 58) };
   }
@@ -93,7 +112,7 @@ function assetMeta(device: DeviceDefinition, reading: Record<string, number>) {
   const first = device.metrics[0];
   if (first) {
     return {
-      primary: `${Number(reading[first.key] ?? 0).toFixed(first.digits)}${first.unit}`,
+      primary: reading[first.key] === undefined ? "--" : `${reading[first.key].toFixed(first.digits)}${first.unit}`,
       secondary: first.label,
       progress: 0,
     };
@@ -102,7 +121,7 @@ function assetMeta(device: DeviceDefinition, reading: Record<string, number>) {
 }
 
 export function GeoMapPage() {
-  const { scenario, readings, deviceStatuses, alerts, stats, events, cycleAlert, simTime } = useSimulation();
+  const { scenario, readings, deviceStatuses, alerts, stats, events, cycleAlert, simTime, liveMode } = useSimulation();
   const { canOperate } = useAuth();
   const [searchParams, updateQuery] = usePageQuery();
   const focusParam = searchParams.get('focus');
@@ -136,7 +155,7 @@ export function GeoMapPage() {
     return DEVICES.filter((device) => !UNMANNED_KINDS.includes(device.kind) && device.kind !== 'video');
   }, [assetTab]);
 
-  const heroMetrics = selectedDevice ? getGeoMetrics(selectedDevice, selectedReading) : [];
+  const heroMetrics = selectedDevice ? getGeoMetrics(selectedDevice, selectedReading, !readings[selectedDevice.id], liveMode) : [];
 
   return (
     <div className="geo-page">
@@ -234,8 +253,8 @@ export function GeoMapPage() {
 
               <div className="geo-target__meta">
                 <span>{selectedDevice.protocol}</span>
-                <span>信号 {selectedDevice.signal}%</span>
-                <span>电量 {selectedDevice.battery}%</span>
+                <span>信号 {liveMode ? selectedReading.signal === undefined ? '--' : `${selectedReading.signal}%` : `${selectedDevice.signal}%`}</span>
+                <span>电量 {liveMode ? selectedReading.battery === undefined ? '--' : `${selectedReading.battery}%` : `${selectedDevice.battery}%`}</span>
                 <span className="mono">{selectedDevice.lng.toFixed(4)}°E / {selectedDevice.lat.toFixed(4)}°N</span>
               </div>
 
@@ -288,7 +307,7 @@ export function GeoMapPage() {
           </div>
           <div className="asset-list">
             {listDevices.map((device) => {
-              const meta = assetMeta(device, readings[device.id] ?? {});
+              const meta = assetMeta(device, readings[device.id] ?? {}, !readings[device.id], liveMode);
               return (
                 <button
                   key={device.id}

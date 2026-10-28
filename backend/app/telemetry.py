@@ -17,6 +17,7 @@ from .data import (
     compute_stats,
     clock,
     derive_status,
+    metric_state,
     initial_events,
     iso,
     now_local,
@@ -69,6 +70,7 @@ class TelemetryStore:
         self.sim_time = now
         self.readings: dict[str, dict[str, float]] = {}
         self.reading_ts: dict[str, datetime] = {}
+        self.received_at: dict[str, float] = {}
         self.alerts = build_alerts(scenario_key, now)
         self.events: deque[dict[str, Any]] = deque(initial_events(now), maxlen=8)
         self.history = seed_history(
@@ -97,6 +99,7 @@ class TelemetryStore:
         with self.lock:
             self.readings[device_id] = metrics
             self.reading_ts[device_id] = timestamp
+            self.received_at[device_id] = time.monotonic()
             self.last_ingest_at = now_local()
 
     def record_tick(self, now: datetime, readings: dict[str, dict[str, float]]) -> None:
@@ -114,28 +117,46 @@ class TelemetryStore:
                 templates = SCENARIO_EVENT_TEXT.get(self.scenario_key, SCENARIO_EVENT_TEXT["normal"])
                 self.add_event(templates[self.tick % len(templates)], "data", now)
 
+    def _fresh_readings(self) -> dict[str, dict[str, float]]:
+        # Caller holds self.lock; use receipt time, never a device-supplied clock.
+        now = time.monotonic()
+        ttl = max(0.1, settings.device_offline_after_seconds)
+        return {key: metrics for key, metrics in self.readings.items()
+                if key in self.received_at and now - self.received_at[key] <= ttl}
+
+    @staticmethod
+    def _live_status(device: dict[str, Any], reading: dict[str, float]) -> str:
+        # Demo seed status/scenario overrides are not live device observations.
+        for metric in device.get("metrics", []):
+            value = reading.get(metric["key"])
+            if value is not None and metric_state(metric, float(value)) != "normal":
+                return "warning"
+        return "online"
+
     def sample_real_history(self) -> None:
         """Live mode: append a trend point averaged from the latest received readings."""
         now = now_local()
         with self.lock:
             self.sim_time = now
             self.tick += 1
-            if not self.readings:
-                return
+            live_readings = self._fresh_readings()
 
-            def average(key: str) -> float:
-                values = [m[key] for m in self.readings.values() if isinstance(m.get(key), (int, float))]
-                return sum(values) / len(values) if values else 0.0
+            def sample(key: str, digits: int = 0) -> float | int | None:
+                values = [m[key] for m in live_readings.values() if isinstance(m.get(key), (int, float))]
+                if not values:
+                    return None
+                average = sum(values) / len(values)
+                return round(average, digits) if digits else round(average)
 
             point = {
                 "ts": int(now.timestamp() * 1000),
                 "t": clock(now),
-                "temperature": round(average("temperature"), 1),
-                "humidity": round(average("humidity")),
-                "pm25": round(average("pm25")),
-                "waterLevel": round(average("level"), 2),
-                "turbidity": round(average("turbidity")),
-                "ph": round(average("ph"), 2),
+                "temperature": sample("temperature", 1),
+                "humidity": sample("humidity"),
+                "pm25": sample("pm25"),
+                "waterLevel": sample("level", 2),
+                "turbidity": sample("turbidity"),
+                "ph": sample("ph", 2),
             }
             self.history = self.history[-(settings.history_size - 1) :] + [point]
 
@@ -184,6 +205,7 @@ class TelemetryStore:
     def snapshot(self, mqtt: MQTTBridge) -> dict[str, Any]:
         now = now_local()
         with self.lock:
+            current_readings = self.readings if settings.simulation_enabled else self._fresh_readings()
             if settings.simulation_enabled:
                 statuses = {
                     device["id"]: derive_status(
@@ -197,13 +219,14 @@ class TelemetryStore:
                 # Live mode: a device that has not reported yet is simply absent.
                 statuses = {
                     device["id"]: (
-                        derive_status(device, self.readings[device["id"]], self.scenario_key)
-                        if device["id"] in self.readings
+                        self._live_status(device, current_readings[device["id"]])
+                        if device["id"] in current_readings
                         else "offline"
                     )
                     for device in DEVICES
                 }
-            stats = compute_stats(statuses, self.readings, self.alerts, self.tick, self.scenario_key)
+            stats = compute_stats(statuses, current_readings, self.alerts, self.tick, self.scenario_key,
+                                  include_demo_offline=not settings.simulation_enabled)
             alerts = [
                 {
                     **alert,
@@ -221,13 +244,14 @@ class TelemetryStore:
                 for event in self.events
             ]
             return {
+                "mode": "simulated" if settings.simulation_enabled else "live",
                 "server_time": iso(now),
                 "data_time": iso(self.sim_time),
                 "scenario_key": self.scenario_key,
                 "running": self.running,
                 "speed": self.speed,
                 "tick": self.tick,
-                "readings": copy.deepcopy(self.readings),
+                "readings": copy.deepcopy(current_readings),
                 "statuses": statuses,
                 "history": copy.deepcopy(self.history),
                 "alerts": alerts,

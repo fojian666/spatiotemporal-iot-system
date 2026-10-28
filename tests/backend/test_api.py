@@ -245,3 +245,45 @@ def test_copilot_validation_fallback_and_host_security(client):
     assert client.post('/api/copilot/chat', headers=headers, json={'query': 'x' * 301}).status_code == 422
     assert client.post('/api/copilot/chat', headers=headers, json={'query': '当前风险'}).status_code == 503
     assert client.get('/api', headers={'host': 'evil.example'}).status_code == 400
+
+
+def test_ws_session_expiry_closes_existing_socket_and_invalidates_ticket(client, monkeypatch):
+    import time
+    from app import main
+    from app.config import settings
+
+    async def pause_periodic_broadcast(_payload):
+        pass
+
+    monkeypatch.setattr(main.app.state.manager, 'broadcast', pause_periodic_broadcast)
+    monkeypatch.setattr(settings, 'access_token_minutes', 0.05)
+    headers = login(client, 'viewer')
+    ticket1 = client.post('/api/auth/ws-ticket', headers=headers).json()['ticket']
+    ticket2 = client.post('/api/auth/ws-ticket', headers=headers).json()['ticket']
+    with client.websocket_connect('/ws/telemetry?ticket=' + ticket1) as socket:
+        assert len(socket.receive_json()['readings']) == 21
+        time.sleep(3.2)
+        with pytest.raises(WebSocketDisconnect) as closed:
+            socket.receive_json()
+        assert closed.value.code == 4401
+    with client.websocket_connect('/ws/telemetry?ticket=' + ticket2) as socket:
+        with pytest.raises(WebSocketDisconnect) as rejected:
+            socket.receive_json()
+        assert rejected.value.code == 4401
+    assert client.get('/api/auth/me', headers=headers).status_code == 401
+
+
+def test_route_and_plan_reject_unknown_or_non_unmanned_devices(client):
+    headers = login(client)
+    payload = {'name': 'device-check', 'device_id': 'UAV-01', 'waypoints': [
+        {'lng': 102, 'lat': 36}, {'lng': 102.1, 'lat': 36.1}]}
+    assert client.post('/api/drone/routes', headers=headers, json={**payload, 'device_id': 'WQ-01'}).status_code == 400
+    route = client.post('/api/drone/routes', headers=headers, json=payload).json()
+    for bad in ('FAKE', 'WQ-01'):
+        assert client.put('/api/drone/routes/' + route['id'], headers=headers, json={**payload, 'device_id': bad}).status_code == 400
+        plan = {'name': 'invalid', 'route_id': route['id'], 'device_id': bad,
+                'planned_start': '2026-10-26T12:00:00Z', 'planned_end': '2026-10-26T13:00:00Z'}
+        assert client.post('/api/drone/plans', headers=headers, json=plan).status_code == 400
+    for valid in ('UGV-01', 'USV-01'):
+        assert client.put('/api/drone/routes/' + route['id'], headers=headers, json={**payload, 'device_id': valid}).status_code == 200
+    assert client.delete('/api/drone/routes/' + route['id'], headers=headers).status_code == 200

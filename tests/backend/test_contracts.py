@@ -134,3 +134,56 @@ def test_finite_large_readings_do_not_break_aggregate_rounding():
     metrics = DeviceReadingPayload(device_id='WT-01', metrics={'temperature': 1e100}).metrics
     result = compute_stats({'WT-01': 'warning'}, {'WT-01': metrics}, [], 0, 'normal')
     assert result['avgTemperature'] == 1e100
+
+
+def test_live_freshness_uses_receipt_time_and_excludes_stale_values(monkeypatch):
+    from app import telemetry
+    monkeypatch.setattr(settings, 'simulation_enabled', False)
+    monkeypatch.setattr(settings, 'device_offline_after_seconds', 30)
+    clock = [100.0]
+    monkeypatch.setattr(telemetry.time, 'monotonic', lambda: clock[0])
+    service = TelemetryService()
+    # Old device clock must not make a freshly received message stale.
+    service.store.ingest({'device_id': 'WT-01', 'ts': '2000-01-01T00:00:00+08:00', 'metrics': {'temperature': 20}})
+    assert service.snapshot()['statuses']['WT-01'] == 'online'
+    clock[0] += 31
+    service.store.ingest({'device_id': 'WT-02', 'metrics': {'temperature': 10}})
+    snapshot = service.snapshot()
+    assert snapshot['statuses']['WT-01'] == 'offline'
+    assert 'WT-01' not in snapshot['readings']
+    assert snapshot['stats']['avgTemperature'] == 10
+    service.store.sample_real_history()
+    assert service.snapshot()['history'][-1]['temperature'] == 10
+    service.store.ingest({'device_id': 'WT-01', 'metrics': {'temperature': 21}})
+    assert service.snapshot()['statuses']['WT-01'] == 'online'
+    clock[0] += 31
+    service.store.sample_real_history()
+    assert service.snapshot()['history'][-1]['temperature'] is None
+
+
+def test_live_devices_ignore_demo_only_status_overrides(monkeypatch):
+    monkeypatch.setattr(settings, 'simulation_enabled', False)
+    service = TelemetryService()
+    service.store.ingest({'device_id': 'AQ-02', 'metrics': {'pm25': 12}})
+    service.store.ingest({'device_id': 'WQ-04', 'metrics': {'ph': 7.2, 'turbidity': 10, 'ammonia': 0.05, 'level': 1, 'oxygen': 8}})
+    snapshot = service.snapshot()
+    assert snapshot['statuses']['AQ-02'] == 'online'
+    assert snapshot['statuses']['WQ-04'] == 'online'
+    assert snapshot['stats']['avgPm25'] == 12
+
+
+def test_extreme_finite_metrics_are_rejected_before_aggregation():
+    for device_id in ('WT-01', 'WT-02'):
+        with pytest.raises(ValidationError):
+            DeviceReadingPayload(device_id=device_id, metrics={'humidity': 1e308})
+    assert DeviceReadingPayload(device_id='WT-01', metrics={'x': 1e100}).metrics['x'] == 1e100
+
+
+def test_live_history_records_missing_metrics_as_null(monkeypatch):
+    monkeypatch.setattr(settings, 'simulation_enabled', False)
+    service = TelemetryService()
+    service.store.ingest({'device_id': 'WT-01', 'metrics': {'temperature': 20}})
+    service.store.sample_real_history()
+    point = service.snapshot()['history'][-1]
+    assert point['temperature'] == 20
+    assert all(point[key] is None for key in ('humidity', 'pm25', 'waterLevel', 'turbidity', 'ph'))

@@ -298,6 +298,7 @@ def compute_stats(
     alerts: list[dict[str, Any]],
     tick: int,
     scenario_key: str,
+    *, include_demo_offline: bool = False,
 ) -> dict[str, Any]:
     values = list(statuses.values())
     online = sum(1 for status in values if status != "offline")
@@ -349,7 +350,7 @@ def compute_stats(
         "messageRate": _fixed(1280 + math.sin(tick / 5) * 48 + (0 if scenario_key == "normal" else 310)),
         "avgTemperature": _fixed(average(reported(weather, "temperature")), 1),
         "avgHumidity": math.floor(average(reported(weather, "humidity")) + 0.5),
-        "avgPm25": math.floor(average(reported([device for device in weather if device["id"] != "AQ-02"], "pm25")) + 0.5),
+        "avgPm25": math.floor(average(reported([device for device in weather if include_demo_offline or device["id"] != "AQ-02"], "pm25")) + 0.5),
         "avgWaterLevel": _fixed(average(reported(water, "level")), 2),
         "avgPh": _fixed(average(reported(water, "ph")), 2),
         "todayTasks": 24 + (0 if scenario_key == "normal" else 3),

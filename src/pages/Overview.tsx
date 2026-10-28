@@ -103,6 +103,7 @@ export function OverviewPage() {
     scenarioKey,
     readings,
     deviceStatuses,
+    liveMode,
     cycleAlert,
     simTime,
   } = useSimulation();
@@ -140,7 +141,7 @@ export function OverviewPage() {
   const selectedReading = selectedId ? readings[selectedId] ?? {} : {};
 
   const healthSeries = useMemo(
-    () => history.map((point, index) => Math.max(24, 99 - point.pm25 * 0.11 - point.turbidity * 0.07 - (scenarioKey === 'normal' ? 0 : 8) + Math.sin(index / 3) * 1.5)),
+    () => history.flatMap((point, index) => point.pm25 === null || point.turbidity === null ? [] : [Math.max(24, 99 - point.pm25 * 0.11 - point.turbidity * 0.07 - (scenarioKey === 'normal' ? 0 : 8) + Math.sin(index / 3) * 1.5)]),
     [history, scenarioKey],
   );
   const messageSeries = useMemo(() => history.map((_, index) => 1250 + Math.sin(index / 4) * 42 + (scenarioKey === 'normal' ? 0 : 300)), [history, scenarioKey]);
@@ -258,6 +259,8 @@ export function OverviewPage() {
     };
   }, [chartTab, history, palette]);
 
+  const hasLiveMetric = (key: string, kinds: string[]) => !liveMode || DEVICES.some(device => kinds.includes(device.kind) && readings[device.id]?.[key] !== undefined);
+
   const zoneIssues = (zone: string) =>
     DEVICES.filter((device) => device.zone === zone && deviceStatuses[device.id] !== 'online').length;
 
@@ -266,15 +269,21 @@ export function OverviewPage() {
     if (selectedDevice.metrics.length) {
       return selectedDevice.metrics.slice(0, 3).map((def) => ({
         label: def.label,
-        value: `${Number(selectedReading[def.key] ?? 0).toFixed(def.digits)}${def.unit}`,
+        value: selectedReading[def.key] === undefined ? "--" : `${selectedReading[def.key].toFixed(def.digits)}${def.unit}`,
       }));
     }
+    if (!readings[selectedDevice.id]) return [{ label: '实时观测', value: '--' }];
+    if (liveMode) return [
+      { label: '电量', value: selectedReading.battery === undefined ? '--' : `${selectedReading.battery}%` },
+      { label: '信号', value: selectedReading.signal === undefined ? '--' : `${selectedReading.signal}%` },
+      { label: '任务', value: selectedReading.progress === undefined ? '--' : `${Math.round(selectedReading.progress)}%` },
+    ];
     return [
       { label: '电量', value: `${selectedReading.battery ?? selectedDevice.battery}%` },
       { label: '信号', value: `${selectedDevice.signal}%` },
       { label: '任务', value: `${Math.round(selectedReading.progress ?? 64)}%` },
     ];
-  }, [selectedDevice, selectedReading]);
+  }, [selectedDevice, selectedReading, readings, liveMode]);
 
   return (
     <div ref={pageRef} className="page overview-page">
@@ -340,7 +349,7 @@ export function OverviewPage() {
               <span className="kpi-mini">在线率 {stats.onlineRate.toFixed(1)}%</span>
             </>
           }
-          spark={healthSeries}
+          spark={healthSeries.length ? healthSeries : undefined}
         />
         <KpiCard
           icon={ShieldAlert}
@@ -455,15 +464,15 @@ export function OverviewPage() {
               <div className="map-summary">
                 <div>
                   <span>气温</span>
-                  <strong className="mono">{stats.avgTemperature}<em>°C</em></strong>
+                  <strong className="mono">{hasLiveMetric('temperature', ['weather', 'air']) ? stats.avgTemperature : '--'}<em>{hasLiveMetric('temperature', ['weather', 'air']) ? '°C' : ''}</em></strong>
                 </div>
                 <div>
                   <span>平均水位</span>
-                  <strong className="mono">{stats.avgWaterLevel}<em>m</em></strong>
+                  <strong className="mono">{hasLiveMetric('level', ['water']) ? stats.avgWaterLevel : '--'}<em>{hasLiveMetric('level', ['water']) ? 'm' : ''}</em></strong>
                 </div>
                 <div>
                   <span>PM2.5</span>
-                  <strong className="mono">{stats.avgPm25}<em>µg/m³</em></strong>
+                  <strong className="mono">{hasLiveMetric('pm25', ['weather', 'air']) ? stats.avgPm25 : '--'}<em>{hasLiveMetric('pm25', ['weather', 'air']) ? 'µg/m³' : ''}</em></strong>
                 </div>
               </div>
 
