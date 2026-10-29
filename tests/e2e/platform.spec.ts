@@ -19,12 +19,22 @@ async function login(page: Page, role: '观察员' | '值班长' | '管理员') 
   await expect(page.locator('.app-content')).toBeVisible();
 }
 
-for (const width of [390, 675, 1024]) {
+for (const width of [320, 390, 640, 675, 900, 1024, 1280]) {
   test(`compact overview and map controls remain reachable at ${width}px`, async ({ page }) => {
     await prepare(page);
     await page.setViewportSize({ width, height: 800 });
     await page.goto(local + '/#/');
     await expect(page.getByRole('heading', { level: 1, name: '一图感知平安' })).toBeVisible({ timeout: 20000 });
+    if (width <= 640) {
+      const nav = page.getByRole('navigation', { name: '移动端主导航' });
+      const links = nav.getByRole('link');
+      await expect(links).toHaveCount(7);
+      const boxes = await links.evaluateAll(nodes => nodes.map(node => {
+        const rect = node.getBoundingClientRect();
+        return { left: rect.left, right: rect.right, scrollWidth: node.scrollWidth, clientWidth: node.clientWidth };
+      }));
+      expect(boxes.every((box, index) => box.scrollWidth <= box.clientWidth + 1 && (!index || boxes[index - 1].right <= box.left + 1))).toBe(true);
+    }
     for (const label of ['接入感知节点', '区域健康度', '活动告警', '全无人系统', '实时消息速率']) {
       await expect(page.locator('.kpi').filter({ hasText: label })).toBeVisible();
     }
@@ -47,7 +57,7 @@ for (const width of [390, 675, 1024]) {
   });
 }
 
-for (const width of [390, 675, 1024]) {
+for (const width of [320, 390, 640, 675, 900, 1024, 1280]) {
   test(`flight summary and plan dialog remain usable at ${width}px`, async ({ page }) => {
     await prepare(page);
     await page.setViewportSize({ width, height: 800 });
@@ -69,9 +79,9 @@ for (const width of [390, 675, 1024]) {
   });
 }
 
-for (const width of [1440, 1024, 390]) {
-  test(`all seven modules render without overflow or uncaught exceptions at ${width}px`, async ({ page }, testInfo) => {
-    await page.setViewportSize({ width, height: 1000 });
+for (const [width, height] of [[320, 568], [375, 812], [390, 1000], [430, 932], [640, 800], [768, 1024], [900, 700], [1024, 1000], [1100, 760], [1280, 800], [1440, 1000], [1920, 1080], [844, 390]]) {
+  test(`all seven modules render without overflow or uncaught exceptions at ${width}×${height}`, async ({ page }, testInfo) => {
+    await page.setViewportSize({ width, height });
     await prepare(page);
     const errors: string[] = [];
     page.on('pageerror', error => errors.push(error.message));
