@@ -55,9 +55,16 @@ def launcher(tmp_path):
     return script, env, log
 
 
+def run_launcher(script, env):
+    try:
+        return subprocess.run(['bash', '-x', str(script)], env=env, capture_output=True, text=True, timeout=10)
+    except subprocess.TimeoutExpired as exc:
+        pytest.fail(f'Launcher timed out; shell trace: {(exc.stderr or b"")[-4000:]!r}')
+
+
 def test_launcher_refuses_tls_without_certificates(launcher):
     script, env, log = launcher
-    result = subprocess.run(['bash', str(script)], env={**env, 'IOT_TLS_ENABLED': 'true'}, capture_output=True, text=True, timeout=10)
+    result = run_launcher(script, {**env, 'IOT_TLS_ENABLED': 'true'})
     assert result.returncode != 0
     assert '拒绝以明文降级' in result.stderr
     assert not log.exists()
@@ -67,7 +74,7 @@ def test_launcher_environment_port_precedence_and_no_shell_eval(launcher):
     script, env, log = launcher
     marker = script.parent / 'should-not-exist'
     (script.parent / '.env').write_text(f'IOT_API_PORT=8123\nIOT_MQTT_ENABLED=false\nIOT_TLS_ENABLED=false\nEVIL=$(touch {marker})\n')
-    result = subprocess.run(['bash', str(script)], env={**env, 'IOT_API_PORT': '8027'}, capture_output=True, text=True, timeout=10)
+    result = run_launcher(script, {**env, 'IOT_API_PORT': '8027'})
     assert result.returncode == 0, result.stderr
     args = log.read_text().splitlines()
     assert args[args.index('--port') + 1] == '8027'
@@ -78,7 +85,7 @@ def test_launcher_environment_port_precedence_and_no_shell_eval(launcher):
 def test_launcher_reads_quoted_dotenv_port(launcher):
     script, env, log = launcher
     (script.parent / '.env').write_text('IOT_API_PORT="8123"\r\nIOT_TLS_ENABLED=false\n')
-    result = subprocess.run(['bash', str(script)], env=env, capture_output=True, text=True, timeout=10)
+    result = run_launcher(script, env)
     assert result.returncode == 0, result.stderr
     args = log.read_text().splitlines()
     assert args[args.index('--port') + 1] == '8123'
