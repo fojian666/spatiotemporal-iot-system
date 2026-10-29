@@ -3835,11 +3835,6 @@
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 
-  .kpi:nth-child(4),
-  .kpi:nth-child(5) {
-    display: none;
-  }
-
   .overview-page {
     height: auto;
     overflow: auto;

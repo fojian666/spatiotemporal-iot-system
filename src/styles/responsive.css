@@ -422,7 +422,7 @@
     min-width: 0;
   }
 
-  /* 1320 断点把链接钉在第 5 列并隐藏，2 列网格下必须复位 */
+  /* 窄屏链接独占一行，保留全部统计项。 */
   .ops-summary__link {
     display: flex;
     grid-column: 1 / -1;
@@ -851,6 +851,29 @@
 }
 
 /* 地图工具栏独占顶行，避免被标题和资产面板盖住。 */
+@media (max-width: 900px) {
+  .scenario-strip {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .scenario-card p {
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+
+  .geo-page .map-layers {
+    left: 12px;
+    right: 126px;
+    max-width: none;
+    transform: none;
+  }
+
+  .geo-page .map-layers__title,
+  .geo-page .map-layers__items {
+    flex-shrink: 0;
+  }
+}
+
 @media (min-width: 901px) {
   .geo-page .map-layers {
     top: 18px;

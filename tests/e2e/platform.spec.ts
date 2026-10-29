@@ -19,6 +19,56 @@ async function login(page: Page, role: '观察员' | '值班长' | '管理员') 
   await expect(page.locator('.app-content')).toBeVisible();
 }
 
+for (const width of [390, 675, 1024]) {
+  test(`compact overview and map controls remain reachable at ${width}px`, async ({ page }) => {
+    await prepare(page);
+    await page.setViewportSize({ width, height: 800 });
+    await page.goto(local + '/#/');
+    await expect(page.getByRole('heading', { level: 1, name: '一图感知平安' })).toBeVisible({ timeout: 20000 });
+    for (const label of ['接入感知节点', '区域健康度', '活动告警', '全无人系统', '实时消息速率']) {
+      await expect(page.locator('.kpi').filter({ hasText: label })).toBeVisible();
+    }
+    await page.goto(local + '/#/simulation');
+    const descriptions = page.locator('.scenario-card p');
+    await expect(descriptions).toHaveCount(4);
+    expect(await descriptions.evaluateAll(nodes => nodes.every(node => node.scrollWidth <= node.clientWidth + 1))).toBe(true);
+    await page.goto(local + '/#/map');
+    const layers = page.locator('.geo-page .map-layers');
+    const tools = page.locator('.geo-page .map-tools');
+    await expect(layers).toBeVisible();
+    await expect(tools).toBeVisible();
+    const layerBox = await layers.boundingBox();
+    const toolBox = await tools.boundingBox();
+    expect(layerBox!.x + layerBox!.width).toBeLessThanOrEqual(toolBox!.x);
+    await layers.getByRole('button', { name: /立体地形/ }).scrollIntoViewIfNeeded();
+    await expect(layers.getByRole('button', { name: /立体地形/ })).toBeInViewport();
+    await layers.getByRole('button', { name: '卫星过境' }).scrollIntoViewIfNeeded();
+    await expect(layers.getByRole('button', { name: '卫星过境' })).toBeInViewport();
+  });
+}
+
+for (const width of [390, 675, 1024]) {
+  test(`flight summary and plan dialog remain usable at ${width}px`, async ({ page }) => {
+    await prepare(page);
+    await page.setViewportSize({ width, height: 800 });
+    await login(page, '值班长');
+    await page.goto(remote + '/#/drone');
+    await expect(page.getByRole('heading', { name: '无人机一网统飞' })).toBeVisible();
+    const summary = page.locator('.ops-summary');
+    for (const label of ['机场', '无人系统', '执行中', '飞行计划', '媒体资产', '待处理线索']) {
+      await expect(summary.locator('.ops-summary__item').filter({ hasText: label })).toBeVisible();
+    }
+    await page.getByRole('button', { name: /任务计划/ }).click();
+    await page.getByRole('button', { name: '新建计划' }).click();
+    const dialog = page.getByRole('dialog', { name: '新建飞行计划' });
+    await expect(dialog).toBeVisible();
+    await dialog.getByRole('button', { name: '创建计划' }).scrollIntoViewIfNeeded();
+    await expect(dialog.getByRole('button', { name: '创建计划' })).toBeInViewport();
+    await dialog.getByRole('button', { name: '取消' }).click();
+    await expect(dialog).toHaveCount(0);
+  });
+}
+
 for (const width of [1440, 1024, 390]) {
   test(`all seven modules render without overflow or uncaught exceptions at ${width}px`, async ({ page }, testInfo) => {
     await page.setViewportSize({ width, height: 1000 });
