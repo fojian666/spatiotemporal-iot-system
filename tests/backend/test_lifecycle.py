@@ -49,8 +49,9 @@ def launcher(tmp_path):
     log = tmp_path / 'argv'
     python.write_text('#!/bin/bash\nif [[ "$1" == "-c" ]]; then exit 0; fi\nprintf "%s\\n" "$@" > "$TEST_ARGV"\n')
     python.chmod(0o755)
-    env = {k: v for k, v in os.environ.items() if not k.startswith('IOT_')}
-    env.update(IOT_PYTHON=str(python), IOT_MQTT_ENABLED='false', TEST_ARGV=str(log))
+    env = {k: v for k, v in os.environ.items() if not k.startswith('IOT_') and k != 'CONDA_PREFIX'}
+    # Do not probe a host Conda installation while testing the fake interpreter.
+    env.update(PATH='/usr/bin:/bin', HOME=str(tmp_path), IOT_PYTHON=str(python), IOT_MQTT_ENABLED='false', TEST_ARGV=str(log))
     return script, env, log
 
 
